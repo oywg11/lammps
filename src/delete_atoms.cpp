@@ -65,9 +65,9 @@ DeleteAtoms::DeleteAtoms(LAMMPS *lmp) :
 void DeleteAtoms::command(int narg, char **arg)
 {
   if (domain->box_exist == 0)
-    error->all(FLERR, "Delete_atoms command before simulation box is defined");
+    error->all(FLERR, -1, "Delete_atoms command before simulation box is defined");
   if (narg < 1) utils::missing_cmd_args(FLERR, "delete_atoms", error);
-  if (atom->tag_enable == 0) error->all(FLERR, "Cannot use delete_atoms unless atoms have IDs");
+  if (atom->tag_enable == 0) error->all(FLERR, -1, "Cannot use delete_atoms unless atoms have IDs");
 
   // store state before delete
 
@@ -91,21 +91,21 @@ void DeleteAtoms::command(int narg, char **arg)
     delete_random(narg, arg);
   // deprecated porosity option, now included in new partial option
   else if (strcmp(arg[0], "porosity") == 0) {
-    error->all(FLERR,
+    error->all(FLERR, Error::ARGZERO,
                "The delete_atoms 'porosity' keyword has been removed.\n"
                "Please use: delete_atoms random fraction frac exact group-ID region-ID seed\n");
   } else if (strcmp(arg[0], "variable") == 0)
     delete_variable(narg, arg);
   else
-    error->all(FLERR, "Unknown delete_atoms sub-command: {}", arg[0]);
+    error->all(FLERR, Error::ARGZERO, "Unknown delete_atoms sub-command: {}", arg[0]);
 
   if (allflag) {
     int igroup = group->find("all");
     if ((igroup >= 0) && modify->check_rigid_group_overlap(group->bitmask[igroup]))
-      error->warning(FLERR, "Attempting to delete atoms in rigid bodies");
+      if (comm->me == 0) error->warning(FLERR, "Attempting to delete atoms in rigid bodies");
   } else {
     if (modify->check_rigid_list_overlap(dlist))
-      error->warning(FLERR, "Attempting to delete atoms in rigid bodies");
+      if (comm->me == 0) error->warning(FLERR, "Attempting to delete atoms in rigid bodies");
   }
 
   // if allflag = 1, just reset atom->nlocal
