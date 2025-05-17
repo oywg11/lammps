@@ -460,7 +460,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     }
   }
 
-  for (auto & rlm : rate_limit_multi) {
+  for (auto &rlm : rate_limit_multi) {
     for (int i = 0; i < rlm.Nrxns; i++) {
       int existflag = 0;
       for (int j = 0; j < nreacts; j++) {
@@ -473,6 +473,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       }
       if (existflag == 0) error->all(FLERR, "Fix bond/react: Invalid reaction name {} listed for rate_limit_multi", rlm.rxn_names[i]);
     }
+    rlm.store_rxn_counts.assign(rlm.Nsteps,-1);
   }
 
   max_natoms = 0; // the number of atoms in largest molecule template
@@ -932,6 +933,12 @@ void FixBondReact::post_integrate()
       }
       store_rxn_count[0][myrxn] = reaction_count_total[myrxn];
     }
+  }
+  for (auto &rlm : rate_limit_multi) {
+    int rxn_count_sum = 0;
+    for (int i = 0; i < rlm.Nrxns; i++) rxn_count_sum += reaction_count_total[rlm.rxnIDs[i]];
+    rlm.store_rxn_counts.push_front(rxn_count_sum);
+    rlm.store_rxn_counts.pop_back();
   }
 
   // check if any reactions could occur on this timestep

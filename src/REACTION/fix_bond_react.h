@@ -28,6 +28,7 @@ FixStyle(bond/react,FixBondReact);
 
 #include <map>
 #include <set>
+#include <deque>
 
 namespace LAMMPS_NS {
 
@@ -264,6 +265,7 @@ class FixBondReact : public Fix {
     std::vector<int> rxnIDs;
     int Nlimit;
     int Nsteps;
+    std::deque<int> store_rxn_counts;
   };
   std::vector<RateLimitMulti> rate_limit_multi;
 
