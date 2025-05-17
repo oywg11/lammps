@@ -260,11 +260,9 @@ class FixBondReact : public Fix {
   std::vector<AddAtom> addatoms;
 
   struct RateLimitMulti {
-    int Nrxns;
-    std::vector<std::string> rxn_names;
+    int Nrxns, var_flag, var_id, Nlimit, Nsteps;
     std::vector<int> rxnIDs;
-    int Nlimit;
-    int Nsteps;
+    std::vector<std::string> rxn_names;
     std::deque<int> store_rxn_counts;
   };
   std::vector<RateLimitMulti> rate_limit_multi;

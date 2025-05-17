@@ -222,7 +222,15 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
         std::string tmpstr = arg[iarg+2+i];
         rlm.rxn_names.push_back(tmpstr);
       }
-      rlm.Nlimit = utils::inumeric(FLERR,arg[iarg+rlm.Nrxns+2],false,lmp);
+      char *myarg = arg[iarg+rlm.Nrxns+2]; // Nlimit
+      if (strncmp(myarg,"v_",2) == 0) {
+        rlm.var_flag = 1;
+        rlm.var_id = input->variable->find(myarg);
+        if (rlm.var_id < 0)
+          error->all(FLERR,"Fix bond/react: Variable name {} for rate_limit_multi does not exist",myarg);
+        if (!input->variable->equalstyle(rlm.var_id))
+          error->all(FLERR,"Fix bond/react: Variable {} for rate_limit_multi is not equal-style",myarg);
+      } else rlm.Nlimit = utils::inumeric(FLERR,myarg,false,lmp);
       rlm.Nsteps = utils::inumeric(FLERR,arg[iarg+rlm.Nrxns+3],false,lmp);
       rate_limit_multi.push_back(rlm);
       iarg += rlm.Nrxns+4;
@@ -936,7 +944,7 @@ void FixBondReact::post_integrate()
   }
   for (auto &rlm : rate_limit_multi) {
     int rxn_count_sum = 0;
-    for (int i = 0; i < rlm.Nrxns; i++) rxn_count_sum += reaction_count_total[rlm.rxnIDs[i]];
+    for (auto i : rlm.rxnIDs) rxn_count_sum += reaction_count_total[i];
     rlm.store_rxn_counts.push_front(rxn_count_sum);
     rlm.store_rxn_counts.pop_back();
   }
@@ -1014,8 +1022,26 @@ void FixBondReact::post_integrate()
   nxspecial = atom->nspecial;
   xspecial = atom->special;
 
+  // check if we are over rate_limit_multi limits
+  std::vector<int> rate_limit_multi_flag(nreacts, 1);
+  for (auto &rlm : rate_limit_multi) {
+    int myrxn_count = rlm.store_rxn_counts[rlm.Nsteps-1];
+    int nrxns_delta, my_nrate;
+    if (myrxn_count != -1) {
+      int rxn_count_sum = 0;
+      for (auto i : rlm.rxnIDs) rxn_count_sum += reaction_count_total[i];
+      nrxns_delta = rxn_count_sum - myrxn_count;
+      if (rlm.var_flag == 1) {
+        my_nrate = input->variable->compute_equal(rlm.var_id);
+      } else my_nrate = rlm.Nlimit;
+    }
+    if (myrxn_count == -1 || nrxns_delta >= my_nrate)
+      for (auto i : rlm.rxnIDs) rate_limit_multi_flag[i] = 0;
+  }
+
   int j;
   for (rxnID = 0; rxnID < nreacts; rxnID++) {
+    if (rate_limit_multi_flag[rxnID] == 0) continue;
     int rate_limit_flag = 1;
     if (rate_limit[0][rxnID] == 1) {
       int myrxn_count = store_rxn_count[rate_limit[2][rxnID]-1][rxnID];
