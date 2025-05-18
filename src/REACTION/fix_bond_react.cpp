@@ -4643,9 +4643,9 @@ void FixBondReact::unpack_reverse_comm(int n, int *list, double *buf)
 
 void FixBondReact::write_restart(FILE *fp)
 {
-  int revision = 1;
+  int revision = 2;
   set[0].nreacts = nreacts;
-  // NEED2FIX set[0].max_rate_limit_steps = max_rate_limit_steps;
+  set[0].nratelimits = rate_limit_multi.size();
 
   for (int i = 0; i < nreacts; i++) {
     set[i].reaction_count_total = reaction_count_total[i];
@@ -4654,22 +4654,33 @@ void FixBondReact::write_restart(FILE *fp)
     set[i].rxn_name[MAXNAME-1] = '\0';
   }
 
-  /* // NEED2FIX int rbufcount = max_rate_limit_steps*nreacts;
+  // to store, for each RateLimit: Nrxns rxn_IDs[Nrxns] NSteps store_rxn_counts[Nsteps]
+  // NOTE: rxn_IDs only valid in reference to this restart file's reaction list
+  int rbufcount = rate_limit_multi.size()*2;
+  for (auto rlm : rate_limit_multi)
+    rbufcount += rlm.Nsteps + rlm.Nrxns;
+
+  int ii = 0;
   int *rbuf;
   if (rbufcount) {
     memory->create(rbuf,rbufcount,"bond/react:rbuf");
-    memcpy(rbuf,&store_rxn_count[0][0],sizeof(int)*rbufcount);
+    for (auto &rlm : rate_limit_multi) {
+      rbuf[ii++] = rlm.Nrxns; // need memcpy?
+      for (auto myrxnID : rlm.rxnIDs) rbuf[ii++] = myrxnID;
+      rbuf[ii++] = rlm.Nsteps;
+      for (auto mycount : rlm.store_rxn_counts) rbuf[ii++] = mycount;
+    }
   }
-    */
 
   if (comm->me == 0) {
-    int size = nreacts*sizeof(Set); // NEED2FIX +(rbufcount+1)*sizeof(int);
+    int size = nreacts*sizeof(Set)+(rbufcount+2)*sizeof(int);
     fwrite(&size,sizeof(int),1,fp);
     fwrite(&revision,sizeof(int),1,fp);
     fwrite(set,sizeof(Set),nreacts,fp);
-    // NEED2FIX if (rbufcount) fwrite(rbuf,sizeof(int),rbufcount,fp);
+    fwrite(&rbufcount,sizeof(int),1,fp);
+    if (rbufcount) fwrite(rbuf,sizeof(int),rbufcount,fp);
   }
-  // NEED2FIX if (rbufcount) memory->destroy(rbuf);
+  if (rbufcount) memory->destroy(rbuf);
 }
 
 /* ----------------------------------------------------------------------
@@ -4679,41 +4690,60 @@ void FixBondReact::write_restart(FILE *fp)
 
 void FixBondReact::restart(char *buf)
 {
+  int revision, r_nreacts, r_nratelimits, ibufcount;
+  int iptr = 0;
+  int *ibuf;
 
-  /* // NEED2FIX int n,revision,r_nreacts,r_max_rate_limit_steps,ibufcount,n2cpy;
-  int **ibuf;
+  if (lmp->restart_ver > utils::date2num("3 Nov 2022")) {
+    revision = buf[iptr];
+    iptr += sizeof(int);
+  } else revision = 0;
 
-  n = 0;
-  if (lmp->restart_ver > utils::date2num("3 Nov 2022")) revision = buf[n++];
-  else revision = 0;
-
-  Set *set_restart = (Set *) &buf[n*sizeof(int)];
+  Set *set_restart = (Set *) &buf[iptr];
   r_nreacts = set_restart[0].nreacts;
+  iptr += sizeof(Set)*r_nreacts;
 
-  n2cpy = 0;
-  if (revision > 0) {
-    r_max_rate_limit_steps = set_restart[0].max_rate_limit_steps;
-    if (r_max_rate_limit_steps > 0) {
-      ibufcount = r_max_rate_limit_steps*r_nreacts;
-      memory->create(ibuf,r_max_rate_limit_steps,r_nreacts,"bond/react:ibuf");
-      memcpy(&ibuf[0][0],&buf[sizeof(int)+r_nreacts*sizeof(Set)],sizeof(int)*ibufcount);
-      n2cpy = r_max_rate_limit_steps;
-    }
-  }
-
-  if (max_rate_limit_steps < n2cpy) n2cpy = max_rate_limit_steps;
-  for (int i = 0; i < r_nreacts; i++) {
-    for (int j = 0; j < nreacts; j++) {
-      if (strcmp(set_restart[i].rxn_name,rxn_name[j]) == 0) {
+  for (int i = 0; i < r_nreacts; i++)
+    for (int j = 0; j < nreacts; j++)
+      if (strcmp(set_restart[i].rxn_name,rxn_name[j]) == 0)
         reaction_count_total[j] = set_restart[i].reaction_count_total;
-        // read rate_limit restart information
-        for (int k = 0; k < n2cpy; k++)
-          store_rxn_count[k][j] = ibuf[k][i];
+
+  if (revision > 1) {
+    r_nratelimits = set_restart[0].nratelimits;
+    ibufcount = buf[iptr];
+    iptr += sizeof(int);
+    if (ibufcount > 0) {
+      memory->create(ibuf,ibufcount,"bond/react:ibuf");
+      memcpy(&ibuf[0],&buf[iptr],sizeof(int)*ibufcount);
+    }
+    int ii;
+    for (int i = 0; i < r_nratelimits; i++) {
+      struct RxnLimit r_rlm;
+      r_rlm.Nrxns = ibuf[ii++];
+      for (int i = 0; i < r_rlm.Nrxns; i++) {
+        r_rlm.rxnIDs.push_back(ibuf[ii++]);
+        std::string myrxn_name = set_restart[r_rlm.rxnIDs[i]].rxn_name;
+        r_rlm.rxn_names.push_back(myrxn_name);
+      }
+      r_rlm.Nsteps = ibuf[ii++];
+      for (int i = 0; i < r_rlm.Nsteps; i++) r_rlm.store_rxn_counts.push_back(ibuf[ii++]);
+      restart_rate_limits.push_back(r_rlm);
+    }
+    // restore rate_limit_multi store_rxn_counts if all rxn_names match
+    // assumes there are no repeats - perhaps should error-check this?
+    for (auto &rlm : rate_limit_multi) {
+      for (auto r_rlm : restart_rate_limits) {
+        if (rlm.Nrxns != r_rlm.Nrxns) continue;
+        int nmatch = 0;
+        for (int i = 0; i < rlm.Nrxns; i++)
+          for (int j = 0; j < r_rlm.Nrxns; j++)
+            if (rlm.rxn_names[i] == r_rlm.rxn_names[j]) nmatch++;
+        if (nmatch == rlm.Nrxns)
+          std::copy(r_rlm.store_rxn_counts.begin(), r_rlm.store_rxn_counts.end(), rlm.store_rxn_counts.begin());
       }
     }
+    if (ibufcount > 0) memory->destroy(ibuf);
   }
-  if (revision > 0 && r_max_rate_limit_steps > 0) memory->destroy(ibuf);
-  */
 }
 
 /* ----------------------------------------------------------------------

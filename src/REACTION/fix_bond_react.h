@@ -228,7 +228,7 @@ class FixBondReact : public Fix {
     int nreacts;
     char rxn_name[MAXNAME];
     int reaction_count_total;
-    int max_rate_limit_steps;
+    int nratelimits;
   };
   Set *set;
 
@@ -265,6 +265,7 @@ class FixBondReact : public Fix {
     std::deque<int> store_rxn_counts;
   };
   std::vector<RxnLimit> rate_limit_multi;
+  std::vector<RxnLimit> restart_rate_limits;
 
   // DEBUG
 
