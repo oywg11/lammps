@@ -213,11 +213,11 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       else if (str == "molmap") molid_mode = RESET_MOL_IDS::MOLMAP;
       else error->all(FLERR, iarg+1, "Unknown option {} for 'reset_mol_ids' keyword", str);
       iarg += 2;
-    } else if (strcmp(arg[iarg],"rate_limit_multi") == 0) {
-      if (iarg+2 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit_multi", error);
+    } else if (strcmp(arg[iarg],"rate_limits") == 0) {
+      if (iarg+2 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit", error);
       struct RateLimit rlm;
       rlm.Nrxns = utils::inumeric(FLERR,arg[iarg+1],false,lmp);
-      if (iarg+rlm.Nrxns+4 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit_multi", error);
+      if (iarg+rlm.Nrxns+4 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit", error);
       for (int i = 0; i < rlm.Nrxns; i++) {
         std::string tmpstr = arg[iarg+2+i];
         rlm.rxn_names.push_back(tmpstr);
@@ -227,12 +227,12 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
         rlm.var_flag = 1;
         rlm.var_id = input->variable->find(myarg);
         if (rlm.var_id < 0)
-          error->all(FLERR,"Fix bond/react: Variable name {} for rate_limit_multi does not exist",myarg);
+          error->all(FLERR,"Fix bond/react: Variable name {} for rate_limit does not exist",myarg);
         if (!input->variable->equalstyle(rlm.var_id))
-          error->all(FLERR,"Fix bond/react: Variable {} for rate_limit_multi is not equal-style",myarg);
+          error->all(FLERR,"Fix bond/react: Variable {} for rate_limit is not equal-style",myarg);
       } else rlm.Nlimit = utils::inumeric(FLERR,myarg,false,lmp);
       rlm.Nsteps = utils::inumeric(FLERR,arg[iarg+rlm.Nrxns+3],false,lmp);
-      rate_limit_multi.push_back(rlm);
+      rate_limits.push_back(rlm);
       iarg += rlm.Nrxns+4;
     } else if (strcmp(arg[iarg],"react") == 0) {
       break;
@@ -457,7 +457,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     }
   }
 
-  for (auto &rlm : rate_limit_multi) {
+  for (auto &rlm : rate_limits) {
     for (int i = 0; i < rlm.Nrxns; i++) {
       int existflag = 0;
       for (int j = 0; j < nreacts; j++) {
@@ -468,7 +468,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
           break;
         }
       }
-      if (existflag == 0) error->all(FLERR, "Fix bond/react: Invalid reaction name {} listed for rate_limit_multi", rlm.rxn_names[i]);
+      if (existflag == 0) error->all(FLERR, "Fix bond/react: Invalid reaction name {} listed for rate_limit", rlm.rxn_names[i]);
     }
     rlm.store_rxn_counts.assign(rlm.Nsteps,-1);
   }
@@ -915,7 +915,7 @@ void FixBondReact::init_list(int /*id*/, NeighList *ptr)
 void FixBondReact::post_integrate()
 {
   // update store_rxn_count on every step
-  for (auto &rlm : rate_limit_multi) {
+  for (auto &rlm : rate_limits) {
     int rxn_count_sum = 0;
     for (auto i : rlm.rxnIDs) rxn_count_sum += reaction_count_total[i];
     rlm.store_rxn_counts.push_front(rxn_count_sum);
@@ -995,9 +995,9 @@ void FixBondReact::post_integrate()
   nxspecial = atom->nspecial;
   xspecial = atom->special;
 
-  // check if we are over rate_limit_multi limits
-  std::vector<int> rate_limit_multi_flag(nreacts, 1);
-  for (auto &rlm : rate_limit_multi) {
+  // check if we are over rate_limits limits
+  std::vector<int> rate_limits_flag(nreacts, 1);
+  for (auto &rlm : rate_limits) {
     int myrxn_count = rlm.store_rxn_counts[rlm.Nsteps-1];
     int nrxns_delta, my_nrate;
     if (myrxn_count != -1) {
@@ -1009,14 +1009,14 @@ void FixBondReact::post_integrate()
       } else my_nrate = rlm.Nlimit;
     }
     if (myrxn_count == -1 || nrxns_delta >= my_nrate)
-      for (auto i : rlm.rxnIDs) rate_limit_multi_flag[i] = 0;
+      for (auto i : rlm.rxnIDs) rate_limits_flag[i] = 0;
   }
 
   int j;
   for (rxnID = 0; rxnID < nreacts; rxnID++) {
     if ((update->ntimestep % nevery[rxnID]) ||
         (max_rxn[rxnID] <= reaction_count_total[rxnID]) ||
-        (rate_limit_multi_flag[rxnID] == 0)) continue;
+        (rate_limits_flag[rxnID] == 0)) continue;
 
     for (int ii = 0; ii < nall; ii++) {
       partner[ii] = 0;
@@ -1521,7 +1521,7 @@ void FixBondReact::superimpose_algorithm()
     oversteps[rxnID] = MAX(oversteps[rxnID],max_rxn_overstep);
   }
 
-  for (auto rlm : rate_limit_multi) {
+  for (auto rlm : rate_limits) {
     int myrxn_count = rlm.store_rxn_counts[rlm.Nsteps-1];
     if (myrxn_count != -1) {
       int rxn_count_sum = 0;
@@ -4664,7 +4664,7 @@ void FixBondReact::write_restart(FILE *fp)
 {
   int revision = 2;
   set[0].nreacts = nreacts;
-  set[0].nratelimits = rate_limit_multi.size();
+  set[0].nratelimits = rate_limits.size();
 
   for (int i = 0; i < nreacts; i++) {
     set[i].reaction_count_total = reaction_count_total[i];
@@ -4675,15 +4675,15 @@ void FixBondReact::write_restart(FILE *fp)
 
   // to store, for each RateLimit: Nrxns rxn_IDs[Nrxns] NSteps store_rxn_counts[Nsteps]
   // NOTE: rxn_IDs only valid in reference to this restart file's reaction list
-  int rbufcount = rate_limit_multi.size()*2;
-  for (auto rlm : rate_limit_multi)
+  int rbufcount = rate_limits.size()*2;
+  for (auto rlm : rate_limits)
     rbufcount += rlm.Nsteps + rlm.Nrxns;
 
   int ii = 0;
   int *rbuf;
   if (rbufcount) {
     memory->create(rbuf,rbufcount,"bond/react:rbuf");
-    for (auto &rlm : rate_limit_multi) {
+    for (auto &rlm : rate_limits) {
       rbuf[ii++] = rlm.Nrxns; // need memcpy?
       for (auto myrxnID : rlm.rxnIDs) rbuf[ii++] = myrxnID;
       rbuf[ii++] = rlm.Nsteps;
@@ -4748,9 +4748,9 @@ void FixBondReact::restart(char *buf)
       for (int i = 0; i < r_rlm.Nsteps; i++) r_rlm.store_rxn_counts.push_back(ibuf[ii++]);
       restart_rate_limits.push_back(r_rlm);
     }
-    // restore rate_limit_multi store_rxn_counts if all rxn_names match
+    // restore rate_limits store_rxn_counts if all rxn_names match
     // assumes there are no repeats - perhaps should error-check this?
-    for (auto &rlm : rate_limit_multi) {
+    for (auto &rlm : rate_limits) {
       for (auto r_rlm : restart_rate_limits) {
         if (rlm.Nrxns != r_rlm.Nrxns) continue;
         int nmatch = 0;
