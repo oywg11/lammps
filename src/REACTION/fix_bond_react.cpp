@@ -215,8 +215,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       iarg += 2;
     } else if (strcmp(arg[iarg],"rate_limit_multi") == 0) {
       if (iarg+2 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit_multi", error);
-      struct RxnLimit rlm;
-      rlm.type = RxnLimit::RATE_LIMIT;
+      struct RateLimit rlm;
       rlm.Nrxns = utils::inumeric(FLERR,arg[iarg+1],false,lmp);
       if (iarg+rlm.Nrxns+4 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit_multi", error);
       for (int i = 0; i < rlm.Nrxns; i++) {
@@ -1516,28 +1515,48 @@ void FixBondReact::superimpose_algorithm()
   std::minstd_rand park_rng(rnd());
 
   // check if we overstepped our reaction limit, via either max_rxn or rate_limit
-  for (auto rlm : rate_limit_multi) {
-    // NEED2FIX let's start simple, assuming that *only 1* rxn per rate_limit_'multi'
-    if (rlm.Nrxns > 1) continue; // NEED2FIX
-    int rxnID = rlm.rxnIDs[0];
-    int overstep = 0;
+  std::vector<int> oversteps(nreacts, 0);
+  for (rxnID = 0; rxnID < nreacts; rxnID++) {
     int max_rxn_overstep = reaction_count_total[rxnID] + delta_rxn[rxnID] - max_rxn[rxnID];
-    overstep = MAX(overstep,max_rxn_overstep);
+    oversteps[rxnID] = MAX(oversteps[rxnID],max_rxn_overstep);
+  }
 
+  for (auto rlm : rate_limit_multi) {
     int myrxn_count = rlm.store_rxn_counts[rlm.Nsteps-1];
     if (myrxn_count != -1) {
       int rxn_count_sum = 0;
-      for (auto i : rlm.rxnIDs) rxn_count_sum += reaction_count_total[rxnID];
-      int nrxn_delta = rxn_count_sum + delta_rxn[rxnID] - myrxn_count;
+      int delta_rxn_sum = 0;
+      for (auto i : rlm.rxnIDs) {
+        rxn_count_sum += reaction_count_total[i];
+        delta_rxn_sum += delta_rxn[i];
+      }
+      int nrxn_delta = rxn_count_sum + delta_rxn_sum - myrxn_count;
       int my_nrate;
       if (rlm.var_flag == 1) {
         my_nrate = input->variable->compute_equal(rlm.var_id);
       } else my_nrate = rlm.Nlimit;
-      int rate_limit_overstep = nrxn_delta - my_nrate;
-      overstep = MAX(overstep,rate_limit_overstep);
+      int rate_limit_overstep_sum = delta_rxn_sum - my_nrate;
+      if (rate_limit_overstep_sum > 0) {
+        if (rlm.Nrxns == 1) {
+          rxnID = rlm.rxnIDs[0];
+          oversteps[rxnID] = MAX(oversteps[rxnID], rate_limit_overstep_sum);
+        } else {
+          std::vector<int> dummy_list;
+          for (auto i : rlm.rxnIDs)
+            for (int j = 0; j < delta_rxn[i]; j++)
+              dummy_list.push_back(i);
+          std::shuffle(dummy_list.begin(), dummy_list.end(), park_rng);
+          std::vector<int> rate_limit_overstep(nreacts,0);
+          for (int i = 0; i < rate_limit_overstep_sum; i++)
+            rate_limit_overstep[dummy_list[i]]++;
+          for (rxnID = 0; rxnID < nreacts; rxnID++)
+            oversteps[rxnID] = MAX(oversteps[rxnID], rate_limit_overstep[rxnID]);
+      }
     }
+  }
 
-    if (overstep > 0) {
+  for (rxnID = 0; rxnID < nreacts; rxnID++)
+    if (oversteps[rxnID] > 0) {
       // let's randomly choose rxns to skip, unbiasedly from local and ghostly
       int *local_rxncounts;
       int *all_localkeep;
@@ -1548,8 +1567,8 @@ void FixBondReact::superimpose_algorithm()
         // when using variable input for rate_limit, rate_limit_overstep could be > delta_rxn (below)
         // we need to limit overstep to the number of reactions on this timestep
         // essentially skipping all reactions, would be more efficient to use a skip_all flag
-        if (overstep > delta_rxn[rxnID]) overstep = delta_rxn[rxnID];
-        int nkeep = delta_rxn[rxnID] - overstep;
+        if (oversteps[rxnID] > delta_rxn[rxnID]) oversteps[rxnID] = delta_rxn[rxnID];
+        int nkeep = delta_rxn[rxnID] - oversteps[rxnID];
         int *rxn_by_proc;
         memory->create(rxn_by_proc,delta_rxn[rxnID],"bond/react:rxn_by_proc");
         for (int j = 0; j < delta_rxn[rxnID]; j++)
@@ -4718,7 +4737,7 @@ void FixBondReact::restart(char *buf)
     }
     int ii;
     for (int i = 0; i < r_nratelimits; i++) {
-      struct RxnLimit r_rlm;
+      struct RateLimit r_rlm;
       r_rlm.Nrxns = ibuf[ii++];
       for (int i = 0; i < r_rlm.Nrxns; i++) {
         r_rlm.rxnIDs.push_back(ibuf[ii++]);

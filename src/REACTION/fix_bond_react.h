@@ -256,16 +256,14 @@ class FixBondReact : public Fix {
   };
   std::vector<AddAtom> addatoms;
 
-  struct RxnLimit {
-    typedef enum { RATE_LIMIT, MAX_RXN } TYPE;
-    TYPE type;
+  struct RateLimit {
     int Nrxns, var_flag, var_id, Nlimit, Nsteps;
     std::vector<int> rxnIDs;
     std::vector<std::string> rxn_names;
     std::deque<int> store_rxn_counts;
   };
-  std::vector<RxnLimit> rate_limit_multi;
-  std::vector<RxnLimit> restart_rate_limits;
+  std::vector<RateLimit> rate_limit_multi;
+  std::vector<RateLimit> restart_rate_limits;
 
   // DEBUG
 
