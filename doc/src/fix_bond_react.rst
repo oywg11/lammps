@@ -226,12 +226,9 @@ reaction occurrences is calculated by summing over the listed reactions.
 This sum is limited to Nlimit, which can be specified with an equal-style
 :doc:`variable <variable>`. Reaction occurences are chosen randomly from
 all eligible reaction sites of all listed reactions. Multiple *rate_limit*
-keywords can be specified. If the same reaction is listed for more than one
-*rate_limit* keyword, note that the skipped reactions are chosen
-independently, so it is likely that more reactions will be skipped than
-strictly necessary. This keyword is useful when multiple *react* arguments
-define similar types of reactions, and the relative rates between two or
-more types of reactions must be enforced.
+keywords can be specified. This keyword is useful when multiple *react*
+arguments define similar types of reactions, and the relative rates between
+two or more types of reactions must be enforced.
 
 The following comments pertain to each *react* argument (in other
 words, they can be customized for each reaction, or reaction step):
