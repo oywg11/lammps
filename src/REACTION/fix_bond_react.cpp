@@ -213,7 +213,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       else if (str == "molmap") molid_mode = RESET_MOL_IDS::MOLMAP;
       else error->all(FLERR, iarg+1, "Unknown option {} for 'reset_mol_ids' keyword", str);
       iarg += 2;
-    } else if (strcmp(arg[iarg],"rate_limits") == 0) {
+    } else if (strcmp(arg[iarg],"rate_limit") == 0) {
       if (iarg+2 > narg) utils::missing_cmd_args(FLERR,"fix bond/react rate_limit", error);
       struct RateLimit rlm;
       rlm.Nrxns = utils::inumeric(FLERR,arg[iarg+1],false,lmp);
@@ -4728,6 +4728,7 @@ void FixBondReact::restart(char *buf)
         reaction_count_total[j] = set_restart[i].reaction_count_total;
 
   if (revision > 1) {
+    std::vector<RateLimit> restart_rate_limits;
     r_nratelimits = set_restart[0].nratelimits;
     ibufcount = buf[iptr];
     iptr += sizeof(int);
@@ -4735,7 +4736,7 @@ void FixBondReact::restart(char *buf)
       memory->create(ibuf,ibufcount,"bond/react:ibuf");
       memcpy(&ibuf[0],&buf[iptr],sizeof(int)*ibufcount);
     }
-    int ii;
+    int ii = 0;
     for (int i = 0; i < r_nratelimits; i++) {
       struct RateLimit r_rlm;
       r_rlm.Nrxns = ibuf[ii++];

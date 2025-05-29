@@ -263,7 +263,6 @@ class FixBondReact : public Fix {
     std::deque<int> store_rxn_counts;
   };
   std::vector<RateLimit> rate_limits;
-  std::vector<RateLimit> restart_rate_limits;
 
   // DEBUG
 
