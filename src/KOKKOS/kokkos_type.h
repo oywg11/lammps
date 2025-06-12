@@ -373,9 +373,9 @@ typedef double KK_SUM_FLOAT;
 #endif
 
 struct s_EV_FLOAT {
-  double evdwl;
-  double ecoul;
-  double v[6];
+  KK_SUM_FLOAT evdwl;
+  KK_SUM_FLOAT ecoul;
+  KK_SUM_FLOAT v[6];
   KOKKOS_INLINE_FUNCTION
   s_EV_FLOAT() {
     evdwl = 0;
@@ -395,10 +395,10 @@ struct s_EV_FLOAT {
 typedef struct s_EV_FLOAT EV_FLOAT;
 
 struct s_EV_FLOAT_REAX {
-  double evdwl;
-  double ecoul;
-  double v[6];
-  double ereax[9];
+  KK_SUM_FLOAT evdwl;
+  KK_SUM_FLOAT ecoul;
+  KK_SUM_FLOAT v[6];
+  KK_SUM_FLOAT ereax[9];
   KOKKOS_INLINE_FUNCTION
   s_EV_FLOAT_REAX() {
     evdwl = 0;
@@ -422,10 +422,10 @@ struct s_EV_FLOAT_REAX {
 typedef struct s_EV_FLOAT_REAX EV_FLOAT_REAX;
 
 struct s_FEV_FLOAT {
-  double f[3];
-  double evdwl;
-  double ecoul;
-  double v[6];
+  KK_SUM_FLOAT f[3];
+  KK_SUM_FLOAT evdwl;
+  KK_SUM_FLOAT ecoul;
+  KK_SUM_FLOAT v[6];
   KOKKOS_INLINE_FUNCTION
   s_FEV_FLOAT() {
     evdwl = 0;
@@ -448,21 +448,21 @@ struct s_FEV_FLOAT {
 };
 typedef struct s_FEV_FLOAT FEV_FLOAT;
 
-struct alignas(2*sizeof(KK_FLOAT)) s_KK_FLOAT2 {
-  KK_FLOAT v[2];
+struct alignas(2*sizeof(double)) s_double2 {
+  double v[2];
 
   KOKKOS_INLINE_FUNCTION
-  s_KK_FLOAT2() {
+  s_double2() {
     v[0] = v[1] = 0.0;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator+=(const s_KK_FLOAT2 &rhs) {
+  void operator+=(const s_double2 &rhs) {
     v[0] += rhs.v[0];
     v[1] += rhs.v[1];
   }
 };
-typedef struct s_KK_FLOAT2 KK_FLOAT2;
+typedef struct s_double2 double2;
 
 template <class KeyViewType>
 struct BinOp3DLAMMPS {

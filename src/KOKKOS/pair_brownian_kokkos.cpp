@@ -287,13 +287,13 @@ void PairBrownianKokkos<DeviceType>::operator()(TagPairBrownianCompute<NEIGHFLAG
   KK_FLOAT a_sq, a_sh, a_pu;
   KK_FLOAT xl[3], p1[3], p2[3], p3[3];
 
-  KK_FLOAT fx_i = 0.0;
-  KK_FLOAT fy_i = 0.0;
-  KK_FLOAT fz_i = 0.0;
+  KK_SUM_FLOAT fx_i = 0.0;
+  KK_SUM_FLOAT fy_i = 0.0;
+  KK_SUM_FLOAT fz_i = 0.0;
 
-  KK_FLOAT torquex_i = 0.0;
-  KK_FLOAT torquey_i = 0.0;
-  KK_FLOAT torquez_i = 0.0;
+  KK_SUM_FLOAT torquex_i = 0.0;
+  KK_SUM_FLOAT torquey_i = 0.0;
+  KK_SUM_FLOAT torquez_i = 0.0;
 
   if (FLAGFLD) {
     fx_i = prethermostat * sqrt(R0) * (rand_gen.drand() - 0.5);

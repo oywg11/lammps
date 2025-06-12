@@ -899,9 +899,9 @@ PairUF3Kokkos<DeviceType>::operator()(TagPairUF3ComputeFullA<NEIGHFLAG, EVFLAG>,
 
   const int jnum = d_numneigh_short[i];
 
-  KK_FLOAT fxtmpi = 0.0;
-  KK_FLOAT fytmpi = 0.0;
-  KK_FLOAT fztmpi = 0.0;
+  KK_SUM_FLOAT fxtmpi = 0.0;
+  KK_SUM_FLOAT fytmpi = 0.0;
+  KK_SUM_FLOAT fztmpi = 0.0;
 
   for (int jj = 0; jj < jnum; jj++) {
     int j = d_neighbors_short(i, jj);
@@ -946,9 +946,9 @@ PairUF3Kokkos<DeviceType>::operator()(TagPairUF3ComputeFullA<NEIGHFLAG, EVFLAG>,
     del_rji[2] = x(j, 2) - ztmp;
     KK_FLOAT rij = sqrt(del_rji[0] * del_rji[0] + del_rji[1] * del_rji[1] + del_rji[2] * del_rji[2]);
 
-    KK_FLOAT fxtmpj = 0.0;
-    KK_FLOAT fytmpj = 0.0;
-    KK_FLOAT fztmpj = 0.0;
+    KK_SUM_FLOAT fxtmpj = 0.0;
+    KK_SUM_FLOAT fytmpj = 0.0;
+    KK_SUM_FLOAT fztmpj = 0.0;
 
     for (int kk = jj + 1; kk < jnum; kk++) {
       int k = d_neighbors_short(i, kk);

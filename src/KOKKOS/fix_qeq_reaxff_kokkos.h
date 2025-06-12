@@ -60,7 +60,7 @@ class FixQEqReaxFFKokkos : public FixQEqReaxFF, public KokkosBase {
  public:
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
-  typedef KK_FLOAT2 value_type;
+  typedef double2 value_type;
   FixQEqReaxFFKokkos(class LAMMPS *, int, char **);
   ~FixQEqReaxFFKokkos() override;
 
@@ -101,22 +101,22 @@ class FixQEqReaxFFKokkos : public FixQEqReaxFF, public KokkosBase {
   void operator()(TagQEqSparseMatvec2_Full, const membertype_vec &team) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagQEqNorm1, const int&, KK_FLOAT2&) const;
+  void operator()(TagQEqNorm1, const int&, double2&) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagQEqDot1, const int&, KK_FLOAT2&) const;
+  void operator()(TagQEqDot1, const int&, double2&) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagQEqDot2, const int&, KK_FLOAT2&) const;
+  void operator()(TagQEqDot2, const int&, double2&) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagQEqDot3, const int&, KK_FLOAT2&) const;
+  void operator()(TagQEqDot3, const int&, double2&) const;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(TagQEqSum1, const int&) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagQEqSum2, const int&, KK_FLOAT2&) const;
+  void operator()(TagQEqSum2, const int&, double2&) const;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(TagQEqCalculateQ, const int&) const;
@@ -357,9 +357,9 @@ struct FixQEqReaxFFKokkosComputeHFunctor {
 namespace Kokkos {
   // reduction identity must be defined in Kokkos namespace
   template<>
-  struct reduction_identity<KK_FLOAT2> {
-    KOKKOS_FORCEINLINE_FUNCTION static KK_FLOAT2 sum() {
-      return KK_FLOAT2();
+  struct reduction_identity<double2> {
+    KOKKOS_FORCEINLINE_FUNCTION static double2 sum() {
+      return double2();
     }
   };
 }

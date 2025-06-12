@@ -356,9 +356,9 @@ void PairTersoffKokkos<DeviceType>::tersoff_compute(const int &ii, EV_FLOAT& ev)
 
   // repulsive
 
-  KK_FLOAT f_x = 0.0;
-  KK_FLOAT f_y = 0.0;
-  KK_FLOAT f_z = 0.0;
+  KK_SUM_FLOAT f_x = 0.0;
+  KK_SUM_FLOAT f_y = 0.0;
+  KK_SUM_FLOAT f_z = 0.0;
 
   // attractive: bond order
 
@@ -405,9 +405,9 @@ void PairTersoffKokkos<DeviceType>::tersoff_compute(const int &ii, EV_FLOAT& ev)
     f_x += delx1*fatt;
     f_y += dely1*fatt;
     f_z += delz1*fatt;
-    KK_FLOAT fj_x = -delx1*fatt;
-    KK_FLOAT fj_y = -dely1*fatt;
-    KK_FLOAT fj_z = -delz1*fatt;
+    KK_SUM_FLOAT fj_x = -delx1*fatt;
+    KK_SUM_FLOAT fj_y = -dely1*fatt;
+    KK_SUM_FLOAT fj_z = -delz1*fatt;
 
     if (EVFLAG) {
       const KK_FLOAT eng = 0.5*bij * fa;

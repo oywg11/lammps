@@ -237,12 +237,12 @@ void PairLJCutDipoleCutKokkos<DeviceType>::operator()(TagPairLJCutDipoleCutKerne
 
   const int jnum = d_numneigh[i];
 
-  KK_FLOAT fx_i = 0.0;
-  KK_FLOAT fy_i = 0.0;
-  KK_FLOAT fz_i = 0.0;
-  KK_FLOAT torquex_i = 0.0;
-  KK_FLOAT torquey_i = 0.0;
-  KK_FLOAT torquez_i = 0.0;
+  KK_SUM_FLOAT fx_i = 0.0;
+  KK_SUM_FLOAT fy_i = 0.0;
+  KK_SUM_FLOAT fz_i = 0.0;
+  KK_SUM_FLOAT torquex_i = 0.0;
+  KK_SUM_FLOAT torquey_i = 0.0;
+  KK_SUM_FLOAT torquez_i = 0.0;
 
   for (int jj = 0; jj < jnum; jj++) {
     int j = d_neighbors(i,jj);

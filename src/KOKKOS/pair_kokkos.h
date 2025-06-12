@@ -140,9 +140,9 @@ struct PairComputeFunctor  {
     const AtomNeighborsConst neighbors_i = list.get_neighbors_const(i);
     const int jnum = list.d_numneigh[i];
 
-    KK_FLOAT fxtmp = 0.0;
-    KK_FLOAT fytmp = 0.0;
-    KK_FLOAT fztmp = 0.0;
+    KK_SUM_FLOAT fxtmp = 0.0;
+    KK_SUM_FLOAT fytmp = 0.0;
+    KK_SUM_FLOAT fztmp = 0.0;
 
     if (NEIGHFLAG == FULL && ZEROFLAG) {
       f(i,0) = 0.0;
@@ -215,9 +215,9 @@ struct PairComputeFunctor  {
     const AtomNeighborsConst neighbors_i = list.get_neighbors_const(i);
     const int jnum = list.d_numneigh[i];
 
-    KK_FLOAT fxtmp = 0.0;
-    KK_FLOAT fytmp = 0.0;
-    KK_FLOAT fztmp = 0.0;
+    KK_SUM_FLOAT fxtmp = 0.0;
+    KK_SUM_FLOAT fytmp = 0.0;
+    KK_SUM_FLOAT fztmp = 0.0;
 
     if (NEIGHFLAG == FULL && ZEROFLAG) {
       f(i,0) = 0.0;

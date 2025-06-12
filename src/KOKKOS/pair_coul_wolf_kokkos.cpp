@@ -237,9 +237,9 @@ void PairCoulWolfKokkos<DeviceType>::operator()(TagPairCoulWolfKernelA<NEIGHFLAG
   //const AtomNeighborsConst d_neighbors_i = k_list.get_neighbors_const(i);
   const int jnum = d_numneigh[i];
 
-  KK_FLOAT fxtmp = 0.0;
-  KK_FLOAT fytmp = 0.0;
-  KK_FLOAT fztmp = 0.0;
+  KK_SUM_FLOAT fxtmp = 0.0;
+  KK_SUM_FLOAT fytmp = 0.0;
+  KK_SUM_FLOAT fztmp = 0.0;
 
   for (int jj = 0; jj < jnum; jj++) {
     //int j = d_neighbors_i(jj);

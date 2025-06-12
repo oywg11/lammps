@@ -252,9 +252,9 @@ void PairSWKokkos<DeviceType>::operator()(TagPairSWCompute<NEIGHFLAG,EVFLAG>, co
 
   const int jnum = d_numneigh_short[ii];
 
-  KK_FLOAT fxtmpi = 0.0;
-  KK_FLOAT fytmpi = 0.0;
-  KK_FLOAT fztmpi = 0.0;
+  KK_SUM_FLOAT fxtmpi = 0.0;
+  KK_SUM_FLOAT fytmpi = 0.0;
+  KK_SUM_FLOAT fztmpi = 0.0;
 
   for (int jj = 0; jj < jnum; jj++) {
     int j = d_neighbors_short(ii,jj);
@@ -305,9 +305,9 @@ void PairSWKokkos<DeviceType>::operator()(TagPairSWCompute<NEIGHFLAG,EVFLAG>, co
     delr1[2] = x(j,2) - ztmp;
     const KK_FLOAT rsq1 = delr1[0]*delr1[0] + delr1[1]*delr1[1] + delr1[2]*delr1[2];
 
-    KK_FLOAT fxtmpj = 0.0;
-    KK_FLOAT fytmpj = 0.0;
-    KK_FLOAT fztmpj = 0.0;
+    KK_SUM_FLOAT fxtmpj = 0.0;
+    KK_SUM_FLOAT fytmpj = 0.0;
+    KK_SUM_FLOAT fztmpj = 0.0;
 
     for (int kk = jj+1; kk < jnum; kk++) {
       int k = d_neighbors_short(ii,kk);
