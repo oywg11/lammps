@@ -406,8 +406,12 @@ struct AtomVecKokkos_UnpackComm {
   AtomVecKokkos_UnpackComm(
       const typename DAT::ttransform_kkfloat_1d_3_lr &x,
       const typename DAT::tdual_double_2d_lr &buf,
-      const int& first):_x(x.view<DeviceType>()),_buf(buf.view<DeviceType>()),
-                        _first(first) {};
+      const int& first):_x(x.view<DeviceType>()),
+                        _first(first) {
+        const size_t maxsend = (buf.view<DeviceType>().extent(0)*buf.view<DeviceType>().extent(1))/3;
+        const size_t elements = 3;
+        buffer_view<DeviceType>(_buf,buf,maxsend,elements);
+      };
 
   KOKKOS_INLINE_FUNCTION
   void operator() (const int& i) const {
@@ -471,7 +475,7 @@ struct AtomVecKokkos_PackCommVel {
   {
     const size_t elements = 6;
     const int maxsend = (buf.template view<DeviceType>().extent(0)*buf.template view<DeviceType>().extent(1))/elements;
-    _buf = typename ArrayTypes<DeviceType>::t_double_2d_lr_um(buf.view<DeviceType>().data(),maxsend,elements);
+    buffer_view<DeviceType>(_buf,buf,maxsend,elements);
     _pbc[0] = pbc[0]; _pbc[1] = pbc[1]; _pbc[2] = pbc[2];
     _pbc[3] = pbc[3]; _pbc[4] = pbc[4]; _pbc[5] = pbc[5];
     _h_rate[0] = h_rate[0]; _h_rate[1] = h_rate[1]; _h_rate[2] = h_rate[2];
@@ -718,8 +722,12 @@ struct AtomVecKokkos_PackReverse {
   AtomVecKokkos_PackReverse(
       const typename DAT::ttransform_kkfloat_1d_3 &f,
       const typename DAT::tdual_double_2d_lr &buf,
-      const int& first):_f(f.view<DeviceType>()),_buf(buf.view<DeviceType>()),
-                        _first(first) {};
+      const int& first):_f(f.view<DeviceType>()),
+                        _first(first) {
+        const size_t maxsend = (buf.view<DeviceType>().extent(0)*buf.view<DeviceType>().extent(1))/3;
+        const size_t elements = 3;
+        buffer_view<DeviceType>(_buf,buf,maxsend,elements);
+      };
 
   KOKKOS_INLINE_FUNCTION
   void operator() (const int& i) const {
