@@ -154,10 +154,10 @@ struct AtomVecSpinKokkos_PackComm {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr_randomread _x;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_4_randomread _sp;
-  typename ArrayTypes<DeviceType>::t_double_2d_lr_um _buf;
-  typename ArrayTypes<DeviceType>::t_int_1d_const _list;
+  typename AT::t_kkfloat_1d_3_lr_randomread _x;
+  typename AT::t_kkfloat_1d_4_randomread _sp;
+  typename AT::t_double_2d_lr_um _buf;
+  typename AT::t_int_1d_const _list;
   double _xprd,_yprd,_zprd,_xy,_xz,_yz;
   double _pbc[6];
 
@@ -219,23 +219,23 @@ struct AtomVecSpinKokkos_PackBorder {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename ArrayTypes<DeviceType>::t_double_2d_lr _buf;
-  const typename ArrayTypes<DeviceType>::t_int_1d_const _list;
-  const typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr_randomread _x;
-  const typename ArrayTypes<DeviceType>::t_tagint_1d _tag;
-  const typename ArrayTypes<DeviceType>::t_int_1d _type;
-  const typename ArrayTypes<DeviceType>::t_int_1d _mask;
-  const typename ArrayTypes<DeviceType>::t_kkfloat_1d_4_randomread _sp;
+  typename AT::t_double_2d_lr _buf;
+  const typename AT::t_int_1d_const _list;
+  const typename AT::t_kkfloat_1d_3_lr_randomread _x;
+  const typename AT::t_tagint_1d _tag;
+  const typename AT::t_int_1d _type;
+  const typename AT::t_int_1d _mask;
+  const typename AT::t_kkfloat_1d_4_randomread _sp;
   double _dx,_dy,_dz;
 
   AtomVecSpinKokkos_PackBorder(
-      const typename ArrayTypes<DeviceType>::t_double_2d_lr &buf,
-      const typename ArrayTypes<DeviceType>::t_int_1d_const &list,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr &x,
-      const typename ArrayTypes<DeviceType>::t_tagint_1d &tag,
-      const typename ArrayTypes<DeviceType>::t_int_1d &type,
-      const typename ArrayTypes<DeviceType>::t_int_1d &mask,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d_4 &sp,
+      const typename AT::t_double_2d_lr &buf,
+      const typename AT::t_int_1d_const &list,
+      const typename AT::t_kkfloat_1d_3_lr &x,
+      const typename AT::t_tagint_1d &tag,
+      const typename AT::t_int_1d &type,
+      const typename AT::t_int_1d &mask,
+      const typename AT::t_kkfloat_1d_4 &sp,
       const double &dx, const double &dy, const double &dz):
   _buf(buf),_list(list),
     _x(x),_tag(tag),_type(type),_mask(mask),_sp(sp),
@@ -323,22 +323,22 @@ struct AtomVecSpinKokkos_UnpackBorder {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  const typename ArrayTypes<DeviceType>::t_double_2d_lr_const _buf;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr _x;
-  typename ArrayTypes<DeviceType>::t_tagint_1d _tag;
-  typename ArrayTypes<DeviceType>::t_int_1d _type;
-  typename ArrayTypes<DeviceType>::t_int_1d _mask;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_4 _sp;
+  const typename AT::t_double_2d_lr_const _buf;
+  typename AT::t_kkfloat_1d_3_lr _x;
+  typename AT::t_tagint_1d _tag;
+  typename AT::t_int_1d _type;
+  typename AT::t_int_1d _mask;
+  typename AT::t_kkfloat_1d_4 _sp;
   int _first;
 
 
   AtomVecSpinKokkos_UnpackBorder(
-      const typename ArrayTypes<DeviceType>::t_double_2d_lr_const &buf,
-      typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr &x,
-      typename ArrayTypes<DeviceType>::t_tagint_1d &tag,
-      typename ArrayTypes<DeviceType>::t_int_1d &type,
-      typename ArrayTypes<DeviceType>::t_int_1d &mask,
-      typename ArrayTypes<DeviceType>::t_kkfloat_1d_4 &sp,
+      const typename AT::t_double_2d_lr_const &buf,
+      typename AT::t_kkfloat_1d_3_lr &x,
+      typename AT::t_tagint_1d &tag,
+      typename AT::t_int_1d &type,
+      typename AT::t_int_1d &mask,
+      typename AT::t_kkfloat_1d_4 &sp,
       const int& first):
     _buf(buf),_x(x),_tag(tag),_type(type),_mask(mask),_sp(sp),_first(first){
   };

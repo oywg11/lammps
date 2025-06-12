@@ -176,7 +176,7 @@ class PairExp6rxKokkos : public PairExp6rx {
   t_param_1d_randomread d_params;                // parameter set for an I-J-K interaction
 
   DAT::ttransform_kkfloat_2d k_cutsq;
-  typename ArrayTypes<DeviceType>::t_kkfloat_2d d_cutsq;
+  typename AT::t_kkfloat_2d d_cutsq;
 
   void read_file(char *) override;
   void setup() override;

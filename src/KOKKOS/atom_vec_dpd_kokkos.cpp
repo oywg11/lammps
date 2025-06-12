@@ -167,10 +167,10 @@ struct AtomVecDPDKokkos_PackComm {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr_randomread _x;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem;
-  typename ArrayTypes<DeviceType>::t_double_2d_lr_um _buf;
-  typename ArrayTypes<DeviceType>::t_int_1d_const _list;
+  typename AT::t_kkfloat_1d_3_lr_randomread _x;
+  typename AT::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem;
+  typename AT::t_double_2d_lr_um _buf;
+  typename AT::t_int_1d_const _list;
   double _xprd,_yprd,_zprd,_xy,_xz,_yz;
   double _pbc[6];
 
@@ -317,11 +317,11 @@ struct AtomVecDPDKokkos_PackCommSelf {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr_randomread _x;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr _xw;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem;
+  typename AT::t_kkfloat_1d_3_lr_randomread _x;
+  typename AT::t_kkfloat_1d_3_lr _xw;
+  typename AT::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem;
   int _nfirst;
-  typename ArrayTypes<DeviceType>::t_int_1d_const _list;
+  typename AT::t_int_1d_const _list;
   double _xprd,_yprd,_zprd,_xy,_xz,_yz;
   double _pbc[6];
 
@@ -459,9 +459,9 @@ struct AtomVecDPDKokkos_UnpackComm {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr _x;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem;
-  typename ArrayTypes<DeviceType>::t_double_2d_lr_const _buf;
+  typename AT::t_kkfloat_1d_3_lr _x;
+  typename AT::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem;
+  typename AT::t_double_2d_lr_const _buf;
   int _first;
 
   AtomVecDPDKokkos_UnpackComm(
@@ -519,28 +519,28 @@ struct AtomVecDPDKokkos_PackBorder {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename ArrayTypes<DeviceType>::t_double_2d_lr _buf;
-  const typename ArrayTypes<DeviceType>::t_int_1d_const _list;
-  const typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr_randomread _x;
-  const typename ArrayTypes<DeviceType>::t_tagint_1d _tag;
-  const typename ArrayTypes<DeviceType>::t_int_1d _type;
-  const typename ArrayTypes<DeviceType>::t_int_1d _mask;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem,_uCG,_uCGnew;
+  typename AT::t_double_2d_lr _buf;
+  const typename AT::t_int_1d_const _list;
+  const typename AT::t_kkfloat_1d_3_lr_randomread _x;
+  const typename AT::t_tagint_1d _tag;
+  const typename AT::t_int_1d _type;
+  const typename AT::t_int_1d _mask;
+  typename AT::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem,_uCG,_uCGnew;
   double _dx,_dy,_dz;
 
   AtomVecDPDKokkos_PackBorder(
-      const typename ArrayTypes<DeviceType>::t_double_2d_lr &buf,
-      const typename ArrayTypes<DeviceType>::t_int_1d_const &list,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr &x,
-      const typename ArrayTypes<DeviceType>::t_tagint_1d &tag,
-      const typename ArrayTypes<DeviceType>::t_int_1d &type,
-      const typename ArrayTypes<DeviceType>::t_int_1d &mask,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &dpdTheta,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uCond,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uMech,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uChem,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uCG,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uCGnew,
+      const typename AT::t_double_2d_lr &buf,
+      const typename AT::t_int_1d_const &list,
+      const typename AT::t_kkfloat_1d_3_lr &x,
+      const typename AT::t_tagint_1d &tag,
+      const typename AT::t_int_1d &type,
+      const typename AT::t_int_1d &mask,
+      const typename AT::t_kkfloat_1d &dpdTheta,
+      const typename AT::t_kkfloat_1d &uCond,
+      const typename AT::t_kkfloat_1d &uMech,
+      const typename AT::t_kkfloat_1d &uChem,
+      const typename AT::t_kkfloat_1d &uCG,
+      const typename AT::t_kkfloat_1d &uCGnew,
       const double &dx, const double &dy, const double &dz):
       _buf(buf),_list(list),
       _x(x),_tag(tag),_type(type),_mask(mask),
@@ -639,27 +639,27 @@ struct AtomVecDPDKokkos_UnpackBorder {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  const typename ArrayTypes<DeviceType>::t_double_2d_lr_const _buf;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr _x;
-  typename ArrayTypes<DeviceType>::t_tagint_1d _tag;
-  typename ArrayTypes<DeviceType>::t_int_1d _type;
-  typename ArrayTypes<DeviceType>::t_int_1d _mask;
-  typename ArrayTypes<DeviceType>::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem,_uCG,_uCGnew;
+  const typename AT::t_double_2d_lr_const _buf;
+  typename AT::t_kkfloat_1d_3_lr _x;
+  typename AT::t_tagint_1d _tag;
+  typename AT::t_int_1d _type;
+  typename AT::t_int_1d _mask;
+  typename AT::t_kkfloat_1d _dpdTheta,_uCond,_uMech,_uChem,_uCG,_uCGnew;
   int _first;
 
 
   AtomVecDPDKokkos_UnpackBorder(
-      const typename ArrayTypes<DeviceType>::t_double_2d_lr_const &buf,
-      typename ArrayTypes<DeviceType>::t_kkfloat_1d_3_lr &x,
-      typename ArrayTypes<DeviceType>::t_tagint_1d &tag,
-      typename ArrayTypes<DeviceType>::t_int_1d &type,
-      typename ArrayTypes<DeviceType>::t_int_1d &mask,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &dpdTheta,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uCond,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uMech,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uChem,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uCG,
-      const typename ArrayTypes<DeviceType>::t_kkfloat_1d &uCGnew,
+      const typename AT::t_double_2d_lr_const &buf,
+      typename AT::t_kkfloat_1d_3_lr &x,
+      typename AT::t_tagint_1d &tag,
+      typename AT::t_int_1d &type,
+      typename AT::t_int_1d &mask,
+      const typename AT::t_kkfloat_1d &dpdTheta,
+      const typename AT::t_kkfloat_1d &uCond,
+      const typename AT::t_kkfloat_1d &uMech,
+      const typename AT::t_kkfloat_1d &uChem,
+      const typename AT::t_kkfloat_1d &uCG,
+      const typename AT::t_kkfloat_1d &uCGnew,
       const int& first):
       _buf(buf),_x(x),_tag(tag),_type(type),_mask(mask),
       _dpdTheta(dpdTheta),

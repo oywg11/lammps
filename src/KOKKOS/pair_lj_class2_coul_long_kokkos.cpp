@@ -299,7 +299,7 @@ void PairLJClass2CoulLongKokkos<DeviceType>::init_tables(double cut_coul, double
 {
   Pair::init_tables(cut_coul,cut_respa);
 
-  typedef typename ArrayTypes<DeviceType>::t_kkfloat_1d table_type;
+  typedef typename AT::t_kkfloat_1d table_type;
   typedef typename ArrayTypes<LMPHostType>::t_kkfloat_1d host_table_type;
 
   int ntable = 1;
