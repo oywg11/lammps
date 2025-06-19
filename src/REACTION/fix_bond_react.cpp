@@ -446,8 +446,8 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   }
 
   max_natoms = 0; // the number of atoms in largest molecule template
-  for (int myrxn = 0; myrxn < nreacts; myrxn++) {
-    twomol = atom->molecules[rxns[myrxn].reacted_mol];
+  for (auto &rxn : rxns) {
+    twomol = atom->molecules[rxn.reacted_mol];
     max_natoms = MAX(max_natoms,twomol->natoms);
   }
 
@@ -484,9 +484,9 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   }
 
   if (molid_mode == RESET_MOL_IDS::MOLMAP) {
-    for (int myrxn = 0; myrxn < nreacts; myrxn++) {
-      onemol = atom->molecules[rxns[myrxn].unreacted_mol];
-      twomol = atom->molecules[rxns[myrxn].reacted_mol];
+    for (auto &rxn : rxns) {
+      onemol = atom->molecules[rxn.unreacted_mol];
+      twomol = atom->molecules[rxn.reacted_mol];
       if (!onemol->moleculeflag || !twomol->moleculeflag) {
         if (comm->me == 0)
           error->warning(FLERR,"Fix bond/react ('reset_mol_ids molmap' option): Pre- and post-reaction templates must "
@@ -577,17 +577,17 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
 
   // check if bonding atoms are 1-2, 1-3, or 1-4 bonded neighbors
   // if so, we don't need non-bonded neighbor list
-  for (int myrxn = 0; myrxn < nreacts; myrxn++) {
-    rxns[myrxn].closeneigh = -1; // indicates will search non-bonded neighbors
-    onemol = atom->molecules[rxns[myrxn].unreacted_mol];
+  for (auto &rxn : rxns) {
+    rxn.closeneigh = -1; // indicates will search non-bonded neighbors
+    onemol = atom->molecules[rxn.unreacted_mol];
     get_molxspecials();
-    for (int k = 0; k < onemol_nxspecial[rxns[myrxn].ibonding-1][2]; k++) {
-      if (onemol_xspecial[rxns[myrxn].ibonding-1][k] == rxns[myrxn].jbonding) {
-        rxns[myrxn].closeneigh = 2; // index for 1-4 neighbor
-        if (k < onemol_nxspecial[rxns[myrxn].ibonding-1][1])
-          rxns[myrxn].closeneigh = 1; // index for 1-3 neighbor
-        if (k < onemol_nxspecial[rxns[myrxn].ibonding-1][0])
-          rxns[myrxn].closeneigh = 0; // index for 1-2 neighbor
+    for (int k = 0; k < onemol_nxspecial[rxn.ibonding-1][2]; k++) {
+      if (onemol_xspecial[rxn.ibonding-1][k] == rxn.jbonding) {
+        rxn.closeneigh = 2; // index for 1-4 neighbor
+        if (k < onemol_nxspecial[rxn.ibonding-1][1])
+          rxn.closeneigh = 1; // index for 1-3 neighbor
+        if (k < onemol_nxspecial[rxn.ibonding-1][0])
+          rxn.closeneigh = 0; // index for 1-2 neighbor
         break;
       }
     }
@@ -2725,8 +2725,8 @@ void FixBondReact::dedup_mega_gloves(int dedup_mode)
   // dedup_mode == GLOBAL for global_mega_glove
 
   if (dedup_mode == GLOBAL)
-    for (int i = 0; i < nreacts; i++)
-      rxns[i].ghostly_rxn_count = 0;
+    for (auto &rxn : rxns)
+      rxn.ghostly_rxn_count = 0;
 
   int dedup_size = 0;
   if (dedup_mode == LOCAL) {
@@ -2888,8 +2888,8 @@ void FixBondReact::glove_ghostcheck()
   // 'ghosts of another' indication taken from comm->sendlist
   // also includes local gloves that overlap with ghostly gloves, to get dedup right
 
-  for (int i = 0; i < nreacts; i++)
-    rxns[i].local_rxn_count = 0;
+  for (auto &rxn : rxns)
+    rxn.local_rxn_count = 0;
 
   for (int i = 0; i < my_num_mega; i++) {
     rxnID = (int) my_mega_glove[0][i];
