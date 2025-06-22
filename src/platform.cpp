@@ -1111,20 +1111,6 @@ double platform::disk_free(const std::string &path)
 }
 
 /* ----------------------------------------------------------------------
-   check if filename has the provided extension
-------------------------------------------------------------------------- */
-
-bool platform::has_extension(const std::string &file, const std::string &extension)
-{
-  std::size_t dot = file.find_last_of('.');
-  if (dot != std::string::npos) {
-    const std::string ext = file.substr(dot + 1);
-    if (ext == extension) return true;
-  }
-  return false;
-}
-
-/* ----------------------------------------------------------------------
    check if filename has a known compression extension
 ------------------------------------------------------------------------- */
 

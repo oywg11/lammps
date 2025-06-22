@@ -200,7 +200,7 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
     } else if (strcmp(arg[iarg], "delete") == 0) {
       delete[] filedel;
       filedel = utils::strdup(arg[iarg + 1]);
-      if (platform::has_extension(filedel, "json")) delflag = JSON;
+      if (utils::strmatch(filedel, "\\.json$")) delflag = JSON;
       else delflag = NATIVE;
       if (comm->me == 0) {
         if (fdel) fclose(fdel);
@@ -239,6 +239,7 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
       // rate limit when deleting molecules
 
       if (comm->me == 0 && delflag == JSON) {
+        // header for 'delete' keyword JSON output
         fprintf(fdel, "{\n");
         fprintf(fdel, "    \"application\": \"LAMMPS\",\n");
         fprintf(fdel, "    \"format\": \"output\",\n");
@@ -246,6 +247,11 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
         fprintf(fdel, "    \"revision\": 1,\n");
         fprintf(fdel, "    \"data\": [\n");
         fflush(fdel);
+
+        std::string id_fix1 = "_internal_prop-atom_fix_reaxff_species";
+        mols4json = "_ivec_internal_prop-atom_fix_reaxff_species";
+        if (!modify->get_fix_by_id(id_fix1))
+          modify->add_fix(id_fix1 + " all property/atom i_" + mols4json + " ghost yes");
       }
     } else if (strcmp(arg[iarg], "delete_rate_limit") == 0) {
       if (iarg + 3 > narg)

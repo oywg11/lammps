@@ -64,6 +64,7 @@ class FixReaxFFSpecies : public Fix {
   double massmin, massmax;
   int singlepos_opened, multipos_opened, del_opened;
   char *filepos, *filedel;
+  std::string mols4json;                // name of 'fix property/atom' vector to identify molecules for JSON output
   std::vector<int> ele2uele;            // for element eletype[i], ele2uele[i] stores index of unique element
   std::vector<std::string> eletype;     // list of ReaxFF elements of length ntypes
   std::vector<std::string> ueletype;    // list of unique elements, of quantity nutypes

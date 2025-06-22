@@ -393,14 +393,6 @@ namespace platform {
 
   double disk_free(const std::string &path);
 
-  /*! Check if a file name ends in the provided extension
-   *
-   *  \param  file  name of the file to check
-   *  \param  extension  the file extension to check for
-   *  \return  true if the file has the provided extension, otherwise false  */
-
-  bool has_extension(const std::string &file, const std::string &extension);
-
   /*! Check if a file name ends in a known extension for a compressed file format
    *
    * Currently supported file extensions are: .gz, .bz2, .zst, .xz, .lzma, lz4
