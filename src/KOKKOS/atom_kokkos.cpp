@@ -155,6 +155,12 @@ void AtomKokkos::update_property_atom()
 void AtomKokkos::sync(const ExecutionSpace space, unsigned int mask)
 {
   if ((space == Device || space == HostKK) && lmp->kokkos->auto_sync) {
+
+    // sync HostKK -> Host if needed
+
+    avecKK->sync(Host, mask);
+    for (int n = 0; n < nprop_atom; n++) fix_prop_atom[n]->sync(Host, mask);
+
     avecKK->modified(Host, mask);
     for (int n = 0; n < nprop_atom; n++) fix_prop_atom[n]->modified(Host, mask);
   }
