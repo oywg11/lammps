@@ -128,7 +128,7 @@ int MinCGKokkos::iterate(int maxiter)
           sdot.d0 += l_fvec[i]*l_fvec[i];
           sdot.d1 += l_fvec[i]*l_g[i];
         },sdot);
-      } else { 
+      } else {
         auto l_f = atomKK->k_f.d_view;
         Kokkos::parallel_reduce(atom->nlocal, LAMMPS_LAMBDA(const int& i, s_KK_double2& sdot) {
           sdot.d0 += l_f(i,0)*l_f(i,0);

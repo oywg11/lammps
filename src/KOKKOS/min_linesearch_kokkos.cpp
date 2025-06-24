@@ -296,7 +296,7 @@ int MinLineSearchKokkos::linemin_quadratic(double eoriginal, double &alpha)
           sdot.d0 += l_f(i,1)*l_f(i,1);
           sdot.d0 += l_f(i,2)*l_f(i,2);
 
-          const int j = i*3;      
+          const int j = i*3;
           sdot.d1 += l_f(i,0)*l_h[j];
           sdot.d1 += l_f(i,1)*l_h[j+1];
           sdot.d1 += l_f(i,2)*l_h[j+2];
