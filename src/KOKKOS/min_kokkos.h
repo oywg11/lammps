@@ -24,6 +24,8 @@ class MinKokkos : public Min {
  public:
   MinKokkos(class LAMMPS *);
 
+  static constexpr int F_LAYOUTRIGHT = std::is_same<LMPDeviceLayout,Kokkos::LayoutRight>::value;
+
   void init() override;
   void setup(int flag=1) override;
   void setup_minimal(int) override;
