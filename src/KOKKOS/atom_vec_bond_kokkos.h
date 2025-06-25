@@ -52,7 +52,7 @@ class AtomVecBondKokkos : public AtomVecKokkos, public AtomVecBond {
 
   void sync(ExecutionSpace space, unsigned int mask) override;
   void modified(ExecutionSpace space, unsigned int mask) override;
-  void sync_pinned_device(ExecutionSpace space, unsigned int mask) override;
+  void sync_pinned(ExecutionSpace space, unsigned int mask, int async_flag) override;
 
  private:
   tagint *molecule;

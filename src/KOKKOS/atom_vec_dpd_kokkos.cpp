@@ -998,70 +998,70 @@ void AtomVecDPDKokkos::sync(ExecutionSpace space, unsigned int mask)
 
 /* ---------------------------------------------------------------------- */
 
-void AtomVecDPDKokkos::sync_pinned_device(ExecutionSpace space, unsigned int mask)
+void AtomVecDPDKokkos::sync_pinned(ExecutionSpace space, unsigned int mask, int async_flag)
 {
   if (space == Device) {
     if ((mask & X_MASK) && atomKK->k_x.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3_lr>(atomKK->k_x,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3_lr>(atomKK->k_x,space,async_flag);
     if ((mask & V_MASK) && atomKK->k_v.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3>(atomKK->k_v,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3>(atomKK->k_v,space,async_flag);
     if ((mask & F_MASK) && atomKK->k_f.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kksum_1d_3>(atomKK->k_f,space);
+      perform_pinned_copy_transform<DAT::ttransform_kksum_1d_3>(atomKK->k_f,space,async_flag);
     if ((mask & TAG_MASK) && atomKK->k_tag.need_sync_device())
-      perform_pinned_copy<DAT::tdual_tagint_1d>(atomKK->k_tag,space);
+      perform_pinned_copy<DAT::tdual_tagint_1d>(atomKK->k_tag,space,async_flag);
     if ((mask & TYPE_MASK) && atomKK->k_type.need_sync_device())
-      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_type,space);
+      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_type,space,async_flag);
     if ((mask & MASK_MASK) && atomKK->k_mask.need_sync_device())
-      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_mask,space);
+      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_mask,space,async_flag);
     if ((mask & IMAGE_MASK) && atomKK->k_image.need_sync_device())
-      perform_pinned_copy<DAT::tdual_imageint_1d>(atomKK->k_image,space);
+      perform_pinned_copy<DAT::tdual_imageint_1d>(atomKK->k_image,space,async_flag);
     if ((mask & DPDRHO_MASK) && atomKK->k_rho.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_rho,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_rho,space,async_flag);
     if ((mask & DPDTHETA_MASK) && atomKK->k_dpdTheta.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_dpdTheta,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_dpdTheta,space,async_flag);
     if ((mask & UCOND_MASK) && atomKK->k_uCond.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCond,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCond,space,async_flag);
     if ((mask & UMECH_MASK) && atomKK->k_uMech.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uMech,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uMech,space,async_flag);
     if ((mask & UCHEM_MASK) && atomKK->k_uChem.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uChem,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uChem,space,async_flag);
     if ((mask & UCG_MASK) && atomKK->k_uCG.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCG,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCG,space,async_flag);
     if ((mask & UCGNEW_MASK) && atomKK->k_uCGnew.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCGnew,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCGnew,space,async_flag);
     if ((mask & DUCHEM_MASK) && atomKK->k_duChem.need_sync_device())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_duChem,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_duChem,space,async_flag);
   } else {
     if ((mask & X_MASK) && atomKK->k_x.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3_lr>(atomKK->k_x,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3_lr>(atomKK->k_x,space,async_flag);
     if ((mask & V_MASK) && atomKK->k_v.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3>(atomKK->k_v,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d_3>(atomKK->k_v,space,async_flag);
     if ((mask & F_MASK) && atomKK->k_f.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kksum_1d_3>(atomKK->k_f,space);
+      perform_pinned_copy_transform<DAT::ttransform_kksum_1d_3>(atomKK->k_f,space,async_flag);
     if ((mask & TAG_MASK) && atomKK->k_tag.need_sync_host())
-      perform_pinned_copy<DAT::tdual_tagint_1d>(atomKK->k_tag,space);
+      perform_pinned_copy<DAT::tdual_tagint_1d>(atomKK->k_tag,space,async_flag);
     if ((mask & TYPE_MASK) && atomKK->k_type.need_sync_host())
-      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_type,space);
+      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_type,space,async_flag);
     if ((mask & MASK_MASK) && atomKK->k_mask.need_sync_host())
-      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_mask,space);
+      perform_pinned_copy<DAT::tdual_int_1d>(atomKK->k_mask,space,async_flag);
     if ((mask & IMAGE_MASK) && atomKK->k_image.need_sync_host())
-      perform_pinned_copy<DAT::tdual_imageint_1d>(atomKK->k_image,space);
+      perform_pinned_copy<DAT::tdual_imageint_1d>(atomKK->k_image,space,async_flag);
     if ((mask & DPDRHO_MASK) && atomKK->k_rho.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_rho,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_rho,space,async_flag);
     if ((mask & DPDTHETA_MASK) && atomKK->k_dpdTheta.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_dpdTheta,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_dpdTheta,space,async_flag);
     if ((mask & UCOND_MASK) && atomKK->k_uCond.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCond,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCond,space,async_flag);
     if ((mask & UMECH_MASK) && atomKK->k_uMech.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uMech,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uMech,space,async_flag);
     if ((mask & UCHEM_MASK) && atomKK->k_uChem.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uChem,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uChem,space,async_flag);
     if ((mask & UCG_MASK) && atomKK->k_uCG.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCG,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCG,space,async_flag);
     if ((mask & UCGNEW_MASK) && atomKK->k_uCGnew.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCGnew,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_uCGnew,space,async_flag);
     if ((mask & DUCHEM_MASK) && atomKK->k_duChem.need_sync_host())
-      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_duChem,space);
+      perform_pinned_copy_transform<DAT::ttransform_kkfloat_1d>(atomKK->k_duChem,space,async_flag);
   }
 }
 

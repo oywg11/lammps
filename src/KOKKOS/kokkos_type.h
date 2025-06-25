@@ -621,6 +621,13 @@ struct TransformView {
   typedef typename legacy_view::value_type value_type;
   typedef typename legacy_view::array_layout array_layout;
 
+  typedef Kokkos::View<typename kk_view::data_type,
+               typename kk_view::array_layout,
+               typename std::conditional<
+                 std::is_same_v<typename kk_view::execution_space,LMPDeviceType>,
+                 LMPPinnedHostType,typename kk_view::memory_space>::type,
+               Kokkos::MemoryTraits<Kokkos::Unmanaged> > pinned_mirror_type;
+
   int modified_legacy_device;
   int modified_device_legacy;
   int modified_legacy_hostkk;
@@ -757,25 +764,41 @@ struct TransformView {
     }
   }
 
-  void sync_legacy_to_device() {
+  void sync_legacy_to_device(void* buffer = nullptr, int async_flag = 0) {
     if constexpr (NEED_TRANSFORM) {
       if (!d_view.data()) return;
 
       if (modified_legacy_device) {
-        Kokkos::deep_copy(h_viewkk,h_view);
-        k_view.modify_host();
-        k_view.sync_device();
-        modified_legacy_hostkk = 0;
-        modified_hostkk_legacy = 0;
+        if (buffer) {
+          pinned_mirror_type tmp_view((typename kk_view::value_type*)buffer, typename kk_view::array_layout());
+          Kokkos::deep_copy(LMPHostType(),tmp_view,h_view);
+          Kokkos::deep_copy(LMPHostType(),d_view,tmp_view);
+          if (!async_flag) Kokkos::fence();
+        } else {
+          Kokkos::deep_copy(h_viewkk,h_view);
+          k_view.modify_host();
+          k_view.sync_device();
+          modified_legacy_hostkk = 0;
+          modified_hostkk_legacy = 0;
+        }
         modified_legacy_device = 0;
       }
     }
   }
 
-  void sync_device()
+  void sync_device(void* buffer = nullptr, int async_flag = 0)
   {
-    k_view.sync_device();
-    sync_legacy_to_device();
+    if (buffer && k_view.need_sync_device()) {
+      pinned_mirror_type tmp_view((typename kk_view::value_type*)buffer, typename kk_view::array_layout());
+      Kokkos::deep_copy(LMPHostType(),tmp_view,h_viewkk);
+      Kokkos::deep_copy(LMPHostType(),d_view,tmp_view);
+      k_view.clear_sync_state();
+      if (!async_flag) Kokkos::fence();
+    } else {
+      k_view.sync_device();
+    }
+
+    sync_legacy_to_device(buffer,async_flag);
   }
 
   void sync_legacy_to_hostkk() {
@@ -791,23 +814,38 @@ struct TransformView {
     }
   }
 
-  void sync_hostkk()
+  void sync_hostkk(void* buffer = nullptr, int async_flag = 0)
   {
-    k_view.sync_host();
+    if (buffer && k_view.need_sync_host()) {
+      pinned_mirror_type tmp_view((typename kk_view::value_type*)buffer, typename kk_view::array_layout());
+      Kokkos::deep_copy(LMPHostType(),tmp_view,d_view);
+      Kokkos::deep_copy(LMPHostType(),h_viewkk,tmp_view);
+      k_view.clear_sync_state();
+      if (!async_flag) Kokkos::fence();
+    } else {
+      k_view.sync_host();
+    }
     sync_legacy_to_hostkk();
   }
 
-  void sync_device_to_legacy()
+  void sync_device_to_legacy(void* buffer = nullptr, int async_flag = 0)
   {
     if constexpr (NEED_TRANSFORM) {
       if (!h_view.data()) return;
 
       if (modified_device_legacy) {
-        k_view.modify_device();
-        k_view.sync_host();
-        Kokkos::deep_copy(h_view,h_viewkk);
-        modified_hostkk_legacy = 0;
-        modified_legacy_hostkk = 0;
+        if (buffer) {
+          pinned_mirror_type tmp_view((typename kk_view::value_type*)buffer, typename kk_view::array_layout());
+          Kokkos::deep_copy(LMPHostType(),tmp_view,d_view);
+          Kokkos::deep_copy(LMPHostType(),h_view,tmp_view);
+          if (!async_flag) Kokkos::fence();
+        } else {
+          k_view.modify_device();
+          k_view.sync_host();
+          Kokkos::deep_copy(h_view,h_viewkk);
+          modified_hostkk_legacy = 0;
+          modified_legacy_hostkk = 0;
+        }
         modified_device_legacy = 0;
       }
     }
@@ -828,12 +866,12 @@ struct TransformView {
     }
   }
 
-  void sync_host() {
+  void sync_host(void* buffer = nullptr, int async_flag = 0) {
     if constexpr (NEED_TRANSFORM) {
-      sync_device_to_legacy();
+      sync_device_to_legacy(buffer,async_flag);
       sync_hostkk_to_legacy();
     } else {
-      sync_hostkk();
+      sync_hostkk(buffer,async_flag);
     }
   }
 

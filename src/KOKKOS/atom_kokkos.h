@@ -163,7 +163,7 @@ class AtomKokkos : public Atom {
   void allocate_type_arrays() override;
   void sync(const ExecutionSpace space, unsigned int mask);
   void modified(const ExecutionSpace space, unsigned int mask);
-  void sync_pinned_device(const ExecutionSpace space, unsigned int mask);
+  void sync_pinned(const ExecutionSpace space, unsigned int mask, int async_flag = 0);
   void sort() override;
   int add_custom(const char *, int, int, int border = 0) override;
   void remove_custom(int, int, int) override;
