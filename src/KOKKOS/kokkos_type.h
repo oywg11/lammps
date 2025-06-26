@@ -153,6 +153,11 @@ typedef Kokkos::DefaultExecutionSpace LMPDeviceType;
 typedef Kokkos::HostSpace::execution_space LMPHostType;
 
 // set default device layout
+
+#if !defined (LMP_KOKKOS_LAYOUT_RIGHT) && !defined (LMP_KOKKOS_LAYOUT_DEFAULT)
+#define LMP_KOKKOS_LAYOUT_RIGHT
+#endif
+
 #if defined(LMP_KOKKOS_LAYOUT_RIGHT)
 typedef Kokkos::LayoutRight LMPDeviceLayout;
 #else
@@ -361,7 +366,8 @@ public:
 // LMP_KOKKOS_DOUBLE_DOUBLE: Double precision for all calculations
 // LMP_KOKKOS_SINGLE_DOUBLE: Accumulation of forces, etc. in double
 
-#ifndef LMP_KOKKOS_DOUBLE_DOUBLE
+#if !(defined LMP_KOKKOS_SINGLE_SINGLE) && !(defined LMP_KOKKOS_DOUBLE_DOUBLE) \
+  && !(defined LMP_KOKKOS_SINGLE_DOUBLE)
 #define LMP_KOKKOS_DOUBLE_DOUBLE
 #endif
 
