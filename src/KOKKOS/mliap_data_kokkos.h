@@ -25,8 +25,8 @@
 #include "pair_mliap_kokkos.h"
 #include "pointers.h"
 
-#if LMP_KOKKOS_PRECISION != 2
-#error  Must use -DLMP_KOKKOS_PRECISION=2 for ML-IAP Package
+#ifndef LMP_KOKKOS_DOUBLE_DOUBLE
+#error  Must use -DLMP_KOKKOS_DOUBLE_DOUBLE for ML-IAP Package
 #endif
 
 #ifndef LMP_KOKKOS_LAYOUT_RIGHT

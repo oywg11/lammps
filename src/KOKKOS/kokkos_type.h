@@ -153,6 +153,11 @@ typedef Kokkos::DefaultExecutionSpace LMPDeviceType;
 typedef Kokkos::HostSpace::execution_space LMPHostType;
 
 // set default device layout
+
+#if !defined (LMP_KOKKOS_LAYOUT_RIGHT) && !defined (LMP_KOKKOS_LAYOUT_DEFAULT)
+#define LMP_KOKKOS_LAYOUT_RIGHT
+#endif
+
 #if defined(LMP_KOKKOS_LAYOUT_RIGHT)
 typedef Kokkos::LayoutRight LMPDeviceLayout;
 #else
@@ -357,17 +362,22 @@ public:
 
 // define precision
 
-#ifndef LMP_KOKKOS_PRECISION
-#define LMP_KOKKOS_PRECISION 2
+// LMP_KOKKOS_SINGLE_SINGLE: Single precision for all calculations
+// LMP_KOKKOS_DOUBLE_DOUBLE: Double precision for all calculations
+// LMP_KOKKOS_SINGLE_DOUBLE: Accumulation of forces, etc. in double
+
+#if !(defined LMP_KOKKOS_SINGLE_SINGLE) && !(defined LMP_KOKKOS_DOUBLE_DOUBLE) \
+  && !(defined LMP_KOKKOS_SINGLE_DOUBLE)
+#define LMP_KOKKOS_DOUBLE_DOUBLE
 #endif
 
-#if LMP_KOKKOS_PRECISION == 1 // single
+#if defined (LMP_KOKKOS_SINGLE_SINGLE) // single
 typedef float KK_FLOAT;
 typedef float KK_SUM_FLOAT;
-#elif LMP_KOKKOS_PRECISION == 2 // double
+#elif defined (LMP_KOKKOS_DOUBLE_DOUBLE)  // double
 typedef double KK_FLOAT;
 typedef double KK_SUM_FLOAT;
-#elif LMP_KOKKOS_PRECISION == 3 // mixed
+#elif defined (LMP_KOKKOS_SINGLE_DOUBLE) // mixed
 typedef float KK_FLOAT;
 typedef double KK_SUM_FLOAT;
 #endif

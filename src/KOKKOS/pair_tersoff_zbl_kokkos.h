@@ -156,7 +156,7 @@ class PairTersoffZBLKokkos : public PairTersoffZBL {
     z[0] = k*x[0]+y[0]; z[1] = k*x[1]+y[1]; z[2] = k*x[2]+y[2];
   }
 
-#if LMP_KOKKOS_PRECISION == 3
+#ifdef LMP_KOKKOS_SINGLE_DOUBLE
   KOKKOS_INLINE_FUNCTION
   void vec3_scale(const KK_FLOAT k, const KK_FLOAT x[3], KK_SUM_FLOAT y[3]) const {
     y[0] = (KK_SUM_FLOAT)k*x[0]; y[1] = (KK_SUM_FLOAT)k*x[1]; y[2] = (KK_SUM_FLOAT)k*x[2];

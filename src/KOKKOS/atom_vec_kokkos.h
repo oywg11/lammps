@@ -162,7 +162,7 @@ class AtomVecKokkos : virtual public AtomVec {
   }
   #else
   template<class ViewType>
-  void perform_pinned_copy(ViewType& src, unsigned int space, int async_flag = 0) {
+  void perform_pinned_copy(ViewType& src, unsigned int space, int /*async_flag*/ = 0) {
     if (space == Device)
       src.sync_device();
     else
@@ -189,15 +189,15 @@ class AtomVecKokkos : virtual public AtomVec {
     }
 
     if (space == Device)
-      src.sync_device(buffer);
+      src.sync_device(buffer,async_flag);
     else if (space == Host)
-      src.sync_host(buffer);
+      src.sync_host(buffer,async_flag);
     else if (space == HostKK)
-      src.sync_hostkk(buffer);
+      src.sync_hostkk(buffer,async_flag);
   }
   #else
   template<class TransformViewType>
-  void perform_pinned_copy_transform(TransformViewType& src, unsigned int space, int async_flag = 0) {
+  void perform_pinned_copy_transform(TransformViewType& src, unsigned int space, int /*async_flag*/ = 0) {
     if (space == Device)
       src.sync_device();
     else if (space == Host)
