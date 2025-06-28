@@ -1091,7 +1091,7 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
 
   int printflag = 0;
   if (comm->me == 0)
-    for (int m = 0; m < ndelcomm; m++) 
+    for (int m = 0; m < ndelcomm; m++)
       if (deletecount[m] > 0) { printflag = 1; break; }
 
   MPI_Bcast(&printflag, 1, MPI_INT, 0, world);
@@ -1125,7 +1125,7 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
     } else if (delflag == JSON) {
       std::string indent;
       int json_level = 2, tab = 4;
-  
+
       if (comm->me == 0) {
         indent.resize(json_level*tab, ' ');
         if (deljson_init == 1) {
@@ -1134,17 +1134,17 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
           fprintf(fdel, "%s{\n", indent.c_str());
           deljson_init = 1;
         }
-    
+
         indent.resize(++json_level*tab, ' ');
         utils::print(fdel, "{}\"timestep\": {},\n", indent, update->ntimestep);
         utils::print(fdel, "{}\"deleted_molecules\": [\n", indent);
-    
+
         indent.resize(++json_level*tab, ' ');
       }
-  
+
       output->write_molecule_json(fdel, json_level, mark);
-  
-      if (comm->me == 0) { 
+
+      if (comm->me == 0) {
         indent.resize(--json_level*tab, ' ');
         fprintf(fdel, "%s]\n", indent.c_str());
         fflush(fdel);
@@ -1172,7 +1172,7 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
     for (i = delete_Nsteps - 1; i > 0; i--) delete_Tcount[i] = delete_Tcount[i - 1];
     delete_Tcount[0] += this_delete_Tcount;
   }
-  
+
   if (ndel && (atom->map_style != Atom::MAP_NONE)) {
     atom->nghost = 0;
     atom->map_init();

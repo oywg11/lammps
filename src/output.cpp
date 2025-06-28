@@ -640,155 +640,109 @@ void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
   std::string indent;
   int tab = 4;
   indent.resize(json_level*tab, ' ');
+  int json_init = 0;
 
-  // get max ivec value
+  // let's first condense all ivec values
+  std::unordered_set<int> unique_ivec(ivec, ivec + (size_t) atom->nlocal);
+  unique_ivec.erase(0);
+  std::vector<int> mivec(unique_ivec.begin(), unique_ivec.end());
 
-  int local_max = 0;
-  for (int i = 0; i < atom->nlocal; i++)
-    local_max = MAX(local_max, ivec[i]);
-
-  int global_max;
-  MPI_Allreduce(&local_max, &global_max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-  int iglobal_max = global_max + 1; // (!) here is where assumes outer-loop index is value of ivec (!)
-
-  // (!) need ERROR check: assumes max value (Nmax) is roughly equal to number of values (!)
-
-  // let's break all operations up into natoms/nproc chunks (pagesize)
-
-  int pagesize = atom->natoms / comm->nprocs;
-
-  // first, get pagesize number of counts for each value
-
-  std::vector<Particle> atoms_local(pagesize);
-  std::vector<Particle> atoms_root(pagesize);
-  std::vector<int> local_ivcounts(pagesize);
-  std::vector<int> global_ivcounts(pagesize);
-  std::fill(global_ivcounts.begin(), global_ivcounts.end(), 0);
+  int approxsize = atom->natoms / comm->nprocs;
+  std::vector<Particle> atoms_local;
+  atoms_local.reserve(approxsize);
+  std::vector<Particle> atoms_root;
+  atoms_root.reserve(approxsize);
   MPI_Datatype ParticleStructType = createParticleStructType();
 
-  int ivstart = 1;
-  int ivend = pagesize;
-  if (ivend > iglobal_max) ivend = iglobal_max;
-  int json_init = 0;
-  while (true) {
-    std::fill(local_ivcounts.begin(), local_ivcounts.end(), 0);
-    for (int i = 0; i < atom->nlocal; i++)
-      for (int ival = ivstart; ival < ivend; ival++) 
-        if (ivec[i] == ival) local_ivcounts[ival-ivstart]++; // (!) here is where assumes outer-loop index is value of ivec (!)
+  for (int sendr = 0; sendr < comm->nprocs; sendr++) {
+    int nvals;
+    if (comm->me == sendr) nvals = mivec.size();
+    MPI_Bcast(&nvals, 1, MPI_INT, sendr, MPI_COMM_WORLD);
+    if (nvals == 0) continue;
+    std::vector<int> loop_ivals(nvals);
+    if (comm->me == sendr) loop_ivals = mivec;
+    MPI_Bcast(loop_ivals.data(), nvals, MPI_INT, sendr, MPI_COMM_WORLD);
 
-    MPI_Allreduce(local_ivcounts.data(), global_ivcounts.data(), pagesize, MPI_INT, MPI_SUM, MPI_COMM_WORLD); //sometimes nsend <pagesize
+    for (int ival = 0; ival < nvals; ival++) {
+      int thisval = loop_ivals[ival];
 
-    int substart = 0;
-    int maxicheck = MIN(iglobal_max-ivstart, pagesize); //+ivend?    iglobal_max?
-    int subend = maxicheck;
-
-    // communicate up to pagesize number of Particles each inner while loop
-
-    while (true) {
-      int cumsum = 0;
-      int breakflag = 1;
-      for (int i = substart; i < maxicheck; i++) { 
-        cumsum += global_ivcounts[i];
-        if (global_ivcounts[i] > pagesize) printf("WARNING: you triggered a bug, please contact developer\n"); // (?) need to skip and warn if single molecule bigger than pagesize
-        if (cumsum > pagesize) {
-          subend = i-1;
-          breakflag = 0;
-          break;
-        }
-      }
-
-      int n2recv;
-      int n2send = 0;
-      for (int i = substart; i < subend; i++)
-        n2send += local_ivcounts[i];
-      if (comm->me != 0) MPI_Send(&n2send, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
       Particle myatom;
-      int iloc = 0;
+      int n2send = 0, n2recv = 0;
       for (int i = 0; i < atom->nlocal; i++) {
-        if (ivec[i] >= ivstart+substart && ivec[i] < ivstart+subend ) { // (!) here is where assumes outer-loop index is value of ivec (!)
-          myatom.ival = ivec[i];
+        if (ivec[i] == thisval) {
           myatom.type = atom->type[i];
-          myatom.tag = atom->tag[i];     
+          myatom.tag = (int) atom->tag[i];
           for (int k = 0; k < 3; k++)
             myatom.x[k] = atom->x[i][k];
-          atoms_local[iloc++] = myatom;
+          atoms_local.push_back(myatom);
+          n2send++;
         }
       }
-      if (comm->me != 0) MPI_Send(atoms_local.data(), n2send, ParticleStructType, 0, 0, MPI_COMM_WORLD);
-      
+      if (comm->me != 0) {
+        MPI_Send(&n2send, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(atoms_local.data(), n2send, ParticleStructType, 0, 0, MPI_COMM_WORLD);
+      }
+
       if (comm->me == 0) {
-        int n2print = 0;
         for (int i = 1; i < comm->nprocs; i++) {
           MPI_Recv(&n2recv, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          MPI_Recv(&atoms_root[n2print], n2recv, ParticleStructType, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-          n2print += n2recv;
+          std::vector<Particle> atoms_recv(n2recv);
+          MPI_Recv(atoms_recv.data(), n2recv, ParticleStructType, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          atoms_root.insert(atoms_root.end(), atoms_recv.begin(), atoms_recv.end());
         }
-        // add atoms already on root
-        for (int i = 0; i < n2send; i++)
-          atoms_root[n2print++] = atoms_local[i];        
+        atoms_root.insert(atoms_root.end(), atoms_local.begin(), atoms_local.end());
 
-        for (int j = ivstart; j < ivend; j++) {
-          if (global_ivcounts[j-ivstart+substart] == 0) continue; //yikes
-          if (json_init == 1) {
-            indent.resize(--json_level*tab, ' ');
-            fprintf(fp, "%s},\n%s{\n", indent.c_str(), indent.c_str());
-          } else {
-            fprintf(fp, "%s{\n", indent.c_str());
-            json_init = 1;
-          }
-          indent.resize(++json_level*tab, ' ');
-          fprintf(fp, "%s\"types\": {\n", indent.c_str());
-          indent.resize(++json_level*tab, ' ');
-          //fprintf(fp, "%s\"format\": [\"atom-tag\", \"type\"],\n", indent.c_str());  
-          fprintf(fp, "%s\"data\": [\n", indent.c_str());
-          indent.resize(++json_level*tab, ' ');
-          for (int i = 0; i < n2print; i++) {
-            if (atoms_root[i].ival == j) {
-              int mytype = atoms_root[i].type;
-              std::string typestr = std::to_string(mytype);
-              if (atom->labelmapflag) typestr = atom->lmap->typelabel[mytype-1];
-              utils::print(fp, "{}[{}, \"{}\"]", indent, atoms_root[i].tag, typestr);
-              if (i < n2print-1) fprintf(fp, ",\n");
-              else fprintf(fp, "\n");
-            }
-          }
+        if (json_init == 1) {
           indent.resize(--json_level*tab, ' ');
-          fprintf(fp, "%s]\n", indent.c_str());
-          indent.resize(--json_level*tab, ' ');
-          fprintf(fp, "%s},\n", indent.c_str());
-          fprintf(fp, "%s\"coords\": {\n", indent.c_str());
-          indent.resize(++json_level*tab, ' ');
-          //fprintf(fp, "%s\"format\": [\"atom-tag\", \"x\", \"y\", \"z\"],\n", indent.c_str());
-          fprintf(fp, "%s\"data\": [\n", indent.c_str());
-          indent.resize(++json_level*tab, ' ');
-          for (int i = 0; i < n2print; i++) {
-            if (atoms_root[i].ival == j) {
-              utils::print(fp, "{}[{}, {}, {}, {}]", indent, atoms_root[i].tag, 
-                           atoms_root[i].x[0], atoms_root[i].x[1], atoms_root[i].x[2]);
-              if (i < n2print-1) fprintf(fp, ",\n");
-              else fprintf(fp, "\n");
-            }
-          }
-          indent.resize(--json_level*tab, ' ');
-          fprintf(fp, "%s]\n", indent.c_str());
-          indent.resize(--json_level*tab, ' ');
-          fprintf(fp, "%s}\n", indent.c_str());
+          fprintf(fp, "%s},\n%s{\n", indent.c_str(), indent.c_str());
+        } else {
+          fprintf(fp, "%s{\n", indent.c_str());
+          json_init = 1;
         }
-      }
-      if (breakflag) break;
-      substart = subend+1;
-    }
-
-    if (ivend == iglobal_max) {
-      if (json_init == 1) {
+        indent.resize(++json_level*tab, ' ');
+        fprintf(fp, "%s\"types\": {\n", indent.c_str());
+        indent.resize(++json_level*tab, ' ');
+        //fprintf(fp, "%s\"format\": [\"atom-tag\", \"type\"],\n", indent.c_str());
+        fprintf(fp, "%s\"data\": [\n", indent.c_str());
+        indent.resize(++json_level*tab, ' ');
+        auto it = atoms_root.begin();
+        for (auto myatom : atoms_root) {
+          int mytype = myatom.type;
+          std::string typestr = std::to_string(mytype);
+          if (atom->labelmapflag) typestr = atom->lmap->typelabel[mytype-1];
+          utils::print(fp, "{}[{}, \"{}\"]", indent, myatom.tag, typestr);
+          if (std::next(it) == atoms_root.end()) fprintf(fp, ",\n");
+          else fprintf(fp, "\n");
+          it++;
+        }
+        indent.resize(--json_level*tab, ' ');
+        fprintf(fp, "%s]\n", indent.c_str());
+        indent.resize(--json_level*tab, ' ');
+        fprintf(fp, "%s},\n", indent.c_str());
+        fprintf(fp, "%s\"coords\": {\n", indent.c_str());
+        indent.resize(++json_level*tab, ' ');
+        //fprintf(fp, "%s\"format\": [\"atom-tag\", \"x\", \"y\", \"z\"],\n", indent.c_str());
+        fprintf(fp, "%s\"data\": [\n", indent.c_str());
+        indent.resize(++json_level*tab, ' ');
+        it = atoms_root.begin();
+        for (auto myatom : atoms_root) {
+          utils::print(fp, "{}[{}, {}, {}, {}]", indent, myatom.tag,
+                       myatom.x[0], myatom.x[1], myatom.x[2]);
+          if (std::next(it) == atoms_root.end()) fprintf(fp, ",\n");
+          else fprintf(fp, "\n");
+          it++;
+        }
+        indent.resize(--json_level*tab, ' ');
+        fprintf(fp, "%s]\n", indent.c_str());
         indent.resize(--json_level*tab, ' ');
         fprintf(fp, "%s}\n", indent.c_str());
+
       }
-      break;
+      unique_ivec.erase(thisval);
+      mivec.assign(unique_ivec.begin(), unique_ivec.end());
+      atoms_local.clear();
+      atoms_root.clear();
     }
-    ivstart += pagesize;
-    ivend += pagesize;
-    if (ivend > iglobal_max) ivend = iglobal_max;
   }
 }
 
@@ -799,14 +753,13 @@ void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
 MPI_Datatype Output::createParticleStructType() {
     MPI_Datatype ParticleStructType;
 
-    const int nfields = 4;
-    int blocklengths[nfields] = {1, 1, 1, 3};
+    const int nfields = 3;
+    int blocklengths[nfields] = {1, 1, 3};
     MPI_Aint offsets[nfields];
-    offsets[0] = offsetof(Particle, ival);
-    offsets[1] = offsetof(Particle, tag);
-    offsets[2] = offsetof(Particle, type);
-    offsets[3] = offsetof(Particle, x);
-    MPI_Datatype types[nfields] = {MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE};
+    offsets[0] = offsetof(Particle, tag);
+    offsets[1] = offsetof(Particle, type);
+    offsets[2] = offsetof(Particle, x);
+    MPI_Datatype types[nfields] = {MPI_INT, MPI_INT, MPI_DOUBLE};
 
     MPI_Type_create_struct(nfields, blocklengths, offsets, types, &ParticleStructType);
     MPI_Type_commit(&ParticleStructType);

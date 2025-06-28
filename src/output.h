@@ -71,8 +71,8 @@ class Output : protected Pointers {
   DumpCreatorMap *dump_map;
 
   typedef struct Particle {
-    int ival;                     // atom's value from per-atom vector
-    int tag, type;
+    int tag;
+    int type;
     double x[3];
   } Particle;
   MPI_Datatype createParticleStructType();
