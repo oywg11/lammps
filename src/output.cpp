@@ -736,13 +736,16 @@ void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
         fprintf(fp, "%s]\n", indent.c_str());
         indent.resize(--json_level*tab, ' ');
         fprintf(fp, "%s}\n", indent.c_str());
-
       }
       unique_ivec.erase(thisval);
       mivec.assign(unique_ivec.begin(), unique_ivec.end());
       atoms_local.clear();
       atoms_root.clear();
     }
+  }
+  if (json_init && comm->me == 0) {
+    indent.resize(--json_level*tab, ' ');
+    fprintf(fp, "%s}\n", indent.c_str());
   }
 }
 
