@@ -635,7 +635,7 @@ void Output::write_restart(bigint ntimestep)
    atoms with integer array value of 0 assumed to not belong to a molecule
 ------------------------------------------------------------------------- */
 
-void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
+void Output::write_molecule_json(FILE *fp, int json_level, int printflag, int *ivec)
 {
   std::string indent;
   int tab = 4;
@@ -647,12 +647,13 @@ void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
   unique_ivec.erase(0);
   std::vector<int> mivec(unique_ivec.begin(), unique_ivec.end());
 
-  int approxsize = atom->natoms / comm->nprocs;
   std::vector<Particle> atoms_local;
-  atoms_local.reserve(approxsize);
+  atoms_local.reserve(atom->nmax);
   std::vector<Particle> atoms_root;
-  atoms_root.reserve(approxsize);
+  atoms_root.reserve(atom->nmax);
+  #if !defined(MPI_STUBS)
   MPI_Datatype ParticleStructType = createParticleStructType();
+  #endif
 
   for (int sendr = 0; sendr < comm->nprocs; sendr++) {
     int nvals;
@@ -678,60 +679,70 @@ void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
           n2send++;
         }
       }
+      #if !defined(MPI_STUBS)
       if (comm->me != 0) {
         MPI_Send(&n2send, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
         MPI_Send(atoms_local.data(), n2send, ParticleStructType, 0, 0, MPI_COMM_WORLD);
       }
-
+      #endif
+      
       if (comm->me == 0) {
+        #if !defined(MPI_STUBS)
         for (int i = 1; i < comm->nprocs; i++) {
           MPI_Recv(&n2recv, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           std::vector<Particle> atoms_recv(n2recv);
           MPI_Recv(atoms_recv.data(), n2recv, ParticleStructType, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           atoms_root.insert(atoms_root.end(), atoms_recv.begin(), atoms_recv.end());
         }
+        #endif
         atoms_root.insert(atoms_root.end(), atoms_local.begin(), atoms_local.end());
 
-        if (json_init == 1) {
+        if (json_init > 0) {
           indent.resize(--json_level*tab, ' ');
           fprintf(fp, "%s},\n%s{\n", indent.c_str(), indent.c_str());
         } else {
           fprintf(fp, "%s{\n", indent.c_str());
           json_init = 1;
         }
+
         indent.resize(++json_level*tab, ' ');
         fprintf(fp, "%s\"types\": {\n", indent.c_str());
         indent.resize(++json_level*tab, ' ');
-        //fprintf(fp, "%s\"format\": [\"atom-tag\", \"type\"],\n", indent.c_str());
+        if (printflag == 1 && json_init == 1)
+          fprintf(fp, "%s\"format\": [\"atom-tag\", \"type\"],\n", indent.c_str());  
         fprintf(fp, "%s\"data\": [\n", indent.c_str());
         indent.resize(++json_level*tab, ' ');
         auto it = atoms_root.begin();
         for (auto myatom : atoms_root) {
           int mytype = myatom.type;
           std::string typestr = std::to_string(mytype);
-          if (atom->labelmapflag) typestr = atom->lmap->typelabel[mytype-1];
+          if (atom->labelmapflag) typestr = atom->lmap->getTypelabel()[mytype-1];
           utils::print(fp, "{}[{}, \"{}\"]", indent, myatom.tag, typestr);
-          if (std::next(it) == atoms_root.end()) fprintf(fp, ",\n");
-          else fprintf(fp, "\n");
+          if (std::next(it) == atoms_root.end()) fprintf(fp, "\n");
+          else fprintf(fp, ",\n");
           it++;
         }
+
         indent.resize(--json_level*tab, ' ');
         fprintf(fp, "%s]\n", indent.c_str());
         indent.resize(--json_level*tab, ' ');
         fprintf(fp, "%s},\n", indent.c_str());
         fprintf(fp, "%s\"coords\": {\n", indent.c_str());
         indent.resize(++json_level*tab, ' ');
-        //fprintf(fp, "%s\"format\": [\"atom-tag\", \"x\", \"y\", \"z\"],\n", indent.c_str());
+        if (printflag == 1 && json_init == 1)
+          fprintf(fp, "%s\"format\": [\"atom-tag\", \"x\", \"y\", \"z\"],\n", indent.c_str());
+        if (json_init == 1) json_init++;
         fprintf(fp, "%s\"data\": [\n", indent.c_str());
         indent.resize(++json_level*tab, ' ');
         it = atoms_root.begin();
         for (auto myatom : atoms_root) {
           utils::print(fp, "{}[{}, {}, {}, {}]", indent, myatom.tag,
                        myatom.x[0], myatom.x[1], myatom.x[2]);
-          if (std::next(it) == atoms_root.end()) fprintf(fp, ",\n");
-          else fprintf(fp, "\n");
+          if (std::next(it) == atoms_root.end()) fprintf(fp, "\n");
+          else fprintf(fp, ",\n");
           it++;
         }
+
         indent.resize(--json_level*tab, ' ');
         fprintf(fp, "%s]\n", indent.c_str());
         indent.resize(--json_level*tab, ' ');
@@ -753,22 +764,25 @@ void Output::write_molecule_json(FILE *fp, int json_level, int *ivec)
    create Particle struct type for MPI
 ------------------------------------------------------------------------- */
 
+#if !defined(MPI_STUBS)
 MPI_Datatype Output::createParticleStructType() {
-    MPI_Datatype ParticleStructType;
 
-    const int nfields = 3;
-    int blocklengths[nfields] = {1, 1, 3};
-    MPI_Aint offsets[nfields];
-    offsets[0] = offsetof(Particle, tag);
-    offsets[1] = offsetof(Particle, type);
-    offsets[2] = offsetof(Particle, x);
-    MPI_Datatype types[nfields] = {MPI_INT, MPI_INT, MPI_DOUBLE};
+  MPI_Datatype ParticleStructType;
 
-    MPI_Type_create_struct(nfields, blocklengths, offsets, types, &ParticleStructType);
-    MPI_Type_commit(&ParticleStructType);
+  const int nfields = 3;
+  int blocklengths[nfields] = {1, 1, 3};
+  MPI_Aint offsets[nfields];
+  offsets[0] = offsetof(Particle, tag);
+  offsets[1] = offsetof(Particle, type);
+  offsets[2] = offsetof(Particle, x);
+  MPI_Datatype types[nfields] = {MPI_INT, MPI_INT, MPI_DOUBLE};
 
-    return ParticleStructType;
+  MPI_Type_create_struct(nfields, blocklengths, offsets, types, &ParticleStructType);
+  MPI_Type_commit(&ParticleStructType);
+
+  return ParticleStructType;
 }
+#endif
 
 /* ----------------------------------------------------------------------
    timestep is being changed, called by update->reset_timestep()

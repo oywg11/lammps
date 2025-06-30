@@ -77,6 +77,7 @@ class Output : protected Pointers {
   } Particle;
   MPI_Datatype createParticleStructType();
 
+
   Output(class LAMMPS *);
   ~Output() override;
   void init();
@@ -84,7 +85,7 @@ class Output : protected Pointers {
   void write(bigint);                                      // output for current timestep
   void write_dump(bigint);                                 // force output of dump snapshots
   void write_restart(bigint);                              // force output of a restart file
-  void write_molecule_json(FILE *, int, int *);            // output molecule JSON objects to file
+  void write_molecule_json(FILE *, int, int, int *);       // output molecule JSON objects to file
   void reset_timestep(bigint);                             // reset output which depends on timestep
   void reset_dt();                                         // reset output which depends on timestep size
 

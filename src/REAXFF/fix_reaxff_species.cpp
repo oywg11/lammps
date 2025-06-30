@@ -1128,7 +1128,7 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
 
       if (comm->me == 0) {
         indent.resize(json_level*tab, ' ');
-        if (deljson_init == 1) {
+        if (deljson_init > 0) {
           fprintf(fdel, "%s},\n%s{\n", indent.c_str(), indent.c_str());
         } else {
           fprintf(fdel, "%s{\n", indent.c_str());
@@ -1142,7 +1142,8 @@ void FixReaxFFSpecies::DeleteSpecies(int Nmole, int Nspec)
         indent.resize(++json_level*tab, ' ');
       }
 
-      output->write_molecule_json(fdel, json_level, mark);
+      output->write_molecule_json(fdel, json_level, deljson_init, mark);
+      if (deljson_init == 1) deljson_init++;
 
       if (comm->me == 0) {
         indent.resize(--json_level*tab, ' ');
