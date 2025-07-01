@@ -685,7 +685,7 @@ void Output::write_molecule_json(FILE *fp, int json_level, int printflag, int *i
         MPI_Send(atoms_local.data(), n2send, ParticleStructType, 0, 0, MPI_COMM_WORLD);
       }
       #endif
-      
+
       if (comm->me == 0) {
         #if !defined(MPI_STUBS)
         for (int i = 1; i < comm->nprocs; i++) {
@@ -709,7 +709,7 @@ void Output::write_molecule_json(FILE *fp, int json_level, int printflag, int *i
         fprintf(fp, "%s\"types\": {\n", indent.c_str());
         indent.resize(++json_level*tab, ' ');
         if (printflag == 1 && json_init == 1)
-          fprintf(fp, "%s\"format\": [\"atom-tag\", \"type\"],\n", indent.c_str());  
+          fprintf(fp, "%s\"format\": [\"atom-tag\", \"type\"],\n", indent.c_str());
         fprintf(fp, "%s\"data\": [\n", indent.c_str());
         indent.resize(++json_level*tab, ' ');
         auto it = atoms_root.begin();
