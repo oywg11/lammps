@@ -14,7 +14,7 @@ Syntax
    fix ID group-ID reaxff/species Nevery Nrepeat Nfreq filename keyword value ...
 
 * ID, group-ID are documented in :doc:`fix <fix>` command
-* Nevery = sample bond-order every this many Markdown Preview EnhancedMarkdown Preview Enhancedtimesteps
+* Nevery = sample bond-order every this many timesteps
 * Nrepeat = # of bond-order samples used for calculating averages
 * Nfreq = calculate average bond-order every this many timesteps
 * filename = name of output file
