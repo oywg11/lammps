@@ -171,7 +171,7 @@ When using the *masslimit* keyword and the legacy format, each line of the
 *filedel* file contains the timestep on which deletions occurs, followed by
 how many of each species are deleted (with quantities preceding chemical
 formulae).  The JSON format is the same regardless of the keyword, and lists
-deleted molecules in the style of the :doc:`JSON molecule file <molecule>`, 
+deleted molecules in the style of the :doc:`JSON molecule file <molecule>`,
 where more discussion of JSON schema can be found. Here is an example of a
 JSON output file from a simulation during which one water molecule was
 deleted on the first timestep:
@@ -209,7 +209,7 @@ deleted on the first timestep:
            }
        ]
    }
-   
+
 The first-level keys of the JSON format output are "application", "format",
 "subformat", "revision", and "run_output".  The value of the "run_output"
 key is an array of objects that contain data for each timestep on which a
