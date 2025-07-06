@@ -241,8 +241,6 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     reset_mol_ids->create_computes(id,group->names[igroup]);
   }
 
-  memory->create(constraintstr,nreacts,MAXLINE,"bond/react:constraintstr");
-
   // set up common variables as vectors of length 'nreacts'
   rxns.resize(nreacts);
 
@@ -666,8 +664,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(newmolids);
   memory->destroy(nnewmolids);
   if (vvec != nullptr) memory->destroy(vvec);
-
-  memory->destroy(constraintstr);
 
   if (attempted_rxn == 1) {
     memory->destroy(restore_pt);
@@ -2104,13 +2100,12 @@ int FixBondReact::check_constraints()
   }
 
   if (rxns[rxnID].nconstraints > 0) {
-    char evalstr[MAXLINE],*ptr;
-    strcpy(evalstr,constraintstr[rxnID]);
-    for (int i = 0; i < rxns[rxnID].nconstraints; i++) {
-      ptr = strchr(evalstr,'C');
-      *ptr = satisfied[i] ? '1' : '0';
-    }
-    double verdict = input->variable->evaluate_boolean(evalstr);
+    std::string evalstr = rxns[rxnID].constraintstr;
+    for (int i = 0; i < rxns[rxnID].nconstraints; i++)
+      evalstr.replace(evalstr.find('C'), 1, satisfied[i] ? "1" : "0");
+    std::vector<char> buffer(evalstr.begin(), evalstr.end());
+    buffer.push_back('\0');
+    double verdict = input->variable->evaluate_boolean(buffer.data());
     if (verdict == 0.0) {
       memory->destroy(satisfied);
       return 0;
@@ -4269,19 +4264,19 @@ void FixBondReact::ReadConstraints(char *line, int myrxn)
   char **strargs,*ptr,*lptr;
   memory->create(strargs,MAXCONARGS,MAXLINE,"bond/react:strargs");
   auto constraint_type = new char[MAXLINE];
-  strcpy(constraintstr[myrxn],"("); // string for boolean constraint logic
+  rxns[myrxn].constraintstr = "("; // string for boolean constraint logic
   for (int i = 0; i < rxns[myrxn].nconstraints; i++) {
     readline(line);
     // find left parentheses, add to constraintstr, and update line
     for (int j = 0; j < (int)strlen(line); j++) {
-      if (line[j] == '(') strcat(constraintstr[myrxn],"(");
+      if (line[j] == '(') rxns[myrxn].constraintstr += "(";
       if (isalpha(line[j])) {
         line = line + j;
         break;
       }
     }
     // 'C' indicates where to sub in next constraint
-    strcat(constraintstr[myrxn],"C");
+    rxns[myrxn].constraintstr += "C";
     // special consideration for 'custom' constraint
     // find final double quote, or skip two words
     lptr = line;
@@ -4293,16 +4288,16 @@ void FixBondReact::ReadConstraints(char *line, int myrxn)
     }
     // find right parentheses
     for (int j = 0; j < (int)strlen(lptr); j++)
-      if (lptr[j] == ')') strcat(constraintstr[myrxn],")");
+      if (lptr[j] == ')') rxns[myrxn].constraintstr += ")";
     // find logic symbols, and trim line via ptr
     if ((ptr = strstr(lptr,"&&"))) {
-      strcat(constraintstr[myrxn],"&&");
+      rxns[myrxn].constraintstr += "&&";
       *ptr = '\0';
     } else if ((ptr = strstr(lptr,"||"))) {
-      strcat(constraintstr[myrxn],"||");
+      rxns[myrxn].constraintstr += "||";
       *ptr = '\0';
     } else if (i+1 < rxns[myrxn].nconstraints) {
-      strcat(constraintstr[myrxn],"&&");
+      rxns[myrxn].constraintstr += "&&";
     }
     if ((ptr = strchr(lptr,')')))
       *ptr = '\0';
@@ -4368,7 +4363,7 @@ void FixBondReact::ReadConstraints(char *line, int myrxn)
       constraints[i][myrxn].str = args[1];
     } else error->one(FLERR,"Fix bond/react: Illegal constraint type in 'Constraints' section of map file");
   }
-  strcat(constraintstr[myrxn],")"); // close boolean constraint logic string
+  rxns[myrxn].constraintstr += ")"; // close boolean constraint logic string
   delete[] constraint_type;
   memory->destroy(strargs);
 }
