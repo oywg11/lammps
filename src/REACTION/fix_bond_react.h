@@ -66,7 +66,6 @@ class FixBondReact : public Fix {
   RESET_MOL_IDS molid_mode;
   int custom_exclude_flag;
   int rescale_charges_anyflag; // indicates if any reactions do charge rescaling
-  double *mol_total_charge;    // sum of charges of post-reaction atoms whose charges are updated
   int maxnconstraints;
   int nrxnfunction;
   std::vector<std::string> rxnfunclist;     // lists current special rxn function
@@ -84,6 +83,7 @@ class FixBondReact : public Fix {
     int closeneigh;            // indicates if bonding atoms of a rxn are 1-2, 1-3, or 1-4 neighbors
     double rminsq, rmaxsq;
     double fraction;
+    double mol_total_charge;   // sum of charges of post-reaction atoms whose charges are updated
     int reacted_mol, unreacted_mol;
     int reaction_count, reaction_count_total;
     int local_rxn_count, ghostly_rxn_count;
@@ -91,13 +91,21 @@ class FixBondReact : public Fix {
     int seed, limit_duration;
     int stabilize_steps_flag;
     int custom_charges_fragid;
-    int rescale_charges_flag;   // if nonzero, indicates number of atoms whose charges are updated
+    int rescale_charges_flag;  // if nonzero, indicates number of atoms whose charges are updated
     int create_atoms_flag, modify_create_fragid;
     double overlapsq;
     int molecule_keyword;
     int nconstraints;
     int v_nevery, v_rmin, v_rmax, v_prob; // ID of variable, -1 if static
   };
+  //struct Flag {
+  //  mol_total_charge[j] = 0.0;
+  //  edge[i][j] = 0;
+  //  custom_charges[i][j] = 1; // update all partial charges by default
+  //  delete_atoms[i][j] = 0;
+  //  create_atoms[i][j] = 0;
+  //  newmolids[i][j] = 0;
+  //};
   std::vector<Reaction> rxns;
 
   int rxnID;          // integer ID for identifying current reaction

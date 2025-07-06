@@ -258,6 +258,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     rxn.create_atoms_flag = 0;
     rxn.modify_create_fragid = -1;
     rxn.overlapsq = 0.0;
+    rxn.mol_total_charge = 0.0;
     rxn.molecule_keyword = OFF;
     rxn.nconstraints = 0;
     rxn.limit_duration = 60;
@@ -455,10 +456,8 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   memory->create(chiral_atoms,max_natoms,6,nreacts,"bond/react:chiral_atoms");
   memory->create(newmolids,max_natoms,nreacts,"bond/react:newmolids");
   memory->create(nnewmolids,nreacts,"bond/react:nnewmolids");
-  memory->create(mol_total_charge,nreacts,"bond/react:mol_total_charge");
 
   for (int j = 0; j < nreacts; j++) {
-    mol_total_charge[j] = 0.0;
     for (int i = 0; i < max_natoms; i++) {
       edge[i][j] = 0;
       custom_charges[i][j] = 1; // update all partial charges by default
@@ -539,7 +538,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       for (int j = 0; j < twomol->natoms; j++) {
         int jj = equivalences[j][1][myrxn]-1;
         if (custom_charges[jj][myrxn] == 1 && delete_atoms[jj][myrxn] == 0) {
-          mol_total_charge[myrxn] += twomol->q[j];
+          rxns[myrxn].mol_total_charge += twomol->q[j];
           rxns[myrxn].rescale_charges_flag++;
         }
       }
@@ -669,7 +668,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(chiral_atoms);
   memory->destroy(newmolids);
   memory->destroy(nnewmolids);
-  memory->destroy(mol_total_charge);
   if (vvec != nullptr) memory->destroy(vvec);
 
   memory->destroy(rxn_name);
@@ -3260,7 +3258,7 @@ void FixBondReact::update_everything()
       twomol = atom->molecules[rxns[rxnID].reacted_mol];
       if (rxns[rxnID].rescale_charges_flag) {
         n_custom_charge = rxns[rxnID].rescale_charges_flag;
-        charge_rescale_addend = (sim_total_charges[i]-mol_total_charge[rxnID])/n_custom_charge;
+        charge_rescale_addend = (sim_total_charges[i]-rxns[rxnID].mol_total_charge)/n_custom_charge;
       }
       for (int j = 0; j < twomol->natoms; j++) {
         int jj = equivalences[j][1][rxnID]-1;
