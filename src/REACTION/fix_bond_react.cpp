@@ -441,9 +441,9 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     max_natoms = MAX(max_natoms,twomol->natoms);
   }
 
+  for (auto &rxn : rxns) rxn.atom.resize(max_natoms);
   memory->create(equivalences,max_natoms,2,nreacts,"bond/react:equivalences");
   memory->create(reverse_equiv,max_natoms,2,nreacts,"bond/react:reverse_equiv");
-  memory->create(edge,max_natoms,nreacts,"bond/react:edge");
   memory->create(landlocked_atoms,max_natoms,nreacts,"bond/react:landlocked_atoms");
   memory->create(custom_charges,max_natoms,nreacts,"bond/react:custom_charges");
   memory->create(delete_atoms,max_natoms,nreacts,"bond/react:delete_atoms");
@@ -454,7 +454,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
 
   for (int j = 0; j < nreacts; j++) {
     for (int i = 0; i < max_natoms; i++) {
-      edge[i][j] = 0;
+      rxns[j].atom[i].edge = 0;
       custom_charges[i][j] = 1; // update all partial charges by default
       delete_atoms[i][j] = 0;
       create_atoms[i][j] = 0;
@@ -653,7 +653,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(nattempt);
   memory->destroy(distsq);
   memory->destroy(attempt);
-  memory->destroy(edge);
   memory->destroy(equivalences);
   memory->destroy(reverse_equiv);
   memory->destroy(landlocked_atoms);
@@ -1362,7 +1361,7 @@ void FixBondReact::superimpose_algorithm()
         }
 
         for (int i = 0; i < onemol->natoms; i++) {
-          if (glove[i][0] != 0 && pioneer_count[i] < onemol_nxspecial[i][0] && edge[i][rxnID] == 0) {
+          if (glove[i][0] != 0 && pioneer_count[i] < onemol_nxspecial[i][0] && rxns[rxnID].atom[i].edge == 0) {
             pioneers[i] = 1;
           }
         }
@@ -1668,7 +1667,7 @@ void FixBondReact::check_a_neighbor()
 
   if (status != RESTORE) {
     // special consideration for hydrogen atoms (and all first neighbors bonded to no other atoms) (and aren't edge atoms)
-    if (onemol_nxspecial[(int)onemol_xspecial[pion][neigh]-1][0] == 1 && edge[(int)onemol_xspecial[pion][neigh]-1][rxnID] == 0) {
+    if (onemol_nxspecial[(int)onemol_xspecial[pion][neigh]-1][0] == 1 && rxns[rxnID].atom[(int)onemol_xspecial[pion][neigh]-1].edge == 0) {
 
       for (int i = 0; i < nfirst_neighs; i++) {
 
@@ -1898,7 +1897,7 @@ int FixBondReact::ring_check()
   // double check the number of neighbors match for all non-edge atoms
   // otherwise, atoms at 'end' of symmetric ring can behave like edge atoms
   for (int i = 0; i < onemol->natoms; i++)
-    if (edge[i][rxnID] == 0 &&
+    if (rxns[rxnID].atom[i].edge == 0 &&
         onemol_nxspecial[i][0] != nxspecial[atom->map(glove[i][1])][0])
       return 0;
 
@@ -2569,7 +2568,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
 
   // always remove edge atoms from landlocked list
   for (int i = 0; i < twomol->natoms; i++) {
-    if (create_atoms[i][myrxn] == 0 && edge[equivalences[i][1][myrxn]-1][myrxn] == 1)
+    if (create_atoms[i][myrxn] == 0 && rxns[myrxn].atom[equivalences[i][1][myrxn]-1].edge == 1)
       landlocked_atoms[i][myrxn] = 0;
     else landlocked_atoms[i][myrxn] = 1;
   }
@@ -2583,7 +2582,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
     for (int i = 0; i < twomol->natoms; i++) {
       for (int j = 0; j < twomol_nxspecial[i][nspecial_limit]; j++) {
         for (int k = 0; k < onemol->natoms; k++) {
-          if (equivalences[twomol_xspecial[i][j]-1][1][myrxn] == k+1 && edge[k][myrxn] == 1) {
+          if (equivalences[twomol_xspecial[i][j]-1][1][myrxn] == k+1 && rxns[myrxn].atom[k].edge == 1) {
             landlocked_atoms[i][myrxn] = 0;
           }
         }
@@ -4157,7 +4156,7 @@ void FixBondReact::EdgeIDs(char *line, int myrxn)
     if (rv != 1) error->one(FLERR, "EdgeIDs section is incorrectly formatted");
     if (tmp > onemol->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
-    edge[tmp-1][myrxn] = 1;
+    rxns[myrxn].atom[tmp-1].edge = 1;
   }
 }
 

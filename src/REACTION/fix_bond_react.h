@@ -74,6 +74,10 @@ class FixBondReact : public Fix {
   int narrhenius;
   int status;
 
+  struct ReactionAtomFlags {
+    int edge;        // atoms in molecule templates with incorrect valences
+    //, recharged, deleted, created, newmolid;
+  };
   struct Reaction {
     std::string name, constraintstr;
     int nevery, groupbits;
@@ -96,15 +100,8 @@ class FixBondReact : public Fix {
     int molecule_keyword;
     int nconstraints;
     int v_nevery, v_rmin, v_rmax, v_prob; // ID of variable, -1 if static
+    std::vector<ReactionAtomFlags> atom;
   };
-  //struct Flag {
-  //  mol_total_charge[j] = 0.0;
-  //  edge[i][j] = 0;
-  //  custom_charges[i][j] = 1; // update all partial charges by default
-  //  delete_atoms[i][j] = 0;
-  //  create_atoms[i][j] = 0;
-  //  newmolids[i][j] = 0;
-  //};
   std::vector<Reaction> rxns;
 
   int rxnID;          // integer ID for identifying current reaction
@@ -149,7 +146,6 @@ class FixBondReact : public Fix {
   tagint **restore;      // contains info about restore points
   int *pioneer_count;    // counts pioneers
 
-  int **edge;                // atoms in molecule templates with incorrect valences
   int ***equivalences;       // relation between pre- and post-reacted templates
   int ***reverse_equiv;      // re-ordered equivalences
   int **landlocked_atoms;    // all atoms at least three bonds away from edge atoms
