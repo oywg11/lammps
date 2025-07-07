@@ -446,17 +446,15 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   memory->create(reverse_equiv,max_natoms,2,nreacts,"bond/react:reverse_equiv");
   memory->create(landlocked_atoms,max_natoms,nreacts,"bond/react:landlocked_atoms");
   memory->create(chiral_atoms,max_natoms,6,nreacts,"bond/react:chiral_atoms");
-  memory->create(newmolids,max_natoms,nreacts,"bond/react:newmolids");
-  memory->create(nnewmolids,nreacts,"bond/react:nnewmolids");
 
   for (int j = 0; j < nreacts; j++) {
+    rxns[j].nnewmolids = 0;
     for (int i = 0; i < max_natoms; i++) {
       rxns[j].atom[i].edge = 0;
       rxns[j].atom[i].recharged = 1; // update all partial charges by default
       rxns[j].atom[i].deleted = 0;
       rxns[j].atom[i].created = 0;
-      newmolids[i][j] = 0;
-      nnewmolids[j] = 0;
+      rxns[j].atom[i].newmolid = 0;
       for (int k = 0; k < 6; k++) {
         chiral_atoms[i][k][j] = 0;
       }
@@ -486,7 +484,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       twomol = atom->molecules[rxns[myrxn].reacted_mol];
       if (onemol->moleculeflag && twomol->moleculeflag) {
         for (int j = 0; j < twomol->natoms; j++) {
-          if (newmolids[j][myrxn] != 0) continue;
+          if (rxns[myrxn].atom[j].newmolid != 0) continue;
           int molid_isnew = 1;
           for (int k = 0; k < onemol->natoms; k++) {
             if (twomol->molecule[j] == onemol->molecule[k]) {
@@ -495,10 +493,10 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
             }
           }
           if (molid_isnew == 1) {
-            nnewmolids[myrxn]++;
+            rxns[myrxn].nnewmolids++;
             for (int k = j; k < twomol->natoms; k++) {
               if (twomol->molecule[k] == twomol->molecule[j])
-                newmolids[k][myrxn] = nnewmolids[myrxn];
+                rxns[myrxn].atom[k].newmolid = rxns[myrxn].nnewmolids;
             }
           }
         }
@@ -654,8 +652,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(reverse_equiv);
   memory->destroy(landlocked_atoms);
   memory->destroy(chiral_atoms);
-  memory->destroy(newmolids);
-  memory->destroy(nnewmolids);
   if (vvec != nullptr) memory->destroy(vvec);
 
   if (attempted_rxn == 1) {
@@ -3120,7 +3116,7 @@ void FixBondReact::update_everything()
         tagint molcreate = 0;
         for (int i = 0; i < update_num_mega; i++) {
           rxnID = update_mega_glove[0][i];
-          molcreate += nnewmolids[rxnID];
+          molcreate += rxns[rxnID].nnewmolids;
         }
         MPI_Scan(&molcreate, &moloffset, 1, MPI_LMP_TAGINT, MPI_SUM, world);
         moloffset = moloffset - molcreate + maxmol_all;
@@ -3161,8 +3157,8 @@ void FixBondReact::update_everything()
             }
           }
           if (neednewid == 1) {
-            if (newmolids[j][rxnID] != 0) {
-              molmapid = moloffset + newmolids[j][rxnID];
+            if (rxns[rxnID].atom[j].newmolid != 0) {
+              molmapid = moloffset + rxns[rxnID].atom[j].newmolid;
             } else {
               for (int k = 0; k < onemol->natoms; k++) {
                 if (twomol->molecule[j] == onemol->molecule[k]) {
@@ -3183,7 +3179,7 @@ void FixBondReact::update_everything()
             thismolid = nullptr;
           }
         }
-        moloffset += nnewmolids[rxnID];
+        moloffset += rxns[rxnID].nnewmolids;
       }
     }
 

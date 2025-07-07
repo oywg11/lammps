@@ -79,7 +79,7 @@ class FixBondReact : public Fix {
     int recharged;   // atoms whose charge should be updated
     int deleted;     // atoms in pre-reacted templates to delete
     int created;     // atoms in post-reacted templates to create
-    //deleted, created, newmolid;
+    int newmolid;    // for molmap option: mol IDs in post, but not in pre, re-indexed from 1
   };
   struct Reaction {
     std::string name, constraintstr;
@@ -103,6 +103,7 @@ class FixBondReact : public Fix {
     int molecule_keyword;
     int nconstraints;
     int v_nevery, v_rmin, v_rmax, v_prob; // ID of variable, -1 if static
+    int nnewmolids;            // number of unique new molids needed for each reaction
     std::vector<ReactionAtomFlags> atom;
   };
   std::vector<Reaction> rxns;
@@ -153,8 +154,6 @@ class FixBondReact : public Fix {
   int ***reverse_equiv;      // re-ordered equivalences
   int **landlocked_atoms;    // all atoms at least three bonds away from edge atoms
   int ***chiral_atoms;       // pre-react chiral atoms. 1) flag 2) orientation 3-4) ordered atom types
-  int **newmolids;           // for molmap option: mol IDs in post, but not in pre, re-indexed from 1
-  int *nnewmolids;           // number of unique new molids needed for each reaction
 
   int **nxspecial, **onemol_nxspecial, **twomol_nxspecial;    // full number of 1-4 neighbors
   tagint **xspecial, **onemol_xspecial, **twomol_xspecial;    // full 1-4 neighbor list
