@@ -445,7 +445,6 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   memory->create(equivalences,max_natoms,2,nreacts,"bond/react:equivalences");
   memory->create(reverse_equiv,max_natoms,2,nreacts,"bond/react:reverse_equiv");
   memory->create(landlocked_atoms,max_natoms,nreacts,"bond/react:landlocked_atoms");
-  memory->create(create_atoms,max_natoms,nreacts,"bond/react:create_atoms");
   memory->create(chiral_atoms,max_natoms,6,nreacts,"bond/react:chiral_atoms");
   memory->create(newmolids,max_natoms,nreacts,"bond/react:newmolids");
   memory->create(nnewmolids,nreacts,"bond/react:nnewmolids");
@@ -455,7 +454,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       rxns[j].atom[i].edge = 0;
       rxns[j].atom[i].recharged = 1; // update all partial charges by default
       rxns[j].atom[i].deleted = 0;
-      create_atoms[i][j] = 0;
+      rxns[j].atom[i].created = 0;
       newmolids[i][j] = 0;
       nnewmolids[j] = 0;
       for (int k = 0; k < 6; k++) {
@@ -654,7 +653,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(equivalences);
   memory->destroy(reverse_equiv);
   memory->destroy(landlocked_atoms);
-  memory->destroy(create_atoms);
   memory->destroy(chiral_atoms);
   memory->destroy(newmolids);
   memory->destroy(nnewmolids);
@@ -2564,7 +2562,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
 
   // always remove edge atoms from landlocked list
   for (int i = 0; i < twomol->natoms; i++) {
-    if (create_atoms[i][myrxn] == 0 && rxns[myrxn].atom[equivalences[i][1][myrxn]-1].edge == 1)
+    if (rxns[myrxn].atom[i].created == 0 && rxns[myrxn].atom[equivalences[i][1][myrxn]-1].edge == 1)
       landlocked_atoms[i][myrxn] = 0;
     else landlocked_atoms[i][myrxn] = 1;
   }
@@ -2589,7 +2587,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
   // bad molecule templates check
   // if atoms change types, but aren't landlocked, that's bad
   for (int i = 0; i < twomol->natoms; i++) {
-    if ((create_atoms[i][myrxn] == 0) &&
+    if ((rxns[myrxn].atom[i].created == 0) &&
         (twomol->type[i] != onemol->type[equivalences[i][1][myrxn]-1]) &&
         (landlocked_atoms[i][myrxn] == 0))
       error->all(FLERR, "Fix bond/react: Atom type affected by reaction {} is too close "
@@ -2599,7 +2597,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
   // additionally, if a bond changes type, but neither involved atom is landlocked, bad
   // would someone want to change an angle type but not bond or atom types? (etc.) ...hopefully not yet
   for (int i = 0; i < twomol->natoms; i++) {
-    if (create_atoms[i][myrxn] == 0) {
+    if (rxns[myrxn].atom[i].created == 0) {
       if (landlocked_atoms[i][myrxn] == 0) {
         for (int j = 0; j < twomol->num_bond[i]; j++) {
           int twomol_atomj = twomol->bond_atom[i][j];
@@ -2645,7 +2643,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
   int warnflag = 0;
   if (comm->me == 0)
     for (int i = 0; i < twomol->natoms; i++) {
-      if ((create_atoms[i][myrxn] == 0) &&
+      if ((rxns[myrxn].atom[i].created == 0) &&
           (twomol_nxspecial[i][0] != onemol_nxspecial[equivalences[i][1][myrxn]-1][0]) &&
           (landlocked_atoms[i][myrxn] == 0)) {
         warnflag = 1;
@@ -2681,7 +2679,7 @@ void FixBondReact::find_landlocked_atoms(int myrxn)
 
   // finally, if a created atom is not landlocked, bad!
   for (int i = 0; i < twomol->natoms; i++) {
-    if (create_atoms[i][myrxn] == 1 && landlocked_atoms[i][myrxn] == 0) {
+    if (rxns[myrxn].atom[i].created == 1 && landlocked_atoms[i][myrxn] == 0) {
       error->one(FLERR,"Fix bond/react: Created atom too close to template edge");
     }
   }
@@ -3146,7 +3144,7 @@ void FixBondReact::update_everything()
         for (int j = 0; j < twomol->natoms; j++) {
           int neednewid = 0;
           tagint *thismolid;
-          if (create_atoms[j][rxnID] == 1) {
+          if (rxns[rxnID].atom[j].created == 1) {
             for (auto & myaddatom : addatoms) {
               if (myaddatom.tag == update_mega_glove[j+1][i]) {
                 thismolid = &(myaddatom.molecule);
@@ -3802,7 +3800,7 @@ int FixBondReact::insert_atoms_setup(tagint **my_update_mega_glove, int iupdate)
   for (int j = 0; j < twomol->natoms; j++) {
     if (rxns[rxnID].modify_create_fragid >= 0)
       if (!twomol->fragmentmask[rxns[rxnID].modify_create_fragid][j]) continue;
-    if (!create_atoms[j][rxnID] && !rxns[rxnID].atom[equivalences[j][1][rxnID]].deleted)
+    if (!rxns[rxnID].atom[j].created && !rxns[rxnID].atom[equivalences[j][1][rxnID]].deleted)
       n2superpose++;
   }
 
@@ -3827,7 +3825,7 @@ int FixBondReact::insert_atoms_setup(tagint **my_update_mega_glove, int iupdate)
       if (rxns[rxnID].modify_create_fragid >= 0)
         if (!twomol->fragmentmask[rxns[rxnID].modify_create_fragid][j]) continue;
       int ipre = equivalences[j][1][rxnID]-1; // equiv pre-reaction template index
-      if (!create_atoms[j][rxnID] && !rxns[rxnID].atom[ipre].deleted) {
+      if (!rxns[rxnID].atom[j].created && !rxns[rxnID].atom[ipre].deleted) {
         if (atom->map(my_update_mega_glove[ipre+1][iupdate]) < 0) {
           error->warning(FLERR," eligible atoms skipped for created-atoms fit on rank {}\n",
                          comm->me);
@@ -3855,7 +3853,7 @@ int FixBondReact::insert_atoms_setup(tagint **my_update_mega_glove, int iupdate)
 
   // get coordinates and image flags
   for (int m = 0; m < twomol->natoms; m++) {
-    if (create_atoms[m][rxnID] == 1) {
+    if (rxns[rxnID].atom[m].created == 1) {
       // apply optimal rotation/translation for created atom coords
       // also map coords back into simulation box
       if (fitroot == comm->me) {
@@ -3874,7 +3872,7 @@ int FixBondReact::insert_atoms_setup(tagint **my_update_mega_glove, int iupdate)
   if (rxns[rxnID].overlapsq > 0) {
     int abortflag = 0;
     for (int m = 0; m < twomol->natoms; m++) {
-      if (create_atoms[m][rxnID] == 1) {
+      if (rxns[rxnID].atom[m].created == 1) {
         for (int i = 0; i < nlocal; i++) {
           delx = coords[m][0] - x[i][0];
           dely = coords[m][1] - x[i][1];
@@ -3893,7 +3891,7 @@ int FixBondReact::insert_atoms_setup(tagint **my_update_mega_glove, int iupdate)
     if (!abortflag) {
       for (auto & myaddatom : addatoms) {
         for (int m = 0; m < twomol->natoms; m++) {
-          if (create_atoms[m][rxnID] == 1) {
+          if (rxns[rxnID].atom[m].created == 1) {
             delx = coords[m][0] - myaddatom.x[0];
             dely = coords[m][1] - myaddatom.x[1];
             delz = coords[m][2] - myaddatom.x[2];
@@ -3924,7 +3922,7 @@ int FixBondReact::insert_atoms_setup(tagint **my_update_mega_glove, int iupdate)
   int preID; // new equivalences index
   int add_count = 0;
   for (int m = 0; m < twomol->natoms; m++) {
-    if (create_atoms[m][rxnID] == 1) {
+    if (rxns[rxnID].atom[m].created == 1) {
       // increase atom count
       add_count++;
       preID = onemol->natoms+add_count;
@@ -4132,7 +4130,7 @@ void FixBondReact::read_map_file(int myrxn)
   // error check
   for (int i = 0; i < onemol->natoms; i++) {
     int my_equiv = reverse_equiv[i][1][myrxn];
-    if (create_atoms[my_equiv-1][myrxn] == 1)
+    if (rxns[myrxn].atom[my_equiv-1].created == 1)
       error->all(FLERR,"Fix bond/react: Created atoms cannot also be listed in Equivalences section\n");
   }
 
@@ -4189,7 +4187,7 @@ void FixBondReact::DeleteAtoms(char *line, int myrxn)
     if (rv != 1) error->one(FLERR, "DeleteIDs section is incorrectly formatted");
     if (tmp > onemol->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
-    rxns[myrxn].atom.[tmp-1].deleted = 1;
+    rxns[myrxn].atom[tmp-1].deleted = 1;
   }
 }
 
@@ -4203,7 +4201,7 @@ void FixBondReact::CreateAtoms(char *line, int myrxn)
     if (rv != 1) error->one(FLERR, "CreateIDs section is incorrectly formatted");
     if (tmp > twomol->natoms)
       error->one(FLERR,"Fix bond/react: Invalid atom ID in CreateIDs section of map file");
-    create_atoms[tmp-1][myrxn] = 1;
+    rxns[myrxn].atom[tmp-1].created = 1;
   }
   if (twomol->xflag == 0)
     error->one(FLERR,"Fix bond/react: 'Coords' section required in post-reaction template when creating new atoms");
