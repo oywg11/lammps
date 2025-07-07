@@ -76,7 +76,8 @@ class FixBondReact : public Fix {
 
   struct ReactionAtomFlags {
     int edge;        // atoms in molecule templates with incorrect valences
-    //, recharged, deleted, created, newmolid;
+    int recharged;   // atoms whose charge should be updated
+    //deleted, created, newmolid;
   };
   struct Reaction {
     std::string name, constraintstr;
@@ -149,7 +150,6 @@ class FixBondReact : public Fix {
   int ***equivalences;       // relation between pre- and post-reacted templates
   int ***reverse_equiv;      // re-ordered equivalences
   int **landlocked_atoms;    // all atoms at least three bonds away from edge atoms
-  int **custom_charges;      // atoms whose charge should be updated
   int **delete_atoms;        // atoms in pre-reacted templates to delete
   int **create_atoms;        // atoms in post-reacted templates to create
   int ***chiral_atoms;       // pre-react chiral atoms. 1) flag 2) orientation 3-4) ordered atom types

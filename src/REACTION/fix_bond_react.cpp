@@ -445,7 +445,6 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   memory->create(equivalences,max_natoms,2,nreacts,"bond/react:equivalences");
   memory->create(reverse_equiv,max_natoms,2,nreacts,"bond/react:reverse_equiv");
   memory->create(landlocked_atoms,max_natoms,nreacts,"bond/react:landlocked_atoms");
-  memory->create(custom_charges,max_natoms,nreacts,"bond/react:custom_charges");
   memory->create(delete_atoms,max_natoms,nreacts,"bond/react:delete_atoms");
   memory->create(create_atoms,max_natoms,nreacts,"bond/react:create_atoms");
   memory->create(chiral_atoms,max_natoms,6,nreacts,"bond/react:chiral_atoms");
@@ -455,7 +454,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   for (int j = 0; j < nreacts; j++) {
     for (int i = 0; i < max_natoms; i++) {
       rxns[j].atom[i].edge = 0;
-      custom_charges[i][j] = 1; // update all partial charges by default
+      rxns[j].atom[i].recharged = 1; // update all partial charges by default
       delete_atoms[i][j] = 0;
       create_atoms[i][j] = 0;
       newmolids[i][j] = 0;
@@ -532,7 +531,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       twomol = atom->molecules[rxns[myrxn].reacted_mol];
       for (int j = 0; j < twomol->natoms; j++) {
         int jj = equivalences[j][1][myrxn]-1;
-        if (custom_charges[jj][myrxn] == 1 && delete_atoms[jj][myrxn] == 0) {
+        if (rxns[myrxn].atom[jj].recharged == 1 && delete_atoms[jj][myrxn] == 0) {
           rxns[myrxn].mol_total_charge += twomol->q[j];
           rxns[myrxn].rescale_charges_flag++;
         }
@@ -656,7 +655,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(equivalences);
   memory->destroy(reverse_equiv);
   memory->destroy(landlocked_atoms);
-  memory->destroy(custom_charges);
   memory->destroy(delete_atoms);
   memory->destroy(create_atoms);
   memory->destroy(chiral_atoms);
@@ -2226,7 +2224,7 @@ double FixBondReact::get_totalcharge()
   double sim_total_charge = 0.0;
   for (j = 0; j < onemol->natoms; j++) {
     jj = equivalences[j][1][rxnID]-1;
-    if (custom_charges[jj][rxnID] == 1)
+    if (rxns[rxnID].atom[jj].recharged == 1)
       sim_total_charge += q[atom->map(glove[jj][1])];
   }
   return sim_total_charge;
@@ -3262,7 +3260,7 @@ void FixBondReact::update_everything()
 
           if (landlocked_atoms[j][rxnID] == 1)
             type[ilocal] = twomol->type[j];
-          if (twomol->qflag && atom->q_flag && custom_charges[jj][rxnID] == 1) {
+          if (twomol->qflag && atom->q_flag && rxns[rxnID].atom[jj].recharged == 1) {
             double *q = atom->q;
             q[ilocal] = twomol->q[j]+charge_rescale_addend;
           }
@@ -4217,9 +4215,9 @@ void FixBondReact::CustomCharges(int ifragment, int myrxn)
 {
   for (int i = 0; i < onemol->natoms; i++)
     if (onemol->fragmentmask[ifragment][i])
-      custom_charges[i][myrxn] = 1;
+      rxns[myrxn].atom[i].recharged = 1;
     else
-      custom_charges[i][myrxn] = 0;
+      rxns[myrxn].atom[i].recharged = 0;
 }
 
 void FixBondReact::ChiralCenters(char *line, int myrxn)
