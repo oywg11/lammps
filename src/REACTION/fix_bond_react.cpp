@@ -444,7 +444,6 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   for (auto &rxn : rxns) rxn.atom.resize(max_natoms);
   memory->create(equivalences,max_natoms,2,nreacts,"bond/react:equivalences");
   memory->create(reverse_equiv,max_natoms,2,nreacts,"bond/react:reverse_equiv");
-  memory->create(chiral_atoms,max_natoms,6,nreacts,"bond/react:chiral_atoms");
 
   for (int j = 0; j < nreacts; j++) {
     rxns[j].nnewmolids = 0;
@@ -454,9 +453,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       rxns[j].atom[i].deleted = 0;
       rxns[j].atom[i].created = 0;
       rxns[j].atom[i].newmolid = 0;
-      for (int k = 0; k < 6; k++) {
-        chiral_atoms[i][k][j] = 0;
-      }
+      rxns[j].atom[i].chiral.fill(0);
       // default equivalences to their own mol index
       // all but created atoms will be updated
       for (int m = 0; m < 2; m++) {
@@ -649,7 +646,6 @@ FixBondReact::~FixBondReact()
   memory->destroy(attempt);
   memory->destroy(equivalences);
   memory->destroy(reverse_equiv);
-  memory->destroy(chiral_atoms);
   if (vvec != nullptr) memory->destroy(vvec);
 
   if (attempted_rxn == 1) {
@@ -2101,14 +2097,14 @@ int FixBondReact::check_constraints()
 
   // let's also check chirality within 'check_constraint'
   for (int i = 0; i < onemol->natoms; i++) {
-    if (chiral_atoms[i][0][rxnID] == 1) {
+    if (rxns[rxnID].atom[i].chiral[0] == 1) {
       double my4coords[12];
       // already ensured, by transitive property, that chiral simulation atom has four neighs
       for (int j = 0; j < 4; j++) {
         atom1 = atom->map(glove[i][1]);
         // loop over known types involved in chiral center
         for (int jj = 0; jj < 4; jj++) {
-          if (atom->type[atom->map(xspecial[atom1][j])] == chiral_atoms[i][jj+2][rxnID]) {
+          if (atom->type[atom->map(xspecial[atom1][j])] == rxns[rxnID].atom[i].chiral[jj+2]) {
             atom2 = atom->map(xspecial[atom1][j]);
             atom2 = domain->closest_image(atom1,atom2);
             for (int k = 0; k < 3; k++) {
@@ -2118,7 +2114,7 @@ int FixBondReact::check_constraints()
           }
         }
       }
-      if (get_chirality(my4coords) != chiral_atoms[i][1][rxnID]) {
+      if (get_chirality(my4coords) != rxns[rxnID].atom[i].chiral[1]) {
         memory->destroy(satisfied);
         return 0;
       }
@@ -4219,7 +4215,7 @@ void FixBondReact::ChiralCenters(char *line, int myrxn)
     if (rv != 1) error->one(FLERR, "ChiralIDs section is incorrectly formatted");
     if (tmp > onemol->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
-    chiral_atoms[tmp-1][0][myrxn] = 1;
+    rxns[myrxn].atom[tmp-1].chiral[0] = 1;
     if (onemol->xflag == 0)
       error->one(FLERR,"Fix bond/react: Molecule template 'Coords' section required for chiralIDs keyword");
     if ((int) onemol_nxspecial[tmp-1][0] != 4)
@@ -4234,13 +4230,13 @@ void FixBondReact::ChiralCenters(char *line, int myrxn)
     // record order of atom types, and coords
     double my4coords[12];
     for (int j = 0; j < 4; j++) {
-      chiral_atoms[tmp-1][j+2][myrxn] = onemol->type[onemol_xspecial[tmp-1][j]-1];
+      rxns[myrxn].atom[tmp-1].chiral[j+2] = onemol->type[onemol_xspecial[tmp-1][j]-1];
       for (int k = 0; k < 3; k++) {
         my4coords[3*j+k] = onemol->x[onemol_xspecial[tmp-1][j]-1][k];
       }
     }
     // get orientation
-    chiral_atoms[tmp-1][1][myrxn] = get_chirality(my4coords);
+    rxns[myrxn].atom[tmp-1].chiral[1] = get_chirality(my4coords);
   }
 }
 

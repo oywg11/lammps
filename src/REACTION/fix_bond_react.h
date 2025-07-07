@@ -75,12 +75,13 @@ class FixBondReact : public Fix {
   int status;
 
   struct ReactionAtomFlags {
-    int edge;        // true if atom in molecule template has incorrect valency
-    int landlocked;  // true if atom is at least three bonds away from edge atoms
-    int recharged;   // true if atoms whose charge should be updated
-    int deleted;     // atoms in pre-reacted templates to delete
-    int created;     // atoms in post-reacted templates to create
-    int newmolid;    // for molmap option: mol IDs in post, but not in pre, re-indexed from 1
+    int edge;                     // true if atom in molecule template has incorrect valency
+    int landlocked;               // true if atom is at least three bonds away from edge atoms
+    int recharged;                // true if atom whose charge should be updated
+    int deleted;                  // true if atom in pre-reacted template to delete
+    int created;                  // true if atom in post-reacted template to create
+    int newmolid;                 // for molmap option: mol IDs in post, but not in pre, re-indexed from 1
+    std::array<int, 6> chiral;    // pre-react chiral atoms. 1) flag 2) orientation 3-4) ordered atom types
   };
   struct Reaction {
     std::string name, constraintstr;
@@ -153,7 +154,6 @@ class FixBondReact : public Fix {
 
   int ***equivalences;       // relation between pre- and post-reacted templates
   int ***reverse_equiv;      // re-ordered equivalences
-  int ***chiral_atoms;       // pre-react chiral atoms. 1) flag 2) orientation 3-4) ordered atom types
 
   int **nxspecial, **onemol_nxspecial, **twomol_nxspecial;    // full number of 1-4 neighbors
   tagint **xspecial, **onemol_xspecial, **twomol_xspecial;    // full 1-4 neighbor list
