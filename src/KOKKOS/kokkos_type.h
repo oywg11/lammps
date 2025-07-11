@@ -1010,6 +1010,7 @@ typedef TransformView<KK_FLOAT*, double*, Kokkos::LayoutRight> ttransform_kkfloa
 
 KOKKOS_DEVICE_DUALVIEW(int**, LMPDeviceLayout, int_2d)
 KOKKOS_DEVICE_DUALVIEW(int**, Kokkos::LayoutRight, int_2d_lr)
+KOKKOS_DEVICE_DUALVIEW(int**, LMPDeviceType::array_layout, int_2d_dl)
 KOKKOS_DEVICE_DUALVIEW(int*[3], LMPDeviceLayout, int_1d_3)
 KOKKOS_DEVICE_DUALVIEW(tagint**, LMPDeviceLayout, tagint_2d)
 KOKKOS_DEVICE_DUALVIEW(double**, Kokkos::LayoutRight, double_2d_lr)
@@ -1055,7 +1056,7 @@ typedef TransformView<KK_FLOAT****, double****, LMPDeviceLayout> ttransform_kkfl
 
 // Neighbor Types
 
-typedef tdual_int_2d tdual_neighbors_2d;
+typedef tdual_int_2d_dl tdual_neighbors_2d;
 typedef tdual_neighbors_2d::t_dev t_neighbors_2d;
 typedef tdual_neighbors_2d::t_dev_const t_neighbors_2d_const;
 typedef tdual_neighbors_2d::t_dev_um t_neighbors_2d_um;
@@ -1098,6 +1099,7 @@ KOKKOS_HOST_DUALVIEW(KK_SUM_FLOAT*, Kokkos::LayoutRight, kksum_1d)
 
 KOKKOS_HOST_DUALVIEW(int**, LMPDeviceLayout, int_2d)
 KOKKOS_HOST_DUALVIEW(int**, Kokkos::LayoutRight, int_2d_lr)
+KOKKOS_HOST_DUALVIEW(int**, LMPDeviceType::array_layout, int_2d_dl)
 KOKKOS_HOST_DUALVIEW(int*[3], LMPDeviceLayout, int_1d_3)
 KOKKOS_HOST_DUALVIEW(tagint**, LMPDeviceLayout, tagint_2d)
 KOKKOS_HOST_DUALVIEW(double**, Kokkos::LayoutRight, double_2d_lr)
@@ -1128,7 +1130,7 @@ KOKKOS_HOST_DUALVIEW(KK_FLOAT****, LMPDeviceLayout, kkfloat_4d)
 
 // Neighbor Types
 
-typedef tdual_int_2d tdual_neighbors_2d;
+typedef tdual_int_2d_dl tdual_neighbors_2d;
 typedef tdual_neighbors_2d::t_host t_neighbors_2d;
 typedef tdual_neighbors_2d::t_host_const t_neighbors_2d_const;
 typedef tdual_neighbors_2d::t_host_um t_neighbors_2d_um;
