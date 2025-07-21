@@ -225,7 +225,7 @@ tagint *taginthash_keys(taginthash_t *tptr) {
   tagint *keys;
   taginthash_node_t *node;
 
-  keys = (tagint *)calloc(tptr->entries, sizeof(tagint));
+  keys = (tagint *)calloc(tptr->entries + 1, sizeof(tagint));
 
   for (tagint i=0; i < tptr->size; ++i) {
     for (node=tptr->bucket[i]; node != nullptr; node=node->next) {
@@ -1802,6 +1802,8 @@ void FixIMD::handle_output_v3() {
 
 /* End of FixIMD class implementation. */
 
+// NOLINTBEGIN
+
 /***************************************************************************/
 
 /* NOTE: the following code is the based on the example implementation
@@ -2151,6 +2153,7 @@ int imd_recv_energies(void *s, IMDEnergies *energies) {
 int imd_recv_fcoords(void *s, int32 n, float *coords) {
   return (imd_readn(s, (char *)coords, 12*n) != 12*n);
 }
+// NOLINTEND
 
 // Local Variables:
 // mode: c++

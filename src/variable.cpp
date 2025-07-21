@@ -45,6 +45,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstring>
+#include <exception>
 #include <functional>
 #include <limits>
 #include <unordered_map>
@@ -881,6 +882,7 @@ int Variable::next(int narg, char **arg)
 
     for (int iarg = 0; iarg < narg; iarg++) {
       ivar = find(arg[iarg]);
+      if (ivar < 0) continue;
       which[ivar] = nextindex;
       if (which[ivar] >= num[ivar]) {
         flag = 1;

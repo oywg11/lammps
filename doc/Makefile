@@ -22,6 +22,7 @@ HAS_PYTHON3    = NO
 HAS_DOXYGEN    = NO
 HAS_PDFLATEX   = NO
 HAS_PANDOC     = NO
+WEB_SEARCH     = NO
 
 ifeq ($(shell type python3 >/dev/null 2>&1; echo $$?), 0)
 HAS_PYTHON3    = YES
@@ -95,6 +96,13 @@ globbed-tocs:
 
 html: xmlgen globbed-tocs $(VENV) $(SPHINXCONFIG)/conf.py $(ANCHORCHECK) $(MATHJAX)
 	@if [ "$(HAS_BASH)" == "NO" ] ; then echo "bash was not found at $(OSHELL)! Please use: $(MAKE) SHELL=/path/to/bash" 1>&2; exit 1; fi
+	@if [ "$(WEB_SEARCH)" == "YES" ] ; then \
+		cp -v utils/sphinx-config/_themes/lammps_theme/google_search.html \
+		      utils/sphinx-config/_themes/lammps_theme/search.html; \
+	else \
+		cp -v utils/sphinx-config/_themes/lammps_theme/local_search.html \
+		      utils/sphinx-config/_themes/lammps_theme/search.html; \
+	fi
 	@$(MAKE) $(MFLAGS) -C graphviz all
 	@(\
 		. $(VENV)/bin/activate ; env PYTHONWARNINGS= PYTHONDONTWRITEBYTECODE=1 \
@@ -248,6 +256,15 @@ link_check : $(VENV) html
 		. $(VENV)/bin/activate ; env PYTHONWARNINGS= PYTHONDONTWRITEBYTECODE=1 \
 		linkchecker -F html --check-extern html/Manual.html ;\
 		deactivate ;\
+	)
+
+upgrade: $(VENV)
+	@(\
+		. $(VENV)/bin/activate; \
+		pip $(PIP_OPTIONS) install --upgrade pip; \
+		pip $(PIP_OPTIONS) install --upgrade wheel; \
+		pip $(PIP_OPTIONS) install --upgrade -r $(BUILDDIR)/utils/requirements.txt; \
+		deactivate;\
 	)
 
 xmlgen : doxygen/xml/index.xml
