@@ -29,8 +29,8 @@
 #error  Must use -DLMP_KOKKOS_DOUBLE_DOUBLE for ML-IAP Package
 #endif
 
-#ifndef LMP_KOKKOS_LAYOUT_RIGHT
-#error  Must use -DLMP_KOKKOS_LAYOUT_RIGHT for ML-IAP Package
+#ifndef LMP_KOKKOS_LAYOUT_LEGACY
+#error  Must use -DLMP_KOKKOS_LAYOUT_LEGACY for ML-IAP Package
 #endif
 
 namespace LAMMPS_NS {
