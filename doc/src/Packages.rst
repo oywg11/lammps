@@ -60,11 +60,6 @@ whether an extra library is needed to build and use the package:
      - :doc:`Howto spherical <Howto_spherical>`
      - ellipse
      - no
-   * - :ref:`AWPMD <PKG-AWPMD>`
-     - wave packet MD
-     - :doc:`pair_style awpmd/cut <pair_awpmd>`
-     - ``PACKAGES/awpmd``
-     - int
    * - :ref:`BOCS <PKG-BOCS>`
      - BOCS bottom up coarse graining
      - :doc:`fix bocs <fix_bocs>`

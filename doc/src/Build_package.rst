@@ -36,7 +36,6 @@ packages:
    :columns: 6
 
    * :ref:`ADIOS <adios>`
-   * :ref:`AWPMD <awpmd>`
    * :ref:`COLVARS <colvar>`
    * :ref:`COMPRESS <compress>`
    * :ref:`ELECTRODE <electrode>`

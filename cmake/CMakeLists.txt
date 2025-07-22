@@ -265,7 +265,6 @@ set(STANDARD_PACKAGES
   AMOEBA
   APIP
   ASPHERE
-  AWPMD
   BOCS
   BODY
   BPM
@@ -516,7 +515,7 @@ if((CMAKE_CXX_COMPILER_ID STREQUAL "Intel") AND (CMAKE_CXX_STANDARD GREATER_EQUA
           PROPERTIES COMPILE_OPTIONS "-std=c++14")
 endif()
 
-if(PKG_AWPMD OR PKG_ML-QUIP OR PKG_ML-POD OR PKG_ELECTRODE OR PKG_RHEO OR BUILD_TOOLS)
+if(PKG_ML-QUIP OR PKG_ML-POD OR PKG_ELECTRODE OR PKG_RHEO OR BUILD_TOOLS)
   if (NOT USE_INTERNAL_LINALG)
     find_package(LAPACK)
     find_package(BLAS)
@@ -686,7 +685,7 @@ endforeach()
 ##############################################
 # add lib sources of (simple) enabled packages
 ############################################
-foreach(PKG_LIB POEMS AWPMD H5MD)
+foreach(PKG_LIB POEMS H5MD)
   if(PKG_${PKG_LIB})
     string(TOLOWER "${PKG_LIB}" PKG_LIB)
     file(GLOB_RECURSE ${PKG_LIB}_SOURCES CONFIGURE_DEPENDS
@@ -706,10 +705,6 @@ endforeach()
 
 if(PKG_ELECTRODE OR PKG_ML-POD)
   target_link_libraries(lammps PRIVATE ${LAPACK_LIBRARIES})
-endif()
-
-if(PKG_AWPMD)
-  target_link_libraries(awpmd PRIVATE ${LAPACK_LIBRARIES})
 endif()
 
 if(PKG_H5MD)

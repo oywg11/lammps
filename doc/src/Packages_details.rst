@@ -30,7 +30,6 @@ gives those details.
    * :ref:`AMOEBA <PKG-AMOEBA>`
    * :ref:`APIP <PKG-APIP>`
    * :ref:`ASPHERE <PKG-ASPHERE>`
-   * :ref:`AWPMD <PKG-AWPMD>`
    * :ref:`BOCS <PKG-BOCS>`
    * :ref:`BODY <PKG-BODY>`
    * :ref:`BPM <PKG-BPM>`
@@ -263,33 +262,6 @@ particle models including ellipsoids, 2d lines, and 3d triangles.
 * ``examples/ellipse``
 * https://www.lammps.org/movies.html#line
 * https://www.lammps.org/movies.html#tri
-
-----------
-
-.. _PKG-AWPMD:
-
-AWPMD package
-------------------
-
-**Contents:**
-
-AWPMD stands for Antisymmetrized Wave Packet Molecular Dynamics.  This
-package implements an atom, pair, and fix style which allows electrons
-to be treated as explicit particles in a classical molecular dynamics
-model.
-
-**Author:** Ilya Valuev (JIHT, Russia).
-
-**Install:**
-
-This package has :ref:`specific installation instructions <awpmd>` on the :doc:`Build extras <Build_extras>` page.
-
-**Supporting info:**
-
-* ``src/AWPMD``: filenames -> commands
-* ``src/AWPMD/README``
-* :doc:`pair_style awpmd/cut <pair_awpmd>`
-* ``examples/PACKAGES/awpmd``
 
 ----------
 

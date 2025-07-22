@@ -36,7 +36,6 @@ This is the list of packages that may require additional steps.
 
    * :ref:`ADIOS <adios>`
    * :ref:`APIP <apip>`
-   * :ref:`AWPMD <awpmd>`
    * :ref:`COLVARS <colvar>`
    * :ref:`COMPRESS <compress>`
    * :ref:`ELECTRODE <electrode>`
@@ -1309,71 +1308,6 @@ at: `https://github.com/ICAMS/lammps-user-pace/ <https://github.com/ICAMS/lammps
       You need to install the ML-PACE package *first* and follow
       the instructions :ref:`here <ml-pace>` before installing
       the APIP package.
-
-----------
-
-.. _awpmd:
-
-AWPMD package
--------------
-
-.. tabs::
-
-   .. tab:: CMake build
-
-      No additional settings are needed besides ``-D PKG_AQPMD=yes``.
-
-   .. tab:: Traditional make
-
-      Before building LAMMPS, you must build the AWPMD library in
-      ``lib/awpmd``.  You can do this manually if you prefer; follow the
-      instructions in ``lib/awpmd/README``.  You can also do it in one
-      step from the ``lammps/src`` dir, using a command like these,
-      which simply invokes the ``lib/awpmd/Install.py`` script with the
-      specified args:
-
-      .. code-block:: bash
-
-         # print help message
-         make lib-awpmd
-
-         # build with GNU g++ compiler and MPI STUBS (settings as with "make serial")
-         make lib-awpmd args="-m serial"
-
-         # build with default MPI compiler (settings as with "make mpi")
-         make lib-awpmd args="-m mpi"
-
-         # build with Intel Classic compiler
-         make lib-awpmd args="-m icc"
-
-      The build should produce two files: ``lib/awpmd/libawpmd.a`` and
-      ``lib/awpmd/Makefile.lammps``.  The latter is copied from an
-      existing ``Makefile.lammps.*`` and has settings needed to build
-      LAMMPS with the AWPMD library.  If necessary, you can edit/create
-      a new ``lib/awpmd/Makefile.machine`` file for your system, which
-      should define an ``EXTRAMAKE`` variable to specify a corresponding
-      ``Makefile.lammps.<machine>`` file.
-
-      Note that the ``Makefile.lammps`` file has settings for the BLAS
-      and LAPACK linear algebra libraries.  As explained in
-      ``lib/awpmd/README`` these can either exist on your system, or you
-      can use the files provided in ``lib/linalg``.  In the latter case
-      you also need to build the library in ``lib/linalg`` with a
-      command like these:
-
-      .. code-block:: bash
-
-         # print help message
-         make lib-linalg
-
-         # build with GNU C++ compiler (settings as with "make serial")
-         make lib-linalg args="-m serial"
-
-         # build with default MPI C++ compiler (settings as with "make mpi")
-         make lib-linalg args="-m mpi"
-
-         # build with GNU C++ compiler
-         make lib-linalg args="-m g++"
 
 ----------
 

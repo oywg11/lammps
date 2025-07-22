@@ -55,7 +55,6 @@ PACKAGE = \
 	amoeba \
 	apip \
 	asphere \
-	awpmd \
 	bocs \
 	body \
 	bpm \
@@ -220,7 +219,6 @@ PACKLIB = \
 	voronoi \
 	adios \
 	apip \
-	awpmd \
 	colvars \
 	h5md \
 	ml-hdnnp \
@@ -242,7 +240,7 @@ PACKLIB = \
 
 PACKSYS = compress latboltz python
 
-PACKINT = awpmd colvars electrode gpu kokkos lepton ml-pod poems
+PACKINT = colvars electrode gpu kokkos lepton ml-pod poems
 
 PACKEXT = \
 	adios \
