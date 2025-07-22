@@ -14,7 +14,7 @@ OPT.
    * :doc:`hybrid (ko) <pair_hybrid>`
    * :doc:`hybrid/molecular (o) <pair_hybrid>`
    * :doc:`hybrid/overlay (ko) <pair_hybrid>`
-   * :doc:`hybrid/scaled (o) <pair_hybrid>`
+   * :doc:`hybrid/scaled (ko) <pair_hybrid>`
    * :doc:`kim <pair_kim>`
    * :doc:`list <pair_list>`
    * :doc:`tracker <pair_tracker>`
