@@ -18,7 +18,6 @@
 #include "pair_pod.h"
 
 #include "atom.h"
-#include "comm.h"
 #include "error.h"
 #include "force.h"
 #include "info.h"
@@ -27,11 +26,9 @@
 #include "memory.h"
 #include "neigh_list.h"
 #include "neighbor.h"
-#include "tokenizer.h"
 
+#include <algorithm>
 #include <cmath>
-#include <cstring>
-#include <chrono>
 
 #include "eapod.h"
 
@@ -825,7 +822,7 @@ void PairPOD::radialbasis(double *rbft, double *rbftx, double *rbfty, double *rb
   }
 }
 
-void matrixMultiply(double *Phi, double *rbft, double *rbf, int nrbfmax, int ns, int Nij)
+static void matrixMultiply(double *Phi, double *rbft, double *rbf, int nrbfmax, int ns, int Nij)
 {
   for (int idx=0; idx<nrbfmax*Nij; idx++)  {
     int j = idx / nrbfmax;  // pair index index
