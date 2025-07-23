@@ -951,34 +951,10 @@ included in the LAMMPS source distribution in the ``lib/lepton`` folder.
 
    .. tab:: Traditional make
 
-      Before building LAMMPS, one must build the Lepton library in lib/lepton.
+      .. versionchanged:: TBD
 
-      This can be done manually in the same folder by using or adapting
-      one of the provided Makefiles: for example, ``Makefile.serial`` for
-      the GNU C++ compiler, or ``Makefile.mpi`` for the MPI compiler wrapper.
-      The Lepton library is written in C++-11 and thus the C++ compiler
-      may need to be instructed to enable support for that.
-
-      In general, it is safer to use build setting consistent with the
-      rest of LAMMPS.  This is best carried out from the LAMMPS src
-      directory using a command like these, which simply invokes the
-      ``lib/lepton/Install.py`` script with the specified args:
-
-      .. code-block:: bash
-
-         # print help message
-         make lib-lepton
-
-         # build with GNU g++ compiler (settings as with "make serial")
-         make lib-lepton args="-m serial"
-
-         # build with default MPI compiler (settings as with "make mpi")
-         make lib-lepton args="-m mpi"
-
-      The "machine" argument of the ``-m`` flag is used to find a
-      Makefile.machine to use as build recipe.
-
-      The build should produce a ``build`` folder and the library ``lib/lepton/liblmplepton.a``
+      The LEPTON package no longer supports the the traditional make build.
+      You need to build with CMake.
 
 ----------
 
@@ -1008,27 +984,10 @@ Eigen3 is a template library, so you do not need to build it.
 
    .. tab:: Traditional make
 
-      You can download the Eigen3 library manually if you prefer; follow
-      the instructions in ``lib/machdyn/README``.  You can also do it in one
-      step from the ``lammps/src`` dir, using a command like these,
-      which simply invokes the ``lib/machdyn/Install.py`` script with the
-      specified args:
+      .. versionchanged:: TBD
 
-      .. code-block:: bash
-
-         # print help message
-         make lib-machdyn
-
-         # download to lib/machdyn/eigen3
-         make lib-machdyn args="-b"
-
-         # use existing Eigen installation in /usr/include/eigen3
-         make lib-machdyn args="-p /usr/include/eigen3"
-
-      Note that a symbolic (soft) link named ``includelink`` is created
-      in ``lib/machdyn`` to point to the Eigen dir.  When LAMMPS builds it
-      will use this link.  You should not need to edit the
-      ``lib/machdyn/Makefile.lammps`` file.
+      The MACHDYN package no longer supports the the traditional make build.
+      You need to build with CMake.
 
 ----------
 

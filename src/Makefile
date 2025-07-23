@@ -86,8 +86,6 @@ PACKAGE = \
 	kim \
 	kokkos \
 	latboltz \
-	lepton \
-	machdyn \
 	manifold \
 	manybody \
 	mc \
@@ -208,7 +206,6 @@ PACKLIB = \
 	gpu \
 	kim \
 	kokkos \
-	lepton \
 	python \
 	voronoi \
 	adios \
@@ -217,7 +214,6 @@ PACKLIB = \
 	h5md \
 	ml-hdnnp \
 	latboltz \
-	lepton \
 	mdi \
 	molfile \
 	netcdf \
@@ -228,20 +224,18 @@ PACKLIB = \
 	ml-quip \
 	rheo \
 	scafacos \
-	machdyn \
 	vtk \
 	electrode
 
 PACKSYS = compress latboltz python
 
-PACKINT = colvars electrode gpu kokkos lepton ml-pod
+PACKINT = colvars electrode gpu kokkos ml-pod
 
 PACKEXT = \
 	adios \
 	apip \
 	h5md \
 	kim \
-	machdyn \
 	ml-hdnnp \
 	ml-pace \
 	ml-quip \
@@ -634,10 +628,8 @@ lib-%:
 	  echo "Installing lib $(@:lib-%=%)"; \
 	  ( cd ../lib/$(LIBDIR); $(PYTHON) Install.py $(args) ); \
 	else \
-	  echo "Install script for lib $(@:lib-%=%) does not exist"; \
+	  echo "Install script for lib $(@:lib-%=%) does not exist. Please use CMake."; \
 	fi; touch main.cpp
-
-lib-colvars: lib-lepton
 
 # status = list src files that differ from package files
 # installed = list of installed packages
