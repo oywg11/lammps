@@ -12,6 +12,19 @@ stop LAMMPS and print a suitable error message in most cases, when a
 style/command is used that has been removed or will replace the command
 with the direct alternative (if available) and print a warning.
 
+
+ATC, AWPMD, and POEMS packages
+------------------------------
+
+.. deprecated:: TBD
+
+The ATC, AWPMD, and POEMS packages are removed.because there were
+unmaintained for a long time and their legacy C++ programming style
+started to create problems with modern C++ compilers.  LAMMPS version
+22 July 2025 is the last version that contained them.  You have to
+download and compile this version, if you want to use any of these
+packages.
+
 GJF formulation in fix langevin
 -------------------------------
 
