@@ -857,7 +857,7 @@ struct TransformView {
         Kokkos::deep_copy(h_viewkk,h_view);
         if (modified_legacy_device || modified_device_legacy)
           k_view.modify_host();
-        else 
+        else
           k_view.clear_sync_state();
         modified_legacy_hostkk = 0;
       }
