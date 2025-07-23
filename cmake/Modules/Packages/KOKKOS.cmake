@@ -210,6 +210,10 @@ if(PKG_ML-IAP)
     message(FATAL_ERROR "Must use KOKKOS_PREC=double with package ML-IAP")
   endif()
 
+  if(NOT (KOKKOS_LAYOUT STREQUAL "LEGACY"))
+    message(FATAL_ERROR "Must use KOKKOS_LAYOUT=legacy with package ML-IAP")
+  endif()
+
   list(APPEND KOKKOS_PKG_SOURCES ${KOKKOS_PKG_SOURCES_DIR}/mliap_data_kokkos.cpp
                                  ${KOKKOS_PKG_SOURCES_DIR}/mliap_descriptor_so3_kokkos.cpp
                                  ${KOKKOS_PKG_SOURCES_DIR}/mliap_model_linear_kokkos.cpp
