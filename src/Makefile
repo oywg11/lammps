@@ -115,7 +115,6 @@ PACKAGE = \
 	peri \
 	plugin \
 	plumed \
-	poems \
 	ptm \
 	python \
 	qeq \
@@ -214,7 +213,6 @@ PACKLIB = \
 	kim \
 	kokkos \
 	lepton \
-	poems \
 	python \
 	voronoi \
 	adios \
@@ -240,7 +238,7 @@ PACKLIB = \
 
 PACKSYS = compress latboltz python
 
-PACKINT = colvars electrode gpu kokkos lepton ml-pod poems
+PACKINT = colvars electrode gpu kokkos lepton ml-pod
 
 PACKEXT = \
 	adios \

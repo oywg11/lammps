@@ -58,7 +58,6 @@ packages:
    * :ref:`OPENMP <openmp>`
    * :ref:`OPT <opt>`
    * :ref:`PLUMED <plumed>`
-   * :ref:`POEMS <poems>`
    * :ref:`PYTHON <python>`
    * :ref:`QMMM <qmmm>`
    * :ref:`RHEO <rheo>`

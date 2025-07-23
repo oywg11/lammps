@@ -325,7 +325,6 @@ set(STANDARD_PACKAGES
   PHONON
   PLUGIN
   PLUMED
-  POEMS
   PTM
   PYTHON
   QEQ
@@ -685,7 +684,7 @@ endforeach()
 ##############################################
 # add lib sources of (simple) enabled packages
 ############################################
-foreach(PKG_LIB POEMS H5MD)
+foreach(PKG_LIB H5MD)
   if(PKG_${PKG_LIB})
     string(TOLOWER "${PKG_LIB}" PKG_LIB)
     file(GLOB_RECURSE ${PKG_LIB}_SOURCES CONFIGURE_DEPENDS
@@ -693,8 +692,6 @@ foreach(PKG_LIB POEMS H5MD)
     add_library(${PKG_LIB} STATIC ${${PKG_LIB}_SOURCES})
     set_target_properties(${PKG_LIB} PROPERTIES OUTPUT_NAME lammps_${PKG_LIB}${LAMMPS_MACHINE})
     target_link_libraries(lammps PRIVATE ${PKG_LIB})
-    if(PKG_LIB STREQUAL "awpmd")
-      target_include_directories(awpmd PUBLIC ${LAMMPS_LIB_SOURCE_DIR}/awpmd/systems/interact ${LAMMPS_LIB_SOURCE_DIR}/awpmd/ivutils/include)
     elseif(PKG_LIB STREQUAL "h5md")
       target_include_directories(h5md PUBLIC ${LAMMPS_LIB_SOURCE_DIR}/h5md/include ${HDF5_INCLUDE_DIRS})
     else()

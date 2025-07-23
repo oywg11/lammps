@@ -96,7 +96,6 @@ gives those details.
    * :ref:`PHONON <PKG-PHONON>`
    * :ref:`PLUGIN <PKG-PLUGIN>`
    * :ref:`PLUMED <PKG-PLUMED>`
-   * :ref:`POEMS <PKG-POEMS>`
    * :ref:`PTM <PKG-PTM>`
    * :ref:`PYTHON <PKG-PYTHON>`
    * :ref:`QEQ <PKG-QEQ>`
@@ -2352,35 +2351,6 @@ as a plugin to avoid licensing conflicts when distributing binaries.
 * ``lib/plumed/README``
 * :doc:`fix plumed <fix_plumed>`
 * ``examples/PACKAGES/plumed``
-
-----------
-
-.. _PKG-POEMS:
-
-POEMS package
--------------
-
-**Contents:**
-
-A fix that wraps the Parallelizable Open source Efficient Multibody
-Software (POEMS) library, which is able to simulate the dynamics of
-articulated body systems.  These are systems with multiple rigid
-bodies (collections of particles) whose motion is coupled by
-connections at hinge points.
-
-**Author:** Rudra Mukherjee (JPL) while at RPI.
-
-**Install:**
-
-This package has :ref:`specific installation instructions <poems>` on the :doc:`Build extras <Build_extras>` page.
-
-**Supporting info:**
-
-* ``src/POEMS``: filenames -> commands
-* ``src/POEMS/README``
-* ``lib/poems/README``
-* :doc:`fix poems <fix_poems>`
-* ``examples/rigid``
 
 ----------
 

@@ -58,7 +58,6 @@ This is the list of packages that may require additional steps.
    * :ref:`OPENMP <openmp>`
    * :ref:`OPT <opt>`
    * :ref:`PLUMED <plumed>`
-   * :ref:`POEMS <poems>`
    * :ref:`PYTHON <python>`
    * :ref:`QMMM <qmmm>`
    * :ref:`RHEO <rheo>`
@@ -1099,51 +1098,6 @@ OPT package
       the OPT package when using Intel compilers.  It should be added to
       the ``CCFLAGS`` line of your ``Makefile.machine``.  See
       ``src/MAKE/OPTIONS/Makefile.opt`` for an example.
-
-----------
-
-.. _poems:
-
-POEMS package
--------------------------
-
-.. tabs::
-
-   .. tab:: CMake build
-
-      No additional settings are needed besides ``-D PKG_OPT=yes``
-
-   .. tab:: Traditional make
-
-      Before building LAMMPS, you must build the POEMS library in
-      ``lib/poems``\ .  You can do this manually if you prefer; follow
-      the instructions in ``lib/poems/README``\ .  You can also do it in
-      one step from the ``lammps/src`` dir, using a command like these,
-      which simply invokes the ``lib/poems/Install.py`` script with the
-      specified args:
-
-      .. code-block:: bash
-
-         # print help message
-         make lib-poems
-
-         # build with GNU g++ compiler (settings as with "make serial")
-         make lib-poems args="-m serial"
-
-         # build with default MPI C++ compiler (settings as with "make mpi")
-         make lib-poems args="-m mpi"
-
-         # build with Intel Classic compiler
-         make lib-poems args="-m icc"
-
-      The build should produce two files: ``lib/poems/libpoems.a`` and
-      ``lib/poems/Makefile.lammps``.  The latter is copied from an
-      existing ``Makefile.lammps.*`` and has settings needed to build
-      LAMMPS with the POEMS library (though typically the settings are
-      just blank).  If necessary, you can edit/create a new
-      ``lib/poems/Makefile.machine`` file for your system, which should
-      define an ``EXTRAMAKE`` variable to specify a corresponding
-      ``Makefile.lammps.machine`` file.
 
 ----------
 

@@ -390,11 +390,6 @@ whether an extra library is needed to build and use the package:
      - :doc:`fix plumed <fix_plumed>`
      - ``PACKAGES/plumed``
      - ext
-   * - :ref:`POEMS <PKG-POEMS>`
-     - coupled rigid body motion
-     - :doc:`fix poems <fix_poems>`
-     - rigid
-     - int
    * - :ref:`PTM <PKG-PTM>`
      - Polyhedral Template Matching
      - :doc:`compute ptm/atom <compute_ptm_atom>`

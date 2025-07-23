@@ -171,7 +171,6 @@ OPT.
    * :doc:`pimd/nvt/bosonic <fix_pimd>`
    * :doc:`planeforce <fix_planeforce>`
    * :doc:`plumed <fix_plumed>`
-   * :doc:`poems <fix_poems>`
    * :doc:`polarize/bem/gmres <fix_polarize>`
    * :doc:`polarize/bem/icc <fix_polarize>`
    * :doc:`polarize/functional <fix_polarize>`

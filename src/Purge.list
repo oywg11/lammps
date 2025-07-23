@@ -62,6 +62,8 @@ fix_nve_awpmd.cpp
 fix_nve_awpmd.h
 pair_awpmd_cut.cpp
 pair_awpmd_cut.h
+fix_poems.cpp
+fix_poems.h
 # removed in Dec 2024
 group_kokkos.cpp
 # renamed in September 2024

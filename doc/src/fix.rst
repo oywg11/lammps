@@ -350,7 +350,6 @@ accelerated styles exist.
 * :doc:`pimd/nvt/bosonic <fix_pimd>` - Bosonic Feynman path-integral molecular dynamics with Nose-Hoover thermostat
 * :doc:`planeforce <fix_planeforce>` - constrain atoms to move in a plane
 * :doc:`plumed <fix_plumed>` - wrapper on PLUMED free energy library
-* :doc:`poems <fix_poems>` - constrain clusters of atoms to move as coupled rigid bodies
 * :doc:`polarize/bem/gmres <fix_polarize>` - compute induced charges at the interface between impermeable media with different dielectric constants with generalized minimum residual (GMRES)
 * :doc:`polarize/bem/icc <fix_polarize>` - compute induced charges at the interface between impermeable media with different dielectric constants with the successive over-relaxation algorithm
 * :doc:`polarize/functional <fix_polarize>` - compute induced charges at the interface between impermeable media with different dielectric constants with the energy variational approach

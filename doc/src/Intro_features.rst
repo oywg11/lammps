@@ -233,7 +233,6 @@ classical MD options:
 * :doc:`real-time visualization and interactive MD <fix_imd>`, :doc:`built-in renderer for images and movies <dump_image>`
 * calculate :doc:`virtual diffraction patterns <compute_xrd>`
 * calculate :doc:`finite temperature phonon dispersion <fix_phonon>` and the :doc:`dynamical matrix of minimized structures <dynamical_matrix>`
-* coupled rigid body integration via the :doc:`POEMS <fix_poems>` library
 * :doc:`QM/MM coupling <fix_qmmm>`
 * Monte Carlo via :doc:`GCMC <fix_gcmc>` and :doc:`tfMC <fix_tfmc>` and :doc:`atom swapping <fix_atom_swap>`
 * :doc:`path-integral molecular dynamics (PIMD) <fix_ipi>` and :doc:`this as well <fix_pimd>`
