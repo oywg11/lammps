@@ -23,10 +23,12 @@ in addition to
 as described on the :doc:`Build_package <Build_package>` page.
 
 For a CMake build there may be additional optional or required
-variables to set.  For a build with make, a provided library under the
-lammps/lib directory may need to be built first.  Or an external
-library may need to exist on your system or be downloaded and built.
-You may need to tell LAMMPS where it is found on your system.
+variables to set.
+
+.. versionchanged:: TBD
+
+The traditional build system with GNU make no longer supports packages
+that require extra steps in the ``lammps/lib`` directory.
 
 This is the list of packages that may require additional steps.
 
@@ -1279,60 +1281,21 @@ module included in the LAMMPS source distribution.
    .. tab:: CMake build
 
       This is the recommended build procedure for using Colvars in
-      LAMMPS. No additional settings are normally needed besides
-      ``-D PKG_COLVARS=yes``.
+      LAMMPS. No additional settings are normally needed besides ``-D
+      PKG_COLVARS=yes``. The following CMake variables are available.
+
+      .. code-block:: bash
+
+         -D PKG_COLVARS=yes          # enable the package itself
+         -D COLVARS_LEPTON=yes       # use the Lepton library for custom expression (on by defaul)
+         -D COLVARS_DEBUG=no         # eneable debugging message (verbose, off by default)
 
    .. tab:: Traditional make
 
-      As with other libraries distributed with LAMMPS, the Colvars library
-      needs to be built before building the LAMMPS program with the COLVARS
-      package enabled.
+      .. versionchanged:: TBD
 
-      From the LAMMPS ``src`` directory, this is most easily and safely done
-      via one of the following commands, which implicitly rely on the
-      ``lib/colvars/Install.py`` script with optional arguments:
-
-      .. code-block:: bash
-
-         # print help message
-         make lib-colvars
-
-         # build with GNU g++ compiler (settings as with "make serial")
-         make lib-colvars args="-m serial"
-
-         # build with default MPI compiler (settings as with "make mpi")
-         make lib-colvars args="-m mpi"
-
-         # build with GNU g++ compiler and colvars debugging enabled
-         make lib-colvars args="-m g++-debug"
-
-      The "machine" argument of the "-m" flag is used to find a
-      ``Makefile.machine`` file to use as build recipe.  If such recipe does
-      not already exist in ``lib/colvars``, suitable settings will be
-      auto-generated consistent with those used in the core LAMMPS makefiles.
-
-
-      .. versionchanged:: 8Feb2023
-
-      Please note that Colvars uses the Lepton library, which is now
-      included with the LEPTON package; if you use anything other than
-      the ``make lib-colvars`` command, please make sure to :ref:`build
-      Lepton beforehand <lepton>`.
-
-      Optional flags may be specified as environment variables:
-
-      .. code-block:: bash
-
-         # Build with debug code (much slower)
-         COLVARS_DEBUG=yes make lib-colvars args="-m machine"
-
-         # Build without Lepton (included otherwise)
-         COLVARS_LEPTON=no make lib-colvars args="-m machine"
-
-      The build should produce two files: the library
-      ``lib/colvars/libcolvars.a`` and the specification file
-      ``lib/colvars/Makefile.lammps``.  The latter is auto-generated,
-      and normally does not need to be edited.
+      The COLVARS package no longer supports the the traditional make build.
+      You need to build with CMake.
 
 ----------
 
