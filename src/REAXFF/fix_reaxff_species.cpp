@@ -404,12 +404,13 @@ void FixReaxFFSpecies::init()
     f_SPECBOND = dynamic_cast<FixAveAtom *>(modify->add_fix(fixcmd));
 
     // create a fix to point to fix_property_atom for storing clusterID
-    fixcmd = fmt::format("clusterID_{} all property/atom d_clusterID ghost yes", id);
+    clusterID_propname = fmt::format("clusterID_propname_{}", id);
+    fixcmd = fmt::format("clusterID_{} all property/atom d_{} ghost yes", id, clusterID_propname);
     f_clusterID = dynamic_cast<FixPropertyAtom *>(modify->add_fix(fixcmd));
 
     // per-atom property for clusterID
     int flag,cols;
-    int index1 = atom->find_custom("clusterID",flag,cols);
+    int index1 = atom->find_custom(clusterID_propname.c_str(),flag,cols);
     clusterID = atom->dvector[index1];
     vector_atom = clusterID;
 
@@ -455,7 +456,7 @@ void FixReaxFFSpecies::Output_ReaxFF_Bonds(bigint ntimestep, FILE * /*fp*/)
 
   // per-atom property for clusterID
   int flag,cols;
-  int index1 = atom->find_custom("clusterID",flag,cols);
+  int index1 = atom->find_custom(clusterID_propname.c_str(),flag,cols);
   clusterID = atom->dvector[index1];
   vector_atom = clusterID;
 
