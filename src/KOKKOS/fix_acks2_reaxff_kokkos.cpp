@@ -1898,9 +1898,6 @@ void FixACKS2ReaxFFKokkos<DeviceType>::grow_arrays(int nmax)
 
   d_s_hist = k_s_hist.template view<DeviceType>();
   d_s_hist_X = k_s_hist_X.template view<DeviceType>();
-
-  k_s_hist.modify_host();
-  k_s_hist_X.modify_host();
 }
 
 /* ----------------------------------------------------------------------

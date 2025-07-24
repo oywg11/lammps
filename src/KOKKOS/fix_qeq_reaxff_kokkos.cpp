@@ -1311,9 +1311,6 @@ void FixQEqReaxFFKokkos<DeviceType>::grow_arrays(int nmax)
 
   d_s_hist = k_s_hist.template view<DeviceType>();
   d_t_hist = k_t_hist.template view<DeviceType>();
-
-  k_s_hist.modify_host();
-  k_t_hist.modify_host();
 }
 
 /* ----------------------------------------------------------------------

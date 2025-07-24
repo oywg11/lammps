@@ -511,14 +511,6 @@ void FixCMAPKokkos<DeviceType>::grow_arrays(int nmax)
 
   for (int i = nmax_previous; i < nmax; i++) k_num_crossterm.h_view(i) = 0;
   nmax_previous = nmax;
-
-  k_num_crossterm.modify_host();
-  k_crossterm_type.modify_host();
-  k_crossterm_atom1.modify_host();
-  k_crossterm_atom2.modify_host();
-  k_crossterm_atom3.modify_host();
-  k_crossterm_atom4.modify_host();
-  k_crossterm_atom5.modify_host();
 }
 
 /* ----------------------------------------------------------------------

@@ -810,6 +810,7 @@ struct TransformView {
           if (!async_flag) Kokkos::fence();
         } else {
           Kokkos::deep_copy(h_viewkk,h_view);
+          k_view.clear_sync_state();
           k_view.modify_host();
           k_view.sync_device();
           modified_legacy_hostkk = 0;

@@ -294,8 +294,8 @@ void FixWallGranKokkos<DeviceType>::grow_arrays(int nmax)
 {
   if (use_history) {
     k_history_one.sync_host(); // force reallocation on host
-    memoryKK->grow_kokkos(k_history_one,history_one,nmax,size_history,"wall/gran/kk:history_one");
     k_history_one.modify_host();
+    memoryKK->grow_kokkos(k_history_one,history_one,nmax,size_history,"wall/gran/kk:history_one");
     d_history_one = k_history_one.template view<DeviceType>();
   }
 }
