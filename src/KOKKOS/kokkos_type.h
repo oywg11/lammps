@@ -681,8 +681,11 @@ struct TransformView {
     h_viewkk = k_view.h_view;
     if constexpr (NEED_TRANSFORM) {
       Kokkos::resize(h_view,ns...);
-      if (k_view.need_sync_host()) modify_device_legacy();
-      else if (k_view.need_sync_device()) modify_hostkk_legacy();
+      if (k_view.need_sync_host()) {
+        modify_legacy_hostkk();
+      } else if (k_view.need_sync_device()) {
+        modify_legacy_device();
+      }
     } else
       h_view = h_viewkk;
   }
@@ -825,12 +828,14 @@ struct TransformView {
 
     if constexpr (NEED_TRANSFORM) {
       if (modified_legacy_device && k_view.need_sync_device()) {
-        std::string msg = "TransformView::modify ERROR: ";
-        msg += "Concurrent modification of views that sync to Kokkos device view ";
-        msg += "in TransformView \"";
-        msg += d_view.label();
-        msg += "\"\n";
-        Kokkos::abort(msg.c_str());
+        if (modified_legacy_hostkk || modified_hostkk_legacy) {
+          std::string msg = "TransformView::modify ERROR: ";
+          msg += "Concurrent modification of views that sync to Kokkos device view ";
+          msg += "in TransformView \"";
+          msg += d_view.label();
+          msg += "\"\n";
+          Kokkos::abort(msg.c_str());
+        } else modified_legacy_device = 0; // prevent double copy
       }
     }
 
@@ -872,12 +877,14 @@ struct TransformView {
 
     if constexpr (NEED_TRANSFORM) {
       if (modified_legacy_hostkk && k_view.need_sync_host()) {
-        std::string msg = "TransformView::modify ERROR: ";
-        msg += "Concurrent modification of views that sync to Kokkos host view ";
-        msg += "in TransformView \"";
-        msg += d_view.label();
-        msg += "\"\n";
-        Kokkos::abort(msg.c_str());
+        if (modified_legacy_device || modified_device_legacy) {
+          std::string msg = "TransformView::modify ERROR: ";
+          msg += "Concurrent modification of views that sync to Kokkos host view ";
+          msg += "in TransformView \"";
+          msg += d_view.label();
+          msg += "\"\n";
+          Kokkos::abort(msg.c_str());
+        } else modified_legacy_hostkk = 0; // prevent double copy
       }
     }
 
@@ -950,12 +957,14 @@ struct TransformView {
       if (!h_view.data()) return;
 
       if (modified_device_legacy && modified_hostkk_legacy) {
-        std::string msg = "TransformView::modify ERROR: ";
-        msg += "Concurrent modification of views that sync to legacy host view ";
-        msg += "in TransformView \"";
-        msg += d_view.label();
-        msg += "\"\n";
-        Kokkos::abort(msg.c_str());
+        if (k_view.need_sync_device() || k_view.need_sync_host()) {
+          std::string msg = "TransformView::modify ERROR: ";
+          msg += "Concurrent modification of views that sync to legacy host view ";
+          msg += "in TransformView \"";
+          msg += d_view.label();
+          msg += "\"\n";
+          Kokkos::abort(msg.c_str());
+        } else modified_device_legacy = 0; // prevent double copy
       }
 
       sync_device_to_legacy(buffer,async_flag);
