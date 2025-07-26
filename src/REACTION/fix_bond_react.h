@@ -26,9 +26,10 @@ FixStyle(bond/react,FixBondReact);
 
 #include "fix.h"
 
+#include <array>
+#include <deque>
 #include <map>
 #include <set>
-#include <deque>
 
 namespace LAMMPS_NS {
 
@@ -153,8 +154,6 @@ class FixBondReact : public Fix {
   int **restore_pt;      // contains info about restore points
   tagint **restore;      // contains info about restore points
   int *pioneer_count;    // counts pioneers
-
-  int ***reverse_equiv;      // re-ordered equivalences
 
   int **nxspecial, **onemol_nxspecial, **twomol_nxspecial;    // full number of 1-4 neighbors
   tagint **xspecial, **onemol_xspecial, **twomol_xspecial;    // full 1-4 neighbor list
