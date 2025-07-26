@@ -92,7 +92,7 @@ For CUDA builds:
 CUDA_MPS_SUPPORT        Do not generate errors for exclusive mode for CUDA
                         effectively supporting  CUDA Multi-process service (MPS)
                         (-DCUDA_MPS_SUPPORT=on)
-                       
+
 For OpenCL builds:
 
 GERYON_OCL_FLUSH        For OpenCL, flush queue after every enqueue
