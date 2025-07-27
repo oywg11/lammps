@@ -83,32 +83,34 @@ class FixBondReact : public Fix {
     int created;                  // true if atom in post-reacted template to create
     int newmolid;                 // for molmap option: mol IDs in post, but not in pre, re-indexed from 1
     std::array<int, 6> chiral;    // pre-react chiral atoms. 1) flag 2) orientation 3-4) ordered atom types
-    std::array<int, 2> amap;      // atom map between reactant and product templates
+    std::array<int, 2> amap;      // atom map: clmn 1 = product atom IDs, clmn 2: reactant atom IDs
     std::array<int, 2> ramap;     // reverse amap
   };
   struct Reaction {
+    class Molecule *reactant;     // pre-reacted molecule template
+    class Molecule *product;      // post-reacted molecule template
     std::string name, constraintstr;
     int nevery, groupbits;
     int iatomtype, jatomtype;
     int ibonding, jbonding;
-    int closeneigh;            // indicates if bonding atoms of a rxn are 1-2, 1-3, or 1-4 neighbors
+    int closeneigh;               // indicates if bonding atoms of a rxn are 1-2, 1-3, or 1-4 neighbors
     double rminsq, rmaxsq;
     double fraction;
-    double mol_total_charge;   // sum of charges of post-reaction atoms whose charges are updated
-    int reacted_mol, unreacted_mol;
+    double mol_total_charge;      // sum of charges of post-reaction atoms whose charges are updated
+    int reacted_mol; // 2delete
     int reaction_count, reaction_count_total;
     int local_rxn_count, ghostly_rxn_count;
     int max_rxn, nlocalkeep, nghostlykeep;
     int seed, limit_duration;
     int stabilize_steps_flag;
     int custom_charges_fragid;
-    int rescale_charges_flag;  // if nonzero, indicates number of atoms whose charges are updated
+    int rescale_charges_flag;     // if nonzero, indicates number of atoms whose charges are updated
     int create_atoms_flag, modify_create_fragid;
     double overlapsq;
     int molecule_keyword;
     int nconstraints;
     int v_nevery, v_rmin, v_rmax, v_prob; // ID of variable, -1 if static
-    int nnewmolids;            // number of unique new molids needed for each reaction
+    int nnewmolids;               // number of unique new molids needed for each reaction
     std::vector<ReactionAtomFlags> atoms;
   };
   std::vector<Reaction> rxns;
@@ -123,7 +125,6 @@ class FixBondReact : public Fix {
   int allnattempt;
   tagint ***attempt;
 
-  class Molecule *onemol;      // pre-reacted molecule template
   class Molecule *twomol;      // post-reacted molecule template
   Fix *fix1;                   // nve/limit used to relax reaction sites
   Fix *fix2;                   // properties/atom used to indicate 1) relaxing atoms
@@ -197,14 +198,14 @@ class FixBondReact : public Fix {
   void inner_crosscheck_loop();
   int ring_check();
   int check_constraints();
-  void get_IDcoords(int, int, double *);
-  double get_temperature(tagint **, int, int);
-  double get_totalcharge();
+  void get_IDcoords(int, int, double *, Molecule *);
+  double get_temperature(tagint **, int, int, Molecule *);
+  double get_totalcharge(Reaction);
   void customvarnames();    // get per-atom variables names used by custom constraint
   void get_customvars();    // evaluate local values for variables names used by custom constraint
   double custom_constraint(const std::string &);    // evaulate expression for custom constraint
   double rxnfunction(const std::string &, const std::string &,
-                     const std::string &);    // eval rxn_sum and rxn_ave
+                     const std::string &, Molecule *);    // eval rxn_sum and rxn_ave
   void get_atoms2bond(int);
   int get_chirality(double[12]);              // get handedness given an ordered set of coordinates
 
@@ -214,12 +215,12 @@ class FixBondReact : public Fix {
 
   void far_partner();
   void close_partner();
-  void get_molxspecials();
-  void find_landlocked_atoms(int);
+  void get_molxspecials(Molecule *);
+  void find_landlocked_atoms(Reaction &);
   void glove_ghostcheck();
   void ghost_glovecast();
   void update_everything();
-  int insert_atoms_setup(tagint **, int);
+  int insert_atoms_setup(tagint **, int, Reaction &);
   void unlimit_bond(); // removes atoms from stabilization, and other post-reaction every-step operations
   void dedup_mega_gloves(int);    //dedup global mega_glove
   void write_restart(FILE *) override;
