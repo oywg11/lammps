@@ -157,10 +157,8 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
 
   nxspecial = nullptr;
   onemol_nxspecial = nullptr;
-  twomol_nxspecial = nullptr;
   xspecial = nullptr;
   onemol_xspecial = nullptr;
-  twomol_xspecial = nullptr;
 
   // these group names are reserved for use exclusively by bond/react
   master_group = (char *) "bond_react_MASTER_group";
@@ -2511,8 +2509,6 @@ void FixBondReact::get_molxspecials(Reaction rxn)
 {
   onemol_nxspecial = rxn.reactant->nspecial;
   onemol_xspecial = rxn.reactant->special;
-  twomol_nxspecial = rxn.product->nspecial;
-  twomol_xspecial = rxn.product->special;
 }
 
 /* ----------------------------------------------------------------------
@@ -2545,9 +2541,9 @@ void FixBondReact::find_landlocked_atoms(Reaction &rxn)
 
   if (nspecial_limit != -1) {
     for (int i = 0; i < rxn.product->natoms; i++) {
-      for (int j = 0; j < twomol_nxspecial[i][nspecial_limit]; j++) {
+      for (int j = 0; j < rxn.product->nspecial[i][nspecial_limit]; j++) {
         for (int k = 0; k < rxn.reactant->natoms; k++) {
-          if (rxn.atoms[twomol_xspecial[i][j]-1].amap[1] == k+1 && rxn.atoms[k].edge == 1) {
+          if (rxn.atoms[rxn.product->special[i][j]-1].amap[1] == k+1 && rxn.atoms[k].edge == 1) {
             rxn.atoms[i].landlocked = 0;
           }
         }
@@ -2571,19 +2567,19 @@ void FixBondReact::find_landlocked_atoms(Reaction &rxn)
     if (rxn.atoms[i].created == 0) {
       if (rxn.atoms[i].landlocked == 0) {
         for (int j = 0; j < rxn.product->num_bond[i]; j++) {
-          int twomol_atomj = rxn.product->bond_atom[i][j];
-          if (rxn.atoms[twomol_atomj-1].landlocked == 0) {
+          int product_atomj = rxn.product->bond_atom[i][j];
+          if (rxn.atoms[product_atomj-1].landlocked == 0) {
             int onemol_atomi = rxn.atoms[i].amap[1];
             int onemol_batom;
             for (int m = 0; m < rxn.reactant->num_bond[onemol_atomi-1]; m++) {
               onemol_batom = rxn.reactant->bond_atom[onemol_atomi-1][m];
-              if ((onemol_batom == rxn.atoms[twomol_atomj-1].amap[1]) &&
+              if ((onemol_batom == rxn.atoms[product_atomj-1].amap[1]) &&
                   (rxn.product->bond_type[i][j] != rxn.reactant->bond_type[onemol_atomi-1][m]))
                 error->all(FLERR, "Fix bond/react: Bond type affected by reaction {} is "
                            "too close to template edge",rxn.name);
             }
             if (newton_bond) {
-              int onemol_atomj = rxn.atoms[twomol_atomj-1].amap[1];
+              int onemol_atomj = rxn.atoms[product_atomj-1].amap[1];
               for (int m = 0; m < rxn.reactant->num_bond[onemol_atomj-1]; m++) {
                 onemol_batom = rxn.reactant->bond_atom[onemol_atomj-1][m];
                 if ((onemol_batom == rxn.atoms[i].amap[1]) &&
@@ -2602,8 +2598,8 @@ void FixBondReact::find_landlocked_atoms(Reaction &rxn)
   for (int i = 0; i < rxn.reactant->natoms; i++) {
     if (rxn.atoms[i].deleted == 1) {
       int ii = rxn.atoms[i].ramap[1] - 1;
-      for (int j = 0; j < twomol_nxspecial[ii][0]; j++) {
-        if (rxn.atoms[rxn.atoms[twomol_xspecial[ii][j]-1].amap[1]-1].deleted == 0) {
+      for (int j = 0; j < rxn.product->nspecial[ii][0]; j++) {
+        if (rxn.atoms[rxn.atoms[rxn.product->special[ii][j]-1].amap[1]-1].deleted == 0) {
           error->all(FLERR,"Fix bond/react: A deleted atom cannot remain bonded to an atom that is not deleted");
         }
       }
@@ -2615,7 +2611,7 @@ void FixBondReact::find_landlocked_atoms(Reaction &rxn)
   if (comm->me == 0)
     for (int i = 0; i < rxn.product->natoms; i++) {
       if ((rxn.atoms[i].created == 0) &&
-          (twomol_nxspecial[i][0] != onemol_nxspecial[rxn.atoms[i].amap[1]-1][0]) &&
+          (rxn.product->nspecial[i][0] != onemol_nxspecial[rxn.atoms[i].amap[1]-1][0]) &&
           (rxn.atoms[i].landlocked == 0)) {
         warnflag = 1;
         break;
@@ -2627,8 +2623,8 @@ void FixBondReact::find_landlocked_atoms(Reaction &rxn)
   if (comm->me == 0)
     for (int i = 0; i < rxn.product->natoms; i++) {
       if (rxn.atoms[i].landlocked == 1) continue;
-      for (int j = 0; j < twomol_nxspecial[i][0]; j++) {
-        int oneneighID = rxn.atoms[twomol_xspecial[i][j]-1].amap[1];
+      for (int j = 0; j < rxn.product->nspecial[i][0]; j++) {
+        int oneneighID = rxn.atoms[rxn.product->special[i][j]-1].amap[1];
         int ii = rxn.atoms[i].amap[1] - 1;
         thereflag = 0;
         for (int k = 0; k < onemol_nxspecial[ii][0]; k++) {

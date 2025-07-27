@@ -154,8 +154,8 @@ class FixBondReact : public Fix {
   tagint **restore;      // contains info about restore points
   int *pioneer_count;    // counts pioneers
 
-  int **nxspecial, **onemol_nxspecial, **twomol_nxspecial;    // full number of 1-4 neighbors
-  tagint **xspecial, **onemol_xspecial, **twomol_xspecial;    // full 1-4 neighbor list
+  int **nxspecial, **onemol_nxspecial;    // full number of 1-4 neighbors
+  tagint **xspecial, **onemol_xspecial;    // full 1-4 neighbor list
 
   int pion, neigh, trace;    // important indices for various loops. required for restore points
   int lcl_inst;              // reaction instance
