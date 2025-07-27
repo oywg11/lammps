@@ -4145,11 +4145,16 @@ void FixBondReact::Equivalences(char *line, int myrxn)
     rxns[myrxn].atoms[tmp1-1].ramap[1] = tmp2;
   }
   // sanity check for one-to-one mapping for equivalences
-  for (int i = 0; i < twomol->natoms; i++)
-    for (int j = i+1; j < twomol->natoms; j++)
+  for (int i = 0; i < twomol->natoms; i++) {
+    if (rxns[myrxn].atoms[i].created == 1) continue;
+    for (int j = i+1; j < twomol->natoms; j++) {
+      if (rxns[myrxn].atoms[j].created == 1) continue;
       if (rxns[myrxn].atoms[i].amap[0] == rxns[myrxn].atoms[j].amap[0] ||
-          rxns[myrxn].atoms[i].amap[1] == rxns[myrxn].atoms[j].amap[1])
+          rxns[myrxn].atoms[i].amap[1] == rxns[myrxn].atoms[j].amap[1]) {
         error->one(FLERR,"Fix bond/react: Repeated atoms IDs in Equivalences section");
+      }
+    }
+  }
 }
 
 void FixBondReact::DeleteAtoms(char *line, int myrxn)
