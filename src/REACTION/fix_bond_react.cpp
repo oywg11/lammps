@@ -241,7 +241,9 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   rxns.resize(nreacts);
 
   rescale_charges_anyflag = 0;
+  int id = 0;
   for (auto &rxn : rxns) {
+    rxn.ID = id++;
     rxn.fraction = 1.0;
     rxn.seed = 12345;
     rxn.max_rxn = INT_MAX;
@@ -263,14 +265,10 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     rxn.v_nevery = rxn.v_prob = -1;
   }
 
-  char **files;
-  files = new char*[nreacts];
-
-  for (rxnID = 0; rxnID < nreacts; rxnID++) {
+  for (auto &rxn : rxns) {
 
     if (strcmp(arg[iarg],"react") != 0) error->all(FLERR,"Illegal fix bond/react command: "
                                                    "'react' or 'stabilization' has incorrect arguments");
-    Reaction &rxn = rxns[rxnID];
     iarg++;
 
     rxn.name = arg[iarg++];
@@ -321,7 +319,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     rxn.product = atom->molecules[mol_idx];
 
     //read map file
-    files[rxnID] = utils::strdup(arg[iarg]);
+    rxn.mapfilename = arg[iarg];
     iarg++;
 
     while (iarg < narg && strcmp(arg[iarg],"react") != 0) {
@@ -463,22 +461,22 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     }
     // 'new' mol IDs are ones that exist in post-reaction but not in pre-reaction
     // let's condense these and shift to be indexed from 1
-    for (int myrxn = 0; myrxn < nreacts; myrxn++) {
-      if (rxns[myrxn].reactant->moleculeflag && rxns[myrxn].product->moleculeflag) {
-        for (int j = 0; j < rxns[myrxn].product->natoms; j++) {
-          if (rxns[myrxn].atoms[j].newmolid != 0) continue;
+    for (auto &rxn : rxns) {
+      if (rxn.reactant->moleculeflag && rxn.product->moleculeflag) {
+        for (int j = 0; j < rxn.product->natoms; j++) {
+          if (rxn.atoms[j].newmolid != 0) continue;
           int molid_isnew = 1;
-          for (int k = 0; k < rxns[myrxn].reactant->natoms; k++) {
-            if (rxns[myrxn].product->molecule[j] == rxns[myrxn].reactant->molecule[k]) {
+          for (int k = 0; k < rxn.reactant->natoms; k++) {
+            if (rxn.product->molecule[j] == rxn.reactant->molecule[k]) {
               molid_isnew = 0;
               break;
             }
           }
           if (molid_isnew == 1) {
-            rxns[myrxn].nnewmolids++;
-            for (int k = j; k < rxns[myrxn].product->natoms; k++) {
-              if (rxns[myrxn].product->molecule[k] == rxns[myrxn].product->molecule[j])
-                rxns[myrxn].atoms[k].newmolid = rxns[myrxn].nnewmolids;
+            rxn.nnewmolids++;
+            for (int k = j; k < rxn.product->natoms; k++) {
+              if (rxn.product->molecule[k] == rxn.product->molecule[j])
+                rxn.atoms[k].newmolid = rxn.nnewmolids;
             }
           }
         }
@@ -487,27 +485,28 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   }
 
   // read all map files afterward
-  for (int i = 0; i < nreacts; i++) {
-    open(files[i]);
-    rxns[i].reactant->check_attributes();
-    rxns[i].product->check_attributes();
-    read_map_file(i);
+  for (auto &rxn : rxns) {
+    fp = fopen(rxn.mapfilename.c_str(),"r");
+    if (fp == nullptr) error->one(FLERR, "Fix bond/react: Cannot open map file {}", rxn.mapfilename);
+    rxn.reactant->check_attributes();
+    rxn.product->check_attributes();
+    read_map_file(rxn);
     fclose(fp);
-    rxns[i].iatomtype = rxns[i].reactant->type[rxns[i].ibonding-1];
-    rxns[i].jatomtype = rxns[i].reactant->type[rxns[i].jbonding-1];
-    find_landlocked_atoms(rxns[i]);
-    if (rxns[i].custom_charges_fragid >= 0) CustomCharges(rxns[i].custom_charges_fragid,i);
+    rxn.iatomtype = rxn.reactant->type[rxn.ibonding-1];
+    rxn.jatomtype = rxn.reactant->type[rxn.jbonding-1];
+    find_landlocked_atoms(rxn);
+    if (rxn.custom_charges_fragid >= 0) CustomCharges(rxn.custom_charges_fragid,rxn);
   }
 
   // charge rescaling values must be calculated after calling CustomCharges
-  for (int myrxn = 0; myrxn < nreacts; myrxn++) {
-    if (rxns[myrxn].rescale_charges_flag) {
-      rxns[myrxn].rescale_charges_flag = 0; // will now store number of updated atoms
-      for (int j = 0; j < rxns[myrxn].product->natoms; j++) {
-        int jj = rxns[myrxn].atoms[j].amap[1]-1;
-        if (rxns[myrxn].atoms[jj].recharged == 1 && rxns[myrxn].atoms[jj].deleted == 0) {
-          rxns[myrxn].mol_total_charge += rxns[myrxn].product->q[j];
-          rxns[myrxn].rescale_charges_flag++;
+  for (auto &rxn : rxns) {
+    if (rxn.rescale_charges_flag) {
+      rxn.rescale_charges_flag = 0; // will now store number of updated atoms
+      for (int j = 0; j < rxn.product->natoms; j++) {
+        int jj = rxn.atoms[j].amap[1]-1;
+        if (rxn.atoms[jj].recharged == 1 && rxn.atoms[jj].deleted == 0) {
+          rxn.mol_total_charge += rxn.product->q[j];
+          rxn.rescale_charges_flag++;
         }
       }
     }
@@ -527,11 +526,6 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       }
     }
   }
-
-  for (int i = 0; i < nreacts; i++) {
-    delete[] files[i];
-  }
-  delete[] files;
 
   if (atom->molecular != Atom::MOLECULAR)
     error->all(FLERR,"Fix bond/react: Cannot use fix bond/react with non-molecular systems");
@@ -3962,7 +3956,7 @@ void FixBondReact::validate_variable_keyword(const char *myarg, int var_id)
 read map file
 ------------------------------------------------------------------------- */
 
-void FixBondReact::read_map_file(int myrxn)
+void FixBondReact::read_map_file(Reaction &rxn)
 {
   int rv;
   char line[MAXLINE] = {'\0'};
@@ -3992,7 +3986,7 @@ void FixBondReact::read_map_file(int myrxn)
     else if (strstr(line,"equivalences")) {
       rv = sscanf(line,"%d",&nequivalent);
       if (rv != 1) error->one(FLERR, "Map file header is incorrectly formatted");
-      if (nequivalent != rxns[myrxn].reactant->natoms)
+      if (nequivalent != rxn.reactant->natoms)
         error->one(FLERR,"Fix bond/react: Number of equivalences in map file must "
                    "equal number of atoms in reaction templates");
     }
@@ -4006,16 +4000,16 @@ void FixBondReact::read_map_file(int myrxn)
       rv = sscanf(line,"%d",&nchiral);
       if (rv != 1) error->one(FLERR, "Map file header is incorrectly formatted");
     } else if (strstr(line,"constraints")) {
-      rv = sscanf(line,"%d",&rxns[myrxn].nconstraints);
+      rv = sscanf(line,"%d",&rxn.nconstraints);
       if (rv != 1) error->one(FLERR, "Map file header is incorrectly formatted");
-      if (maxnconstraints < rxns[myrxn].nconstraints) maxnconstraints = rxns[myrxn].nconstraints;
+      if (maxnconstraints < rxn.nconstraints) maxnconstraints = rxn.nconstraints;
       constraints.resize(maxnconstraints, std::vector<Constraint>(nreacts));
     } else break;
   }
 
-  if (ncreate == 0 && rxns[myrxn].reactant->natoms != rxns[myrxn].product->natoms)
+  if (ncreate == 0 && rxn.reactant->natoms != rxn.product->natoms)
     error->all(FLERR,"Fix bond/react: Reaction templates must contain the same number of atoms");
-  else if (ncreate > 0 && rxns[myrxn].reactant->natoms + ncreate != rxns[myrxn].product->natoms)
+  else if (ncreate > 0 && rxn.reactant->natoms + ncreate != rxn.product->natoms)
     error->all(FLERR,"Fix bond/react: Incorrect number of created atoms");
 
   // grab keyword and skip next line
@@ -4032,28 +4026,28 @@ void FixBondReact::read_map_file(int myrxn)
         if (comm->me == 0) error->warning(FLERR,"Fix bond/react: The BondingIDs section title has been deprecated. Please use InitiatorIDs instead.");
       bondflag = 1;
       readline(line);
-      rv = sscanf(line,"%d",&rxns[myrxn].ibonding);
+      rv = sscanf(line,"%d",&rxn.ibonding);
       if (rv != 1) error->one(FLERR, "InitiatorIDs section is incorrectly formatted");
-      if (rxns[myrxn].ibonding > rxns[myrxn].reactant->natoms)
+      if (rxn.ibonding > rxn.reactant->natoms)
         error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
       readline(line);
-      rv = sscanf(line,"%d",&rxns[myrxn].jbonding);
+      rv = sscanf(line,"%d",&rxn.jbonding);
       if (rv != 1) error->one(FLERR, "InitiatorIDs section is incorrectly formatted");
-      if (rxns[myrxn].jbonding > rxns[myrxn].reactant->natoms)
+      if (rxn.jbonding > rxn.reactant->natoms)
         error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
     } else if (strcmp(keyword,"EdgeIDs") == 0) {
-      EdgeIDs(line, myrxn);
+      EdgeIDs(line, rxn);
     } else if (strcmp(keyword,"Equivalences") == 0) {
       equivflag = 1;
-      Equivalences(line, myrxn);
+      Equivalences(line, rxn);
     } else if (strcmp(keyword,"DeleteIDs") == 0) {
-      DeleteAtoms(line, myrxn);
+      DeleteAtoms(line, rxn);
     } else if (strcmp(keyword,"CreateIDs") == 0) {
-      CreateAtoms(line, myrxn);
+      CreateAtoms(line, rxn);
     } else if (strcmp(keyword,"ChiralIDs") == 0) {
-      ChiralCenters(line, myrxn);
+      ChiralCenters(line, rxn);
     } else if (strcmp(keyword,"Constraints") == 0) {
-      ReadConstraints(line, myrxn);
+      ReadConstraints(line, rxn);
     } else error->one(FLERR,"Fix bond/react: Unknown section in map file");
 
     parse_keyword(1,line,keyword);
@@ -4061,9 +4055,9 @@ void FixBondReact::read_map_file(int myrxn)
   }
 
   // error check
-  for (int i = 0; i < rxns[myrxn].reactant->natoms; i++) {
-    int my_equiv = rxns[myrxn].atoms[i].ramap[1];
-    if (rxns[myrxn].atoms[my_equiv-1].created == 1)
+  for (int i = 0; i < rxn.reactant->natoms; i++) {
+    int my_equiv = rxn.atoms[i].ramap[1];
+    if (rxn.atoms[my_equiv-1].created == 1)
       error->all(FLERR,"Fix bond/react: Created atoms cannot also be listed in Equivalences section\n");
   }
 
@@ -4072,7 +4066,7 @@ void FixBondReact::read_map_file(int myrxn)
     error->all(FLERR,"Fix bond/react: Map file missing InitiatorIDs or Equivalences section\n");
 }
 
-void FixBondReact::EdgeIDs(char *line, int myrxn)
+void FixBondReact::EdgeIDs(char *line, Reaction &rxn)
 {
   // puts a 1 at edge(edgeID)
 
@@ -4081,133 +4075,133 @@ void FixBondReact::EdgeIDs(char *line, int myrxn)
     readline(line);
     rv = sscanf(line,"%d",&tmp);
     if (rv != 1) error->one(FLERR, "EdgeIDs section is incorrectly formatted");
-    if (tmp > rxns[myrxn].reactant->natoms)
+    if (tmp > rxn.reactant->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
-    rxns[myrxn].atoms[tmp-1].edge = 1;
+    rxn.atoms[tmp-1].edge = 1;
   }
 }
 
-void FixBondReact::Equivalences(char *line, int myrxn)
+void FixBondReact::Equivalences(char *line, Reaction &rxn)
 {
   int tmp1,tmp2,rv;
   for (int i = 0; i < nequivalent; i++) {
     readline(line);
     rv = sscanf(line,"%d %d",&tmp1,&tmp2);
     if (rv != 2) error->one(FLERR, "Equivalences section is incorrectly formatted");
-    if (tmp1 > rxns[myrxn].reactant->natoms || tmp2 > rxns[myrxn].product->natoms)
+    if (tmp1 > rxn.reactant->natoms || tmp2 > rxn.product->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
     //equivalences is-> clmn 1: post-reacted, clmn 2: pre-reacted
-    rxns[myrxn].atoms[tmp2-1].amap[0] = tmp2;
-    rxns[myrxn].atoms[tmp2-1].amap[1] = tmp1;
+    rxn.atoms[tmp2-1].amap[0] = tmp2;
+    rxn.atoms[tmp2-1].amap[1] = tmp1;
     //reverse_equiv is-> clmn 1: pre-reacted, clmn 2: post-reacted
-    rxns[myrxn].atoms[tmp1-1].ramap[0] = tmp1;
-    rxns[myrxn].atoms[tmp1-1].ramap[1] = tmp2;
+    rxn.atoms[tmp1-1].ramap[0] = tmp1;
+    rxn.atoms[tmp1-1].ramap[1] = tmp2;
   }
   // sanity check for one-to-one mapping for equivalences
-  for (int i = 0; i < rxns[myrxn].product->natoms; i++) {
-    if (rxns[myrxn].atoms[i].created == 1) continue;
-    for (int j = i+1; j < rxns[myrxn].product->natoms; j++) {
-      if (rxns[myrxn].atoms[j].created == 1) continue;
-      if (rxns[myrxn].atoms[i].amap[0] == rxns[myrxn].atoms[j].amap[0] ||
-          rxns[myrxn].atoms[i].amap[1] == rxns[myrxn].atoms[j].amap[1]) {
+  for (int i = 0; i < rxn.product->natoms; i++) {
+    if (rxn.atoms[i].created == 1) continue;
+    for (int j = i+1; j < rxn.product->natoms; j++) {
+      if (rxn.atoms[j].created == 1) continue;
+      if (rxn.atoms[i].amap[0] == rxn.atoms[j].amap[0] ||
+          rxn.atoms[i].amap[1] == rxn.atoms[j].amap[1]) {
         error->one(FLERR,"Fix bond/react: Repeated atoms IDs in Equivalences section");
       }
     }
   }
 }
 
-void FixBondReact::DeleteAtoms(char *line, int myrxn)
+void FixBondReact::DeleteAtoms(char *line, Reaction &rxn)
 {
   int tmp,rv;
   for (int i = 0; i < ndelete; i++) {
     readline(line);
     rv = sscanf(line,"%d",&tmp);
     if (rv != 1) error->one(FLERR, "DeleteIDs section is incorrectly formatted");
-    if (tmp > rxns[myrxn].reactant->natoms)
+    if (tmp > rxn.reactant->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
-    rxns[myrxn].atoms[tmp-1].deleted = 1;
+    rxn.atoms[tmp-1].deleted = 1;
   }
 }
 
-void FixBondReact::CreateAtoms(char *line, int myrxn)
+void FixBondReact::CreateAtoms(char *line, Reaction &rxn)
 {
-  rxns[myrxn].create_atoms_flag = 1;
+  rxn.create_atoms_flag = 1;
   int tmp,rv;
   for (int i = 0; i < ncreate; i++) {
     readline(line);
     rv = sscanf(line,"%d",&tmp);
     if (rv != 1) error->one(FLERR, "CreateIDs section is incorrectly formatted");
-    if (tmp > rxns[myrxn].product->natoms)
+    if (tmp > rxn.product->natoms)
       error->one(FLERR,"Fix bond/react: Invalid atom ID in CreateIDs section of map file");
-    rxns[myrxn].atoms[tmp-1].created = 1;
+    rxn.atoms[tmp-1].created = 1;
   }
-  if (rxns[myrxn].product->xflag == 0)
+  if (rxn.product->xflag == 0)
     error->one(FLERR,"Fix bond/react: 'Coords' section required in post-reaction template when creating new atoms");
 }
 
-void FixBondReact::CustomCharges(int ifragment, int myrxn)
+void FixBondReact::CustomCharges(int ifragment, Reaction &rxn)
 {
-  for (int i = 0; i < rxns[myrxn].reactant->natoms; i++)
-    if (rxns[myrxn].reactant->fragmentmask[ifragment][i])
-      rxns[myrxn].atoms[i].recharged = 1;
+  for (int i = 0; i < rxn.reactant->natoms; i++)
+    if (rxn.reactant->fragmentmask[ifragment][i])
+      rxn.atoms[i].recharged = 1;
     else
-      rxns[myrxn].atoms[i].recharged = 0;
+      rxn.atoms[i].recharged = 0;
 }
 
-void FixBondReact::ChiralCenters(char *line, int myrxn)
+void FixBondReact::ChiralCenters(char *line, Reaction &rxn)
 {
   int tmp,rv;
   for (int i = 0; i < nchiral; i++) {
     readline(line);
     rv = sscanf(line,"%d",&tmp);
     if (rv != 1) error->one(FLERR, "ChiralIDs section is incorrectly formatted");
-    if (tmp > rxns[myrxn].reactant->natoms)
+    if (tmp > rxn.reactant->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
-    rxns[myrxn].atoms[tmp-1].chiral[0] = 1;
-    if (rxns[myrxn].reactant->xflag == 0)
+    rxn.atoms[tmp-1].chiral[0] = 1;
+    if (rxn.reactant->xflag == 0)
       error->one(FLERR,"Fix bond/react: Molecule template 'Coords' section required for chiralIDs keyword");
-    if ((int) rxns[myrxn].reactant->nspecial[tmp-1][0] != 4)
+    if ((int) rxn.reactant->nspecial[tmp-1][0] != 4)
       error->one(FLERR,"Fix bond/react: Chiral atoms must have exactly four first neighbors");
     for (int j = 0; j < 4; j++) {
       for (int k = j+1; k < 4; k++) {
-        if (rxns[myrxn].reactant->type[rxns[myrxn].reactant->special[tmp-1][j]-1] ==
-            rxns[myrxn].reactant->type[rxns[myrxn].reactant->special[tmp-1][k]-1])
+        if (rxn.reactant->type[rxn.reactant->special[tmp-1][j]-1] ==
+            rxn.reactant->type[rxn.reactant->special[tmp-1][k]-1])
           error->one(FLERR,"Fix bond/react: First neighbors of chiral atoms must be of mutually different types");
       }
     }
     // record order of atom types, and coords
     double my4coords[12];
     for (int j = 0; j < 4; j++) {
-      rxns[myrxn].atoms[tmp-1].chiral[j+2] = rxns[myrxn].reactant->type[rxns[myrxn].reactant->special[tmp-1][j]-1];
+      rxn.atoms[tmp-1].chiral[j+2] = rxn.reactant->type[rxn.reactant->special[tmp-1][j]-1];
       for (int k = 0; k < 3; k++) {
-        my4coords[3*j+k] = rxns[myrxn].reactant->x[rxns[myrxn].reactant->special[tmp-1][j]-1][k];
+        my4coords[3*j+k] = rxn.reactant->x[rxn.reactant->special[tmp-1][j]-1][k];
       }
     }
     // get orientation
-    rxns[myrxn].atoms[tmp-1].chiral[1] = get_chirality(my4coords);
+    rxn.atoms[tmp-1].chiral[1] = get_chirality(my4coords);
   }
 }
 
-void FixBondReact::ReadConstraints(char *line, int myrxn)
+void FixBondReact::ReadConstraints(char *line, Reaction &rxn)
 {
   int rv;
   double tmp[MAXCONARGS];
   char **strargs,*ptr,*lptr;
   memory->create(strargs,MAXCONARGS,MAXLINE,"bond/react:strargs");
   auto constraint_type = new char[MAXLINE];
-  rxns[myrxn].constraintstr = "("; // string for boolean constraint logic
-  for (int i = 0; i < rxns[myrxn].nconstraints; i++) {
+  rxn.constraintstr = "("; // string for boolean constraint logic
+  for (int i = 0; i < rxn.nconstraints; i++) {
     readline(line);
     // find left parentheses, add to constraintstr, and update line
     for (int j = 0; j < (int)strlen(line); j++) {
-      if (line[j] == '(') rxns[myrxn].constraintstr += "(";
+      if (line[j] == '(') rxn.constraintstr += "(";
       if (isalpha(line[j])) {
         line = line + j;
         break;
       }
     }
     // 'C' indicates where to sub in next constraint
-    rxns[myrxn].constraintstr += "C";
+    rxn.constraintstr += "C";
     // special consideration for 'custom' constraint
     // find final double quote, or skip two words
     lptr = line;
@@ -4219,82 +4213,82 @@ void FixBondReact::ReadConstraints(char *line, int myrxn)
     }
     // find right parentheses
     for (int j = 0; j < (int)strlen(lptr); j++)
-      if (lptr[j] == ')') rxns[myrxn].constraintstr += ")";
+      if (lptr[j] == ')') rxn.constraintstr += ")";
     // find logic symbols, and trim line via ptr
     if ((ptr = strstr(lptr,"&&"))) {
-      rxns[myrxn].constraintstr += "&&";
+      rxn.constraintstr += "&&";
       *ptr = '\0';
     } else if ((ptr = strstr(lptr,"||"))) {
-      rxns[myrxn].constraintstr += "||";
+      rxn.constraintstr += "||";
       *ptr = '\0';
-    } else if (i+1 < rxns[myrxn].nconstraints) {
-      rxns[myrxn].constraintstr += "&&";
+    } else if (i+1 < rxn.nconstraints) {
+      rxn.constraintstr += "&&";
     }
     if ((ptr = strchr(lptr,')')))
       *ptr = '\0';
     rv = sscanf(line,"%s",constraint_type);
     if (rv != 1) error->one(FLERR, "Constraints section is incorrectly formatted");
     if (strcmp(constraint_type,"distance") == 0) {
-      constraints[i][myrxn].type = DISTANCE;
+      constraints[i][rxn.ID].type = DISTANCE;
       rv = sscanf(line,"%*s %s %s %lg %lg",strargs[0],strargs[1],&tmp[0],&tmp[1]);
       if (rv != 4) error->one(FLERR, "Distance constraint is incorrectly formatted");
-      readID(strargs[0], i, myrxn, 0);
-      readID(strargs[1], i, myrxn, 1);
+      readID(strargs[0], i, rxn, 0);
+      readID(strargs[1], i, rxn, 1);
       // cutoffs
-      constraints[i][myrxn].par[0] = tmp[0]*tmp[0]; // using square of distance
-      constraints[i][myrxn].par[1] = tmp[1]*tmp[1];
+      constraints[i][rxn.ID].par[0] = tmp[0]*tmp[0]; // using square of distance
+      constraints[i][rxn.ID].par[1] = tmp[1]*tmp[1];
     } else if (strcmp(constraint_type,"angle") == 0) {
-      constraints[i][myrxn].type = ANGLE;
+      constraints[i][rxn.ID].type = ANGLE;
       rv = sscanf(line,"%*s %s %s %s %lg %lg",strargs[0],strargs[1],strargs[2],&tmp[0],&tmp[1]);
       if (rv != 5) error->one(FLERR, "Angle constraint is incorrectly formatted");
-      readID(strargs[0], i, myrxn, 0);
-      readID(strargs[1], i, myrxn, 1);
-      readID(strargs[2], i, myrxn, 2);
-      constraints[i][myrxn].par[0] = tmp[0]/180.0 * MY_PI;
-      constraints[i][myrxn].par[1] = tmp[1]/180.0 * MY_PI;
+      readID(strargs[0], i, rxn, 0);
+      readID(strargs[1], i, rxn, 1);
+      readID(strargs[2], i, rxn, 2);
+      constraints[i][rxn.ID].par[0] = tmp[0]/180.0 * MY_PI;
+      constraints[i][rxn.ID].par[1] = tmp[1]/180.0 * MY_PI;
     } else if (strcmp(constraint_type,"dihedral") == 0) {
-      constraints[i][myrxn].type = DIHEDRAL;
+      constraints[i][rxn.ID].type = DIHEDRAL;
       tmp[2] = 181.0; // impossible range
       tmp[3] = 182.0;
       rv = sscanf(line,"%*s %s %s %s %s %lg %lg %lg %lg",strargs[0],strargs[1],
              strargs[2],strargs[3],&tmp[0],&tmp[1],&tmp[2],&tmp[3]);
       if (rv != 6 && rv != 8) error->one(FLERR, "Dihedral constraint is incorrectly formatted");
-      readID(strargs[0], i, myrxn, 0);
-      readID(strargs[1], i, myrxn, 1);
-      readID(strargs[2], i, myrxn, 2);
-      readID(strargs[3], i, myrxn, 3);
-      constraints[i][myrxn].par[0] = tmp[0]/180.0 * MY_PI;
-      constraints[i][myrxn].par[1] = tmp[1]/180.0 * MY_PI;
-      constraints[i][myrxn].par[2] = tmp[2]/180.0 * MY_PI;
-      constraints[i][myrxn].par[3] = tmp[3]/180.0 * MY_PI;
+      readID(strargs[0], i, rxn, 0);
+      readID(strargs[1], i, rxn, 1);
+      readID(strargs[2], i, rxn, 2);
+      readID(strargs[3], i, rxn, 3);
+      constraints[i][rxn.ID].par[0] = tmp[0]/180.0 * MY_PI;
+      constraints[i][rxn.ID].par[1] = tmp[1]/180.0 * MY_PI;
+      constraints[i][rxn.ID].par[2] = tmp[2]/180.0 * MY_PI;
+      constraints[i][rxn.ID].par[3] = tmp[3]/180.0 * MY_PI;
     } else if (strcmp(constraint_type,"arrhenius") == 0) {
-      constraints[i][myrxn].type = ARRHENIUS;
-      constraints[i][myrxn].par[0] = narrhenius++;
+      constraints[i][rxn.ID].type = ARRHENIUS;
+      constraints[i][rxn.ID].par[0] = narrhenius++;
       rv = sscanf(line,"%*s %lg %lg %lg %lg",&tmp[0],&tmp[1],&tmp[2],&tmp[3]);
       if (rv != 4) error->one(FLERR, "Arrhenius constraint is incorrectly formatted");
-      constraints[i][myrxn].par[1] = tmp[0];
-      constraints[i][myrxn].par[2] = tmp[1];
-      constraints[i][myrxn].par[3] = tmp[2];
-      constraints[i][myrxn].par[4] = tmp[3];
+      constraints[i][rxn.ID].par[1] = tmp[0];
+      constraints[i][rxn.ID].par[2] = tmp[1];
+      constraints[i][rxn.ID].par[3] = tmp[2];
+      constraints[i][rxn.ID].par[4] = tmp[3];
     } else if (strcmp(constraint_type,"rmsd") == 0) {
-      constraints[i][myrxn].type = RMSD;
+      constraints[i][rxn.ID].type = RMSD;
       strcpy(strargs[0],"0");
       rv = sscanf(line,"%*s %lg %s",&tmp[0],strargs[0]);
       if (rv != 1 && rv != 2) error->one(FLERR, "RMSD constraint is incorrectly formatted");
-      constraints[i][myrxn].par[0] = tmp[0]; // RMSDmax
-      constraints[i][myrxn].id[0] = -1; // optional molecule fragment
+      constraints[i][rxn.ID].par[0] = tmp[0]; // RMSDmax
+      constraints[i][rxn.ID].id[0] = -1; // optional molecule fragment
       if (isalpha(strargs[0][0])) {
-        int ifragment = rxns[myrxn].reactant->findfragment(strargs[0]);
+        int ifragment = rxn.reactant->findfragment(strargs[0]);
         if (ifragment < 0) error->one(FLERR,"Fix bond/react: Molecule fragment does not exist");
-        else constraints[i][myrxn].id[0] = ifragment;
+        else constraints[i][rxn.ID].id[0] = ifragment;
       }
     } else if (strcmp(constraint_type,"custom") == 0) {
-      constraints[i][myrxn].type = CUSTOM;
+      constraints[i][rxn.ID].type = CUSTOM;
       std::vector<std::string> args = utils::split_words(line);
-      constraints[i][myrxn].str = args[1];
+      constraints[i][rxn.ID].str = args[1];
     } else error->one(FLERR,"Fix bond/react: Illegal constraint type in 'Constraints' section of map file");
   }
-  rxns[myrxn].constraintstr += ")"; // close boolean constraint logic string
+  rxn.constraintstr += ")"; // close boolean constraint logic string
   delete[] constraint_type;
   memory->destroy(strargs);
 }
@@ -4304,27 +4298,21 @@ if ID starts with character, assume it is a pre-reaction molecule fragment ID
 otherwise, it is a pre-reaction atom ID
 ---------------------------------------------------------------------- */
 
-void FixBondReact::readID(char *strarg, int iconstr, int myrxn, int i)
+void FixBondReact::readID(char *strarg, int iconstr, Reaction &rxn, int i)
 {
   if (isalpha(strarg[0])) {
-    constraints[iconstr][myrxn].idtype[i] = FRAG; // fragment vs. atom ID flag
-    int ifragment = rxns[myrxn].reactant->findfragment(strarg);
+    constraints[iconstr][rxn.ID].idtype[i] = FRAG; // fragment vs. atom ID flag
+    int ifragment = rxn.reactant->findfragment(strarg);
     if (ifragment < 0)
       error->one(FLERR,"Fix bond/react: Molecule fragment {} does not exist", strarg);
-    constraints[iconstr][myrxn].id[i] = ifragment;
+    constraints[iconstr][rxn.ID].id[i] = ifragment;
   } else {
-    constraints[iconstr][myrxn].idtype[i] = ATOM; // fragment vs. atom ID flag
+    constraints[iconstr][rxn.ID].idtype[i] = ATOM; // fragment vs. atom ID flag
     int iatom = utils::inumeric(FLERR, strarg, true, lmp);
-    if (iatom > rxns[myrxn].reactant->natoms)
+    if (iatom > rxn.reactant->natoms)
       error->one(FLERR,"Fix bond/react: Invalid template atom ID {} in map file", strarg);
-    constraints[iconstr][myrxn].id[i] = iatom;
+    constraints[iconstr][rxn.ID].id[i] = iatom;
   }
-}
-
-void FixBondReact::open(char *file)
-{
-  fp = fopen(file,"r");
-  if (fp == nullptr) error->one(FLERR, "Fix bond/react: Cannot open map file {}", file);
 }
 
 void FixBondReact::readline(char *line)

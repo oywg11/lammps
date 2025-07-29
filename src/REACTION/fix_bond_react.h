@@ -86,10 +86,13 @@ class FixBondReact : public Fix {
     std::array<int, 2> amap;      // atom map: clmn 1 = product atom IDs, clmn 2: reactant atom IDs
     std::array<int, 2> ramap;     // reverse amap
   };
+  int rxnID; // to delete
   struct Reaction {
+    int ID;
     class Molecule *reactant;     // pre-reacted molecule template
     class Molecule *product;      // post-reacted molecule template
     std::string name, constraintstr;
+    std::string mapfilename;
     int nevery, groupbits;
     int iatomtype, jatomtype;
     int ibonding, jbonding;
@@ -114,7 +117,6 @@ class FixBondReact : public Fix {
   };
   std::vector<Reaction> rxns;
 
-  int rxnID;          // integer ID for identifying current reaction
   int nmax;          // max num local atoms
   int max_natoms;    // max natoms in a molecule template
   tagint *partner, *finalpartner;
@@ -179,15 +181,15 @@ class FixBondReact : public Fix {
   int glove_counter;       // used to determine when to terminate Superimpose Algorithm
 
   void validate_variable_keyword(const char *, int);
-  void read_map_file(int);
-  void EdgeIDs(char *, int);
-  void Equivalences(char *, int);
-  void DeleteAtoms(char *, int);
-  void CreateAtoms(char *, int);
-  void CustomCharges(int, int);
-  void ChiralCenters(char *, int);
-  void ReadConstraints(char *, int);
-  void readID(char *, int, int, int);
+  void read_map_file(Reaction &);
+  void EdgeIDs(char *, Reaction &);
+  void Equivalences(char *, Reaction &);
+  void DeleteAtoms(char *, Reaction &);
+  void CreateAtoms(char *, Reaction &);
+  void CustomCharges(int, Reaction &);
+  void ChiralCenters(char *, Reaction &);
+  void ReadConstraints(char *, Reaction &);
+  void readID(char *, int, Reaction &, int);
 
   void make_a_guess();
   void neighbor_loop();
@@ -207,7 +209,6 @@ class FixBondReact : public Fix {
   void get_atoms2bond(int);
   int get_chirality(double[12]);              // get handedness given an ordered set of coordinates
 
-  void open(char *);
   void readline(char *);
   void parse_keyword(int, char *, char *);
 
