@@ -86,7 +86,6 @@ class FixBondReact : public Fix {
     std::array<int, 2> amap;      // atom map: clmn 1 = product atom IDs, clmn 2: reactant atom IDs
     std::array<int, 2> ramap;     // reverse amap
   };
-  int rxnID; // to delete
   struct Reaction {
     int ID;
     class Molecule *reactant;     // pre-reacted molecule template
@@ -192,19 +191,19 @@ class FixBondReact : public Fix {
   void ReadConstraints(char *, Reaction &);
   void readID(char *, int, Reaction &, int);
 
-  void make_a_guess();
-  void neighbor_loop();
-  void check_a_neighbor();
-  void crosscheck_the_neighbor();
-  void inner_crosscheck_loop();
-  int ring_check();
-  int check_constraints();
+  void make_a_guess(Reaction &);
+  void neighbor_loop(Reaction &);
+  void check_a_neighbor(Reaction &);
+  void crosscheck_the_neighbor(Reaction &);
+  void inner_crosscheck_loop(Reaction &);
+  int ring_check(Reaction &);
+  int check_constraints(Reaction &);
   void get_IDcoords(int, int, double *, Molecule *);
   double get_temperature(tagint **, int, int, Molecule *);
-  double get_totalcharge(Reaction);
+  double get_totalcharge(Reaction &);
   void customvarnames();    // get per-atom variables names used by custom constraint
   void get_customvars();    // evaluate local values for variables names used by custom constraint
-  double custom_constraint(const std::string &);    // evaulate expression for custom constraint
+  double custom_constraint(const std::string &, Reaction &);    // evaulate expression for custom constraint
   double rxnfunction(const std::string &, const std::string &,
                      const std::string &, Molecule *);    // eval rxn_sum and rxn_ave
   void get_atoms2bond(int);
