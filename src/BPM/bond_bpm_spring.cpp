@@ -85,40 +85,7 @@ BondBPMSpring::~BondBPMSpring()
 }
 
 /* ----------------------------------------------------------------------
-  Store data for a single bond - if bond added after LAMMPS init (e.g. pour)
-------------------------------------------------------------------------- */
-
-double BondBPMSpring::store_bond(int n, int i, int j)
-{
-  double delx, dely, delz, r;
-  double **x = atom->x;
-  double **bondstore = fix_bond_history->bondstore;
-  tagint *tag = atom->tag;
-
-  delx = x[i][0] - x[j][0];
-  dely = x[i][1] - x[j][1];
-  delz = x[i][2] - x[j][2];
-
-  r = sqrt(delx * delx + dely * dely + delz * delz);
-  bondstore[n][0] = r;
-
-  if (i < atom->nlocal) {
-    for (int m = 0; m < atom->num_bond[i]; m++) {
-      if (atom->bond_atom[i][m] == tag[j]) { fix_bond_history->update_atom_value(i, m, 0, r); }
-    }
-  }
-
-  if (j < atom->nlocal) {
-    for (int m = 0; m < atom->num_bond[j]; m++) {
-      if (atom->bond_atom[j][m] == tag[i]) { fix_bond_history->update_atom_value(j, m, 0, r); }
-    }
-  }
-
-  return r;
-}
-
-/* ----------------------------------------------------------------------
-  Store data for all bonds called once
+  Store data for all bonds, called once
 ------------------------------------------------------------------------- */
 
 void BondBPMSpring::store_data()
@@ -150,15 +117,13 @@ void BondBPMSpring::store_data()
       fix_bond_history->update_atom_value(i, m, 0, r);
     }
   }
-
-  fix_bond_history->post_neighbor();
 }
 
 /* ---------------------------------------------------------------------- */
 
 void BondBPMSpring::compute(int eflag, int vflag)
 {
-  BondBPM::pre_compute();
+  pre_compute();
 
   int bond_change_flag = 0;
   double *vol0, *vol;
@@ -215,7 +180,6 @@ void BondBPMSpring::compute(int eflag, int vflag)
     i1 = bondlist[n][0];
     i2 = bondlist[n][1];
     type = bondlist[n][2];
-    r0 = bondstore[n][0];
 
     // Ensure pair is always ordered to ensure numerical operations
     // are identical to minimize the possibility that a bond straddling
@@ -226,15 +190,20 @@ void BondBPMSpring::compute(int eflag, int vflag)
       i2 = itmp;
     }
 
-    // If bond hasn't been set - should be initialized to zero
-    if (r0 < EPSILON || std::isnan(r0)) r0 = store_bond(n, i1, i2);
-
     delx = x[i1][0] - x[i2][0];
     dely = x[i1][1] - x[i2][1];
     delz = x[i1][2] - x[i2][2];
 
     rsq = delx * delx + dely * dely + delz * delz;
     r = sqrt(rsq);
+
+    // If bond hasn't been set (should be initialized to zero)
+    r0 = bondstore[n][0];
+    if (r0 < EPSILON || std::isnan(r0)) {
+      r0 = bondstore[n][0] = r;
+      process_new(n, i1, i2);
+    }
+
     e = (r - r0) / r0;
 
     if ((fabs(e) > ecrit[type]) && allow_breaks) {
@@ -300,7 +269,7 @@ void BondBPMSpring::compute(int eflag, int vflag)
   // Update vol0 to account for any broken bonds
   if (bond_change_flag) update_vol0();
 
-  BondBPM::post_compute();
+  post_compute();
 }
 
 /* ---------------------------------------------------------------------- */
