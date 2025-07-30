@@ -35,17 +35,21 @@ static constexpr double EPSILON = 1e-10;
 
 using namespace LAMMPS_NS;
 
+enum {VOL, VOL0, DVOL0};
+
 /* ---------------------------------------------------------------------- */
 
 BondBPMSpring::BondBPMSpring(LAMMPS *_lmp) :
     BondBPM(_lmp), k(nullptr), av(nullptr), ecrit(nullptr), gamma(nullptr),
-    id_fix_property_bond(nullptr), vol_current(nullptr), dvol0(nullptr)
+    id_fix_property_bond(nullptr), dvol0(nullptr)
 {
   partial_flag = 1;
   smooth_flag = 1;
   normalize_flag = 0;
   volume_flag = 0;
   writedata = 0;
+
+  vol0_calculated = 0;
 
   nhistory = 1;
   id_fix_bond_history = utils::strdup("HISTORY_BPM_SPRING");
@@ -154,6 +158,8 @@ void BondBPMSpring::store_data()
 
 void BondBPMSpring::compute(int eflag, int vflag)
 {
+  BondBPM::pre_compute();
+
   int bond_change_flag = 0;
   double *vol0, *vol;
 
@@ -167,38 +173,18 @@ void BondBPMSpring::compute(int eflag, int vflag)
       memory->create(dvol0, nmax, "bond/bpm/spring:dvol0");
       for (int i = 0; i < nmax; i++) dvol0[i] = 0.0;
     }
-  }
 
-  if (!fix_bond_history->stored_flag) {
-    fix_bond_history->stored_flag = true;
-    store_data();
-
-    if (volume_flag) {
-      vol_current = vol0;
-      bond_change_flag = calculate_vol();
-
-      // zero dvol0, not needed since vol0 just calculated
-      for (int i = 0; i < nmax; i++) dvol0[i] = 0.0;
-    }
-  }
-
-  if (volume_flag) {
-    vol_current = vol;
     bond_change_flag = calculate_vol();
 
-    // Update vol0 to account for any new bonds
-    if (bond_change_flag) {
+    if (!vol0_calculated) {
+      for (int i = 0; i < nmax; i++) vol0[i] = vol[i];
+      vol0_calculated = 1;
+    } else if (bond_change_flag) {
       update_vol0();
-
-      // forward new vol0 to ghosts before force calculation
-      vol_current = vol0;
-      comm->forward_comm(this);
-
-      bond_change_flag = 0;
     }
-  }
 
-  if (hybrid_flag) fix_bond_history->compress_history();
+    bond_change_flag = 0;
+  }
 
   int i1, i2, itmp, n, type;
   double delx, dely, delz, delvx, delvy, delvz;
@@ -312,9 +298,9 @@ void BondBPMSpring::compute(int eflag, int vflag)
   }
 
   // Update vol0 to account for any broken bonds
-  if (volume_flag && bond_change_flag) update_vol0();
+  if (bond_change_flag) update_vol0();
 
-  if (hybrid_flag) fix_bond_history->uncompress_history();
+  BondBPM::post_compute();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -330,11 +316,12 @@ int BondBPMSpring::calculate_vol()
   int dim = domain->dimension;
 
   double **x = atom->x;
+  double *vol = atom->dvector[index_vol];
   int **bondlist = neighbor->bondlist;
   int nbondlist = neighbor->nbondlist;
   double **bondstore = fix_bond_history->bondstore;
 
-  for (n = 0; n < ntotal; n++) vol_current[n] = 0.0;
+  for (n = 0; n < ntotal; n++) vol[n] = 0.0;
 
   int bond_change_flag = 0;
 
@@ -352,8 +339,8 @@ int BondBPMSpring::calculate_vol()
     vol_temp = rsq;
     if (dim == 3) vol_temp *= sqrt(rsq);
 
-    if (newton_bond || i1 < nlocal) vol_current[i1] += vol_temp;
-    if (newton_bond || i2 < nlocal) vol_current[i2] += vol_temp;
+    if (newton_bond || i1 < nlocal) vol[i1] += vol_temp;
+    if (newton_bond || i2 < nlocal) vol[i2] += vol_temp;
 
     // If bond hasn't been set - increment dvol0 too to update vol0
     if (r0 < EPSILON || std::isnan(r0)) {
@@ -363,6 +350,7 @@ int BondBPMSpring::calculate_vol()
     }
   }
 
+  comm_stage = VOL;
   if (newton_bond) comm->reverse_comm(this);
   comm->forward_comm(this);
 
@@ -374,11 +362,15 @@ int BondBPMSpring::calculate_vol()
 void BondBPMSpring::update_vol0()
 {
   // accumulate changes in vol0 from ghosts
-  vol_current = dvol0;
+  comm_stage = DVOL0;
   if (force->newton_bond) comm->reverse_comm(this);
 
   double *vol0 = atom->dvector[index_vol0];
   for (int i = 0; i < atom->nlocal; i++) vol0[i] += dvol0[i];
+
+  // send updated vol0 to ghosts
+  comm_stage = VOL0;
+  comm->forward_comm(this);
 
   // zero dvol0 for next change
   for (int i = 0; i < nmax; i++) dvol0[i] = 0.0;
@@ -546,6 +538,7 @@ void BondBPMSpring::write_restart_settings(FILE *fp)
   fwrite(&smooth_flag, sizeof(int), 1, fp);
   fwrite(&normalize_flag, sizeof(int), 1, fp);
   fwrite(&volume_flag, sizeof(int), 1, fp);
+  fwrite(&vol0_calculated, sizeof(int), 1, fp);
 }
 
 /* ----------------------------------------------------------------------
@@ -558,10 +551,12 @@ void BondBPMSpring::read_restart_settings(FILE *fp)
     utils::sfread(FLERR, &smooth_flag, sizeof(int), 1, fp, nullptr, error);
     utils::sfread(FLERR, &normalize_flag, sizeof(int), 1, fp, nullptr, error);
     utils::sfread(FLERR, &volume_flag, sizeof(int), 1, fp, nullptr, error);
+    utils::sfread(FLERR, &vol0_calculated, sizeof(int), 1, fp, nullptr, error);
   }
   MPI_Bcast(&smooth_flag, 1, MPI_INT, 0, world);
   MPI_Bcast(&normalize_flag, 1, MPI_INT, 0, world);
   MPI_Bcast(&volume_flag, 1, MPI_INT, 0, world);
+  MPI_Bcast(&vol0_calculated, 1, MPI_INT, 0, world);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -628,8 +623,15 @@ double BondBPMSpring::single(int type, double rsq, int i, int j, double &fforce)
 int BondBPMSpring::pack_reverse_comm(int n, int first, double *buf)
 {
   int m = 0;
+  double *vol = atom->dvector[index_vol];
   int last = first + n;
-  for (int i = first; i < last; i++) buf[m++] = vol_current[i];
+  for (int i = first; i < last; i++) {
+    if (comm_stage == VOL) {
+      buf[m++] = vol[i];
+    } else {
+      buf[m++] = dvol0[i];
+    }
+  }
   return m;
 }
 
@@ -638,9 +640,14 @@ int BondBPMSpring::pack_reverse_comm(int n, int first, double *buf)
 void BondBPMSpring::unpack_reverse_comm(int n, int *list, double *buf)
 {
   int m = 0;
+  double *vol = atom->dvector[index_vol];
   for (int i = 0; i < n; i++) {
     int j = list[i];
-    vol_current[j] += buf[m++];
+    if (comm_stage == VOL) {
+      vol[j] += buf[m++];
+    } else {
+      dvol0[j] += buf[m++];
+    }
   }
 }
 
@@ -649,9 +656,15 @@ void BondBPMSpring::unpack_reverse_comm(int n, int *list, double *buf)
 int BondBPMSpring::pack_forward_comm(int n, int *list, double *buf, int /*pbc_flag*/, int * /*pbc*/)
 {
   int m = 0;
+  double *vol = atom->dvector[index_vol];
+  double *vol0 = atom->dvector[index_vol0];
   for (int i = 0; i < n; i++) {
     int j = list[i];
-    buf[m++] = vol_current[j];
+    if (comm_stage == VOL) {
+      buf[m++] = vol[j];
+    } else {
+      buf[m++] = vol0[j];
+    }
   }
   return m;
 }
@@ -661,6 +674,14 @@ int BondBPMSpring::pack_forward_comm(int n, int *list, double *buf, int /*pbc_fl
 void BondBPMSpring::unpack_forward_comm(int n, int first, double *buf)
 {
   int m = 0;
+  double *vol = atom->dvector[index_vol];
+  double *vol0 = atom->dvector[index_vol0];
   int last = first + n;
-  for (int i = first; i < last; i++) vol_current[i] = buf[m++];
+  for (int i = first; i < last; i++) {
+    if (comm_stage == VOL) {
+      vol[i] = buf[m++];
+    } else {
+      vol0[i] = buf[m++];
+    }
+  }
 }

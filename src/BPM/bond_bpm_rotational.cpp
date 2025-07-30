@@ -458,12 +458,7 @@ void BondBPMRotational::damping_forces(int i1, int i2, int type, double *rhat, d
 
 void BondBPMRotational::compute(int eflag, int vflag)
 {
-  if (!fix_bond_history->stored_flag) {
-    fix_bond_history->stored_flag = true;
-    store_data();
-  }
-
-  if (hybrid_flag) fix_bond_history->compress_history();
+  BondBPM::pre_compute();
 
   int i1, i2, itmp, n, type;
   double r[3], r0[3], rhat[3];
@@ -576,7 +571,7 @@ void BondBPMRotational::compute(int eflag, int vflag)
                    -force1on2[2], r[0], r[1], r[2]);
   }
 
-  if (hybrid_flag) fix_bond_history->uncompress_history();
+  BondBPM::post_compute();
 }
 
 /* ---------------------------------------------------------------------- */

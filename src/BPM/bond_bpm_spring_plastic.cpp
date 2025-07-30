@@ -164,12 +164,7 @@ void BondBPMSpringPlastic::store_data()
 
 void BondBPMSpringPlastic::compute(int eflag, int vflag)
 {
-  if (!fix_bond_history->stored_flag) {
-    fix_bond_history->stored_flag = true;
-    store_data();
-  }
-
-  if (hybrid_flag) fix_bond_history->compress_history();
+  BondBPM::pre_compute();
 
   int i1, i2, itmp, n, type;
   double delx, dely, delz, delvx, delvy, delvz;
@@ -273,7 +268,7 @@ void BondBPMSpringPlastic::compute(int eflag, int vflag)
     if (evflag) ev_tally(i1, i2, nlocal, newton_bond, 0.0, fbond, delx, dely, delz);
   }
 
-  if (hybrid_flag) fix_bond_history->uncompress_history();
+  BondBPM::post_compute();
 }
 
 /* ---------------------------------------------------------------------- */
