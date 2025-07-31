@@ -37,8 +37,6 @@ class FixBondReact : public Fix {
  public:
   enum { MAXLINE = 1024 };   // max length of line read from files
   enum { MAXNAME = 256 };    // max character length of react-ID
-  enum { MAXCONIDS = 4 };    // max # of IDs used by any constraint
-  enum { MAXCONPAR = 5 };    // max # of constraint parameters
   enum RESET_MOL_IDS { YES, NO, MOLMAP };  // values for reset_mol_ids keyword
 
   FixBondReact(class LAMMPS *, int, char **);
@@ -86,10 +84,13 @@ class FixBondReact : public Fix {
     std::array<int, 2> ramap;     // reverse amap
   };
   struct Constraint {
-    int type;
-    int id[MAXCONIDS];
-    int idtype[MAXCONIDS];
-    double par[MAXCONPAR];
+    enum class Type { DISTANCE, ANGLE, DIHEDRAL, ARRHENIUS, RMSD, CUSTOM };
+    enum class IDType { ATOM, FRAG };
+    static constexpr int MAXCONIDS = 4;     // max # of IDs used by any constraint
+    Type type;
+    std::array<int, MAXCONIDS> ids;
+    std::array<IDType, MAXCONIDS> idtypes{};
+    std::array<double, 5> par;     // max # of constraint parameters = 5
     std::string str;
   };
   struct Reaction {
