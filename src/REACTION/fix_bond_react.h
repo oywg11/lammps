@@ -84,6 +84,7 @@ class FixBondReact : public Fix {
     std::array<int, 2> ramap;     // reverse amap
   };
   struct Constraint {
+    int ID;
     enum class Type { DISTANCE, ANGLE, DIHEDRAL, ARRHENIUS, RMSD, CUSTOM };
     enum class IDType { ATOM, FRAG };
     static constexpr int MAXCONIDS = 4;     // max # of IDs used by any constraint
@@ -92,6 +93,7 @@ class FixBondReact : public Fix {
     std::array<IDType, MAXCONIDS> idtypes{};
     std::array<double, 5> par;     // max # of constraint parameters = 5
     std::string str;
+    bool satisfied;
   };
   struct Reaction {
     int ID;
@@ -116,7 +118,6 @@ class FixBondReact : public Fix {
     int create_atoms_flag, modify_create_fragid;
     double overlapsq;
     int molecule_keyword;
-    int nconstraints;
     int v_nevery, v_rmin, v_rmax, v_prob; // ID of variable, -1 if static
     int nnewmolids;               // number of unique new molids needed for each reaction
     std::vector<ReactionAtomFlags> atoms;
@@ -204,7 +205,7 @@ class FixBondReact : public Fix {
   void CustomCharges(int, Reaction &);
   void ChiralCenters(char *, Reaction &);
   void ReadConstraints(char *, Reaction &);
-  void readID(char *, int, Reaction &, int);
+  void readID(char *, Constraint &, Reaction &, int);
 
   void make_a_guess(Reaction &);
   void neighbor_loop(Reaction &);
@@ -213,12 +214,12 @@ class FixBondReact : public Fix {
   void inner_crosscheck_loop(Reaction &);
   int ring_check(Reaction &);
   int check_constraints(Reaction &);
-  void get_IDcoords(int, int, double *, Molecule *);
+  void get_IDcoords(Constraint::IDType, int, double *, Molecule *);
   double get_temperature(tagint **, int, int, Molecule *);
   double get_totalcharge(Reaction &);
   void customvarnames();    // get per-atom variables names used by custom constraint
   void get_customvars();    // evaluate local values for variables names used by custom constraint
-  double custom_constraint(const std::string &, Reaction &);    // evaulate expression for custom constraint
+  bool custom_constraint(const std::string &, Reaction &);    // evaulate expression for custom constraint
   double rxnfunction(const std::string &, const std::string &,
                      const std::string &, Molecule *);    // eval rxn_sum and rxn_ave
   void get_atoms2bond(int);
