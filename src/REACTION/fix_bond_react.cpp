@@ -85,25 +85,6 @@ static const char cite_fix_bond_react[] =
     " number =  109287\n"
     "}\n\n";
 
-static constexpr double BIG = 1.0e20;
-static constexpr int MAXGUESS = 20;      // max # of guesses allowed by superimpose algorithm
-static constexpr int MAXCONARGS = 14;    // max # of arguments for any type of constraint + rxnID
-
-// various statuses of superimpose algorithm:
-// ACCEPT: site successfully matched to pre-reacted template
-// REJECT: site does not match pre-reacted template
-// PROCEED: normal execution (non-guessing mode)
-// CONTINUE: a neighbor has been assigned, skip to next neighbor
-// GUESSFAIL: a guess has failed (if no more restore points, status = 'REJECT')
-// RESTORE: restore mode, load most recent restore point
-enum { ACCEPT, REJECT, PROCEED, CONTINUE, GUESSFAIL, RESTORE };
-
-// flag for one-proc vs shared reaction sites
-enum { LOCAL, GLOBAL };
-
-// values for molecule_keyword
-enum { OFF, INTER, INTRA };
-
 /* ---------------------------------------------------------------------- */
 // clang-format off
 
@@ -130,7 +111,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   extvector = 0;
   cuff = 1;
   narrhenius = 0;
-  status = PROCEED;
+  status = Status::PROCEED;
 
   // reaction functions used by 'custom' constraint
   nrxnfunction = 3;
@@ -173,7 +154,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
 
   int iarg = 3;
   stabilization_flag = 0;
-  molid_mode = RESET_MOL_IDS::YES;
+  molid_mode = Reset_Mol_IDs::YES;
   int hang_catch = 0;
   int num_common_keywords = 50; // generous arbitrary limit
   while (true) {
@@ -191,9 +172,9 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     } else if (strcmp(arg[iarg],"reset_mol_ids") == 0) {
       if (iarg+2 > narg) utils::missing_cmd_args(FLERR,"fix bond/react reset_mol_ids", error);
       std::string str = arg[iarg+1];
-      if (str == "yes") molid_mode = RESET_MOL_IDS::YES;
-      else if (str == "no") molid_mode = RESET_MOL_IDS::NO;
-      else if (str == "molmap") molid_mode = RESET_MOL_IDS::MOLMAP;
+      if (str == "yes") molid_mode = Reset_Mol_IDs::YES;
+      else if (str == "no") molid_mode = Reset_Mol_IDs::NO;
+      else if (str == "molmap") molid_mode = Reset_Mol_IDs::MOLMAP;
       else error->all(FLERR, iarg+1, "Unknown option {} for 'reset_mol_ids' keyword", str);
       iarg += 2;
     } else if (strcmp(arg[iarg],"rate_limit") == 0) {
@@ -222,7 +203,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     } else error->all(FLERR, iarg, "Unknown fix bond/react command keyword {}", arg[iarg]);
   }
 
-  if (molid_mode == RESET_MOL_IDS::YES) {
+  if (molid_mode == Reset_Mol_IDs::YES) {
     delete reset_mol_ids;
     reset_mol_ids = new ResetAtomsMol(lmp);
     reset_mol_ids->create_computes(id,group->names[igroup]);
@@ -245,7 +226,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     rxn.modify_create_fragid = -1;
     rxn.overlapsq = 0.0;
     rxn.mol_total_charge = 0.0;
-    rxn.molecule_keyword = OFF;
+    rxn.molecule_keyword = Molecule_Keys::OFF;
     rxn.limit_duration = 60;
     rxn.reaction_count = 0;
     rxn.local_rxn_count = 0;
@@ -374,9 +355,9 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
       } else if (strcmp(arg[iarg],"molecule") == 0) {
         if (iarg+2 > narg) error->all(FLERR,"Illegal fix bond/react command: "
                                       "'molecule' has too few arguments");
-        if (strcmp(arg[iarg+1],"off") == 0) rxn.molecule_keyword = OFF; //default
-        else if (strcmp(arg[iarg+1],"inter") == 0) rxn.molecule_keyword = INTER;
-        else if (strcmp(arg[iarg+1],"intra") == 0) rxn.molecule_keyword = INTRA;
+        if (strcmp(arg[iarg+1],"off") == 0) rxn.molecule_keyword = Molecule_Keys::OFF; //default
+        else if (strcmp(arg[iarg+1],"inter") == 0) rxn.molecule_keyword = Molecule_Keys::INTER;
+        else if (strcmp(arg[iarg+1],"intra") == 0) rxn.molecule_keyword = Molecule_Keys::INTRA;
         else error->one(FLERR,"Fix bond/react: Illegal option for 'molecule' keyword");
         iarg += 2;
       } else if (strcmp(arg[iarg],"modify_create") == 0) {
@@ -440,7 +421,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     }
   }
 
-  if (molid_mode == RESET_MOL_IDS::MOLMAP) {
+  if (molid_mode == Reset_Mol_IDs::MOLMAP) {
     for (auto &rxn : rxns) {
       if (!rxn.reactant->moleculeflag || !rxn.product->moleculeflag) {
         if (comm->me == 0)
@@ -1032,9 +1013,9 @@ void FixBondReact::far_partner(Reaction &rxn)
         continue;
       }
 
-      if (rxn.molecule_keyword == INTER) {
+      if (rxn.molecule_keyword == Molecule_Keys::INTER) {
         if (atom->molecule[i] == atom->molecule[j]) continue;
-      } else if (rxn.molecule_keyword == INTRA) {
+      } else if (rxn.molecule_keyword == Molecule_Keys::INTRA) {
         if (atom->molecule[i] != atom->molecule[j]) continue;
       }
 
@@ -1117,9 +1098,9 @@ void FixBondReact::close_partner(Reaction &rxn)
       if (i_limit_tags[i2] != 0) continue;
       if (itype != rxn.iatomtype || jtype != rxn.jatomtype) continue;
 
-      if (rxn.molecule_keyword == INTER) {
+      if (rxn.molecule_keyword == Molecule_Keys::INTER) {
         if (atom->molecule[i1] == atom->molecule[i2]) continue;
-      } else if (rxn.molecule_keyword == INTRA) {
+      } else if (rxn.molecule_keyword == Molecule_Keys::INTRA) {
         if (atom->molecule[i1] != atom->molecule[i2]) continue;
       }
 
@@ -1165,6 +1146,13 @@ void FixBondReact::close_partner(Reaction &rxn)
 /* ----------------------------------------------------------------------
   Set up global variables. Loop through all pairs; loop through Pioneers
   until Superimpose Algorithm is completed for each pair.
+  various statuses of superimpose algorithm:
+  ACCEPT: site successfully matched to pre-reacted template
+  REJECT: site does not match pre-reacted template
+  PROCEED: normal execution (non-guessing mode)
+  CONTINUE: a neighbor has been assigned, skip to next neighbor
+  GUESSFAIL: a guess has failed (if no more restore points, status = 'REJECT')
+  RESTORE: restore mode, load most recent restore point
 ------------------------------------------------------------------------- */
 
 void FixBondReact::superimpose_algorithm()
@@ -1210,7 +1198,7 @@ void FixBondReact::superimpose_algorithm()
   for (auto &rxn : rxns) {
     for (auto &rxn_attempt : rxn.attempts) {
 
-      status = PROCEED;
+      status = Status::PROCEED;
 
       glove_counter = 0;
       for (int i = 0; i < max_natoms; i++) {
@@ -1245,9 +1233,9 @@ void FixBondReact::superimpose_algorithm()
              check_constraints(rxn)) {
           if (rxn.fraction < 1.0 &&
               random[rxn.ID]->uniform() >= rxn.fraction) {
-            status = REJECT;
+            status = Status::REJECT;
           } else {
-            status = ACCEPT;
+            status = Status::ACCEPT;
             my_mega_glove[0][my_num_mega] = (double) rxn.ID;
             if (rxn.rescale_charges_flag) my_mega_glove[1][my_num_mega] = get_totalcharge(rxn);
             for (int i = 0; i < rxn.reactant->natoms; i++) {
@@ -1255,7 +1243,7 @@ void FixBondReact::superimpose_algorithm()
             }
             my_num_mega++;
           }
-        } else status = REJECT;
+        } else status = Status::REJECT;
       }
 
       avail_guesses = 0;
@@ -1271,7 +1259,7 @@ void FixBondReact::superimpose_algorithm()
 
 
       int hang_catch = 0;
-      while (status != ACCEPT && status != REJECT) {
+      while (status != Status::ACCEPT && status != Status::REJECT) {
 
         for (int i = 0; i < max_natoms; i++) {
           pioneers[i] = 0;
@@ -1286,16 +1274,16 @@ void FixBondReact::superimpose_algorithm()
         // run through the pioneers
         // due to use of restore points, 'pion' index can change in loop
         for (pion = 0; pion < rxn.reactant->natoms; pion++) {
-          if (pioneers[pion] || status == GUESSFAIL) {
+          if (pioneers[pion] || status == Status::GUESSFAIL) {
             make_a_guess(rxn);
-            if (status == ACCEPT || status == REJECT) break;
+            if (status == Status::ACCEPT || status == Status::REJECT) break;
           }
         }
 
         // reaction site found successfully!
-        if (status == ACCEPT) {
+        if (status == Status::ACCEPT) {
           if (rxn.fraction < 1.0 &&
-              random[rxn.ID]->uniform() >= rxn.fraction) status = REJECT;
+              random[rxn.ID]->uniform() >= rxn.fraction) status = Status::REJECT;
           else {
             my_mega_glove[0][my_num_mega] = (double) rxn.ID;
             if (rxn.rescale_charges_flag) my_mega_glove[1][my_num_mega] = get_totalcharge(rxn);
@@ -1329,7 +1317,7 @@ void FixBondReact::superimpose_algorithm()
     }
   }
 
-  dedup_mega_gloves(LOCAL); // make sure atoms aren't added to more than one reaction
+  dedup_mega_gloves(Dedup_Modes::LOCAL); // make sure atoms aren't added to more than one reaction
   glove_ghostcheck(); // split into 'local' and 'global'
   ghost_glovecast(); // consolidate all mega_gloves to all processors
 
@@ -1461,12 +1449,12 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   int index1 = atom->find_custom("limit_tags",flag,cols);
   int *i_limit_tags = atom->ivector[index1];
 
-  if (status == GUESSFAIL && avail_guesses == 0) {
-    status = REJECT;
+  if (status == Status::GUESSFAIL && avail_guesses == 0) {
+    status = Status::REJECT;
     return;
   }
 
-  if (status == GUESSFAIL && avail_guesses > 0) {
+  if (status == Status::GUESSFAIL && avail_guesses > 0) {
     // load restore point
     for (int i = 0; i < rxn.reactant->natoms; i++) {
       glove[i][0] = restore[i][(avail_guesses*4)-4];
@@ -1478,9 +1466,9 @@ void FixBondReact::make_a_guess(Reaction &rxn)
     neigh = restore_pt[avail_guesses-1][1];
     trace = restore_pt[avail_guesses-1][2];
     glove_counter = restore_pt[avail_guesses-1][3];
-    status = RESTORE;
+    status = Status::RESTORE;
     neighbor_loop(rxn);
-    if (status != PROCEED) return;
+    if (status != Status::PROCEED) return;
   }
 
   nfirst_neighs = rxn.reactant->nspecial[pion][0];
@@ -1496,14 +1484,14 @@ void FixBondReact::make_a_guess(Reaction &rxn)
       error->one(FLERR,"Fix bond/react: Fix bond/react needs ghost atoms from further away"); // parallel issues.
     }
     if (i_limit_tags[(int)atom->map(xspecial[atom->map(glove[pion][1])][i])] != 0) {
-      status = GUESSFAIL;
+      status = Status::GUESSFAIL;
       return;
     }
   }
 
   // check for same number of neighbors between unreacted mol and simulation
   if (nfirst_neighs != nxspecial[atom->map(glove[pion][1])][0]) {
-    status = GUESSFAIL;
+    status = Status::GUESSFAIL;
     return;
   }
 
@@ -1517,7 +1505,7 @@ void FixBondReact::make_a_guess(Reaction &rxn)
         break;
       }
 
-  if (assigned_count == nfirst_neighs) status = GUESSFAIL;
+  if (assigned_count == nfirst_neighs) status = Status::GUESSFAIL;
 
   // check if all neigh atom types are the same between simulation and unreacted mol
   int *mol_ntypes = new int[atom->ntypes];
@@ -1535,7 +1523,7 @@ void FixBondReact::make_a_guess(Reaction &rxn)
 
   for (int i = 0; i < atom->ntypes; i++) {
     if (mol_ntypes[i] != lcl_ntypes[i]) {
-      status = GUESSFAIL;
+      status = Status::GUESSFAIL;
       delete[] mol_ntypes;
       delete[] lcl_ntypes;
       return;
@@ -1558,7 +1546,7 @@ void FixBondReact::neighbor_loop(Reaction &rxn)
 {
   int nfirst_neighs = rxn.reactant->nspecial[pion][0];
 
-  if (status == RESTORE) {
+  if (status == Status::RESTORE) {
     check_a_neighbor(rxn);
     return;
   }
@@ -1581,7 +1569,7 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
   int *type = atom->type;
   int nfirst_neighs = rxn.reactant->nspecial[pion][0];
 
-  if (status != RESTORE) {
+  if (status != Status::RESTORE) {
     // special consideration for hydrogen atoms (and all first neighbors bonded to no other atoms) (and aren't edge atoms)
     if (rxn.reactant->nspecial[(int)rxn.reactant->special[pion][neigh]-1][0] == 1 && rxn.atoms[(int)rxn.reactant->special[pion][neigh]-1].edge == 0) {
 
@@ -1613,8 +1601,8 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
 
             glove_counter++;
             if (glove_counter == rxn.reactant->natoms) {
-              if (ring_check(rxn) && check_constraints(rxn)) status = ACCEPT;
-              else status = GUESSFAIL;
+              if (ring_check(rxn) && check_constraints(rxn)) status = Status::ACCEPT;
+              else status = Status::GUESSFAIL;
               return;
             }
             // status should still == PROCEED
@@ -1623,15 +1611,15 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
         }
       }
       // we are here if no matching atom found
-      status = GUESSFAIL;
+      status = Status::GUESSFAIL;
       return;
     }
   }
 
   crosscheck_the_neighbor(rxn);
-  if (status != PROCEED) {
-    if (status == CONTINUE)
-      status = PROCEED;
+  if (status != Status::PROCEED) {
+    if (status == Status::CONTINUE)
+      status = Status::PROCEED;
     return;
   }
 
@@ -1665,8 +1653,8 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
 
         glove_counter++;
         if (glove_counter == rxn.reactant->natoms) {
-          if (ring_check(rxn) && check_constraints(rxn)) status = ACCEPT;
-          else status = GUESSFAIL;
+          if (ring_check(rxn) && check_constraints(rxn)) status = Status::ACCEPT;
+          else status = Status::GUESSFAIL;
           return;
           // will never complete here when there are edge atoms
           // ...actually that could be wrong if people get creative...shouldn't affect anything
@@ -1688,7 +1676,7 @@ void FixBondReact::crosscheck_the_neighbor(Reaction &rxn)
 {
   int nfirst_neighs = rxn.reactant->nspecial[pion][0];
 
-  if (status == RESTORE) {
+  if (status == Status::RESTORE) {
     inner_crosscheck_loop(rxn);
     return;
   }
@@ -1699,7 +1687,7 @@ void FixBondReact::crosscheck_the_neighbor(Reaction &rxn)
 
       if (avail_guesses == MAXGUESS) {
         error->warning(FLERR,"Fix bond/react: Fix bond/react failed because MAXGUESS set too small. ask developer for info");
-        status = GUESSFAIL;
+        status = Status::GUESSFAIL;
         return;
       }
       avail_guesses++;
@@ -1737,7 +1725,7 @@ void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
   for (int i = 0; i < nfirst_neighs; i++) {
     if (type[(int)atom->map(xspecial[atom->map(glove[pion][1])][i])] == rxn.reactant->type[(int)rxn.reactant->special[pion][neigh]-1]) {
       if (num_choices == 5) { // here failed because too many identical first neighbors. but really no limit if situation arises
-        status = GUESSFAIL;
+        status = Status::GUESSFAIL;
         return;
       }
       tag_choices[num_choices++] = xspecial[atom->map(glove[pion][1])][i];
@@ -1770,7 +1758,7 @@ void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
     if (already_assigned == 1) {
       guess_branch[avail_guesses-1]--;
       if (guess_branch[avail_guesses-1] == 0) {
-        status = REJECT;
+        status = Status::REJECT;
         return;
       }
     } else {
@@ -1793,11 +1781,11 @@ void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
   }
   glove_counter++;
   if (glove_counter == rxn.reactant->natoms) {
-    if (ring_check(rxn) && check_constraints(rxn)) status = ACCEPT;
-    else status = GUESSFAIL;
+    if (ring_check(rxn) && check_constraints(rxn)) status = Status::ACCEPT;
+    else status = Status::GUESSFAIL;
     return;
   }
-  status = CONTINUE;
+  status = Status::CONTINUE;
 }
 
 /* ----------------------------------------------------------------------
@@ -2589,32 +2577,32 @@ let's dedup global_mega_glove
 allows for same site undergoing different pathways, in parallel
 ------------------------------------------------------------------------- */
 
-void FixBondReact::dedup_mega_gloves(int dedup_mode)
+void FixBondReact::dedup_mega_gloves(Dedup_Modes dedup_mode)
 {
   // dedup_mode == LOCAL for local_dedup
   // dedup_mode == GLOBAL for global_mega_glove
 
-  if (dedup_mode == GLOBAL)
+  if (dedup_mode == Dedup_Modes::GLOBAL)
     for (auto &rxn : rxns)
       rxn.ghostly_rxn_count = 0;
 
   int dedup_size = 0;
-  if (dedup_mode == LOCAL) {
+  if (dedup_mode == Dedup_Modes::LOCAL) {
     dedup_size = my_num_mega;
-  } else if (dedup_mode == GLOBAL) {
+  } else if (dedup_mode == Dedup_Modes::GLOBAL) {
     dedup_size = global_megasize;
   }
 
   double **dedup_glove;
   memory->create(dedup_glove,max_natoms+cuff,dedup_size,"bond/react:dedup_glove");
 
-  if (dedup_mode == LOCAL) {
+  if (dedup_mode == Dedup_Modes::LOCAL) {
     for (int i = 0; i < dedup_size; i++) {
       for (int j = 0; j < max_natoms+cuff; j++) {
         dedup_glove[j][i] = my_mega_glove[j][i];
       }
     }
-  } else if (dedup_mode == GLOBAL) {
+  } else if (dedup_mode == Dedup_Modes::GLOBAL) {
     for (int i = 0; i < dedup_size; i++) {
       for (int j = 0; j < max_natoms+cuff; j++) {
         dedup_glove[j][i] = global_mega_glove[j][i];
@@ -2671,7 +2659,7 @@ void FixBondReact::dedup_mega_gloves(int dedup_mode)
 
   // we must update local_mega_glove and local_megasize
   // we can simply overwrite local_mega_glove column by column
-  if (dedup_mode == LOCAL) {
+  if (dedup_mode == Dedup_Modes::LOCAL) {
     int my_new_megasize = 0;
     for (int i = 0; i < my_num_mega; i++) {
       if (dedup_mask[i] == 0) {
@@ -2686,7 +2674,7 @@ void FixBondReact::dedup_mega_gloves(int dedup_mode)
 
   // we must update global_mega_glove and global_megasize
   // we can simply overwrite global_mega_glove column by column
-  if (dedup_mode == GLOBAL) {
+  if (dedup_mode == Dedup_Modes::GLOBAL) {
     int new_global_megasize = 0;
     for (int i = 0; i < global_megasize; i++) {
       if (dedup_mask[i] == 0) {
@@ -2859,7 +2847,7 @@ void FixBondReact::ghost_glovecast()
                 column, 0, world);
   }
 
-  if (comm->me == 0) dedup_mega_gloves(GLOBAL); // global_mega_glove mode
+  if (comm->me == 0) dedup_mega_gloves(Dedup_Modes::GLOBAL); // global_mega_glove mode
   MPI_Bcast(&global_megasize,1,MPI_INT,0,world);
   MPI_Bcast(&(global_mega_glove[0][0]), global_megasize, column, 0, world);
 
@@ -3003,7 +2991,7 @@ void FixBondReact::update_everything()
 
     // find current max molecule ID and shift for each proc
     tagint moloffset = 0;
-    if (molid_mode == RESET_MOL_IDS::MOLMAP) {
+    if (molid_mode == Reset_Mol_IDs::MOLMAP) {
       tagint maxmol_all = 0;
       for (int i = 0; i < atom->nlocal; i++) maxmol_all = MAX(maxmol_all, atom->molecule[i]);
       MPI_Allreduce(MPI_IN_PLACE, &maxmol_all, 1, MPI_LMP_TAGINT, MPI_MAX, world);
@@ -3026,7 +3014,7 @@ void FixBondReact::update_everything()
     // assumes consistent molecule IDs in pre- and post-reaction template
     // NOTE: all procs assumed to have same update_mega_glove for second pass
     // NOTE: must be done before add atoms, because add_atoms deletes ghost info
-    if (molid_mode == RESET_MOL_IDS::MOLMAP) {
+    if (molid_mode == Reset_Mol_IDs::MOLMAP) {
       for (int i = 0; i < update_num_mega; i++) {
         auto &rxn = rxns[(int) update_mega_glove[0][i]];
         if (!rxn.reactant->moleculeflag || !rxn.product->moleculeflag) continue;
@@ -4345,7 +4333,7 @@ void FixBondReact::post_integrate_respa(int ilevel, int /*iloop*/)
 
 void FixBondReact::post_force(int /*vflag*/)
 {
-  if (molid_mode == RESET_MOL_IDS::YES) reset_mol_ids->reset();
+  if (molid_mode == Reset_Mol_IDs::YES) reset_mol_ids->reset();
 }
 
 /* ---------------------------------------------------------------------- */
