@@ -100,7 +100,6 @@ PACKAGE = \
 	peri \
 	ptm \
 	qeq \
-	qmmm \
 	qtb \
 	reaction \
 	reaxff \
@@ -184,19 +183,13 @@ PACKMOST = \
 # NOTE ^^^^^: the last three packages must remain at the end since
 # they depend on other packages to be installed first.
 
-PACKLIB = \
-	kokkos \
-	adios \
-	latboltz \
-	qmmm
+PACKLIB = kokkos adios latboltz
 
 PACKSYS = latboltz
 
 PACKINT = kokkos
 
-PACKEXT = \
-	adios \
-	qmmm
+PACKEXT = adios
 
 # Helper GNU make function for conversion to upper case without using shell commands
 uppercase_TABLE:=a,A b,B c,C d,D e,E f,F g,G h,H i,I j,J k,K l,L m,M n,N o,O p,P q,Q r,R s,S t,T u,U v,V w,W x,X y,Y z,Z

@@ -1737,7 +1737,7 @@ verified to work in February 2020 with Quantum Espresso versions 6.3 to
       When using CMake, building a LAMMPS library is required and it is
       recommended to build a shared library, since any libraries built
       from the sources in the *lib* folder (including the essential
-      libqmmm.a) are not included in the static LAMMPS library and
+      libqmmm.a) are not included in the static LAMMPS library and are
       (currently) not installed, while their code is included in the
       shared LAMMPS library.  Thus a typical command to configure
       building LAMMPS for QMMM would be:
@@ -1755,42 +1755,10 @@ verified to work in February 2020 with Quantum Espresso versions 6.3 to
 
    .. tab:: Traditional make
 
-      Before building LAMMPS, you must build the QMMM library in
-      ``lib/qmmm``.  You can do this manually if you prefer; follow the
-      first two steps explained in ``lib/qmmm/README``.  You can also do
-      it in one step from the ``lammps/src`` dir, using a command like
-      these, which simply invokes the ``lib/qmmm/Install.py`` script with
-      the specified args:
+      .. versionchanged:: TBD
 
-      .. code-block:: bash
-
-         # print help message
-         make lib-qmmm
-
-         # build with GNU Fortran compiler (settings as in "make serial")
-         make lib-qmmm args="-m serial"
-
-         # build with default MPI compiler (settings as in "make mpi")
-         make lib-qmmm args="-m mpi"
-
-         # build with GNU Fortran compiler
-         make lib-qmmm args="-m gfortran"
-
-      The build should produce two files: ``lib/qmmm/libqmmm.a`` and
-      ``lib/qmmm/Makefile.lammps``.  The latter is copied from an
-      existing ``Makefile.lammps.*`` and has settings needed to build
-      LAMMPS with the QMMM library (though typically the settings are
-      just blank).  If necessary, you can edit/create a new
-      ``lib/qmmm/Makefile.<machine>`` file for your system, which should
-      define an ``EXTRAMAKE`` variable to specify a corresponding
-      ``Makefile.lammps.<machine>`` file.
-
-      You can then install QMMM package and build LAMMPS in the usual
-      manner.  After completing the LAMMPS build and compiling Quantum
-      ESPRESSO with external library support (via ``make couple``), go
-      back to the ``lib/qmmm`` folder and follow the instructions in the
-      README file to build the combined LAMMPS/QE QM/MM executable
-      (``pwqmmm.x``) in the ``lib/qmmm`` folder.
+      The QMMM package no longer supports the the traditional make build.
+      You need to build LAMMPS with CMake.
 
 ----------
 
