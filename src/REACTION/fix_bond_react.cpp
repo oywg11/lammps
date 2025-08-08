@@ -1297,7 +1297,7 @@ void FixBondReact::superimpose_algorithm()
         if (rlm.var_flag == 1) {
           my_nrate = input->variable->compute_equal(rlm.var_id);
         } else my_nrate = rlm.Nlimit;
-        int rate_limit_overstep_sum = delta_rxn_sum - my_nrate;
+        int rate_limit_overstep_sum = nrxn_delta - my_nrate;
         if (rate_limit_overstep_sum > 0) {
           if (rlm.Nrxns == 1) {
             oversteps[rlm.rxnIDs[0]] = MAX(oversteps[rlm.rxnIDs[0]], rate_limit_overstep_sum);
