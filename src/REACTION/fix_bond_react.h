@@ -129,7 +129,7 @@ class FixBondReact : public Fix {
     int nnewmolids;                                        // number of unique new molids needed for each reaction
     std::vector<ReactionAtomFlags> atoms;
     std::vector<Constraint> constraints;
-    std::vector<std::array<tagint, 2>> attempts;           // 1st column: 2nd column:
+    std::vector<std::array<tagint, 2>> attempts;           // stores sim atom IDs of initiator atoms
   };
   std::vector<Reaction> rxns;
 
@@ -180,7 +180,7 @@ class FixBondReact : public Fix {
   tagint **xspecial;                                       // full 1-4 neighbor list
 
   int pion, neigh, trace;                                  // important indices for various loops. required for restore points
-  tagint **glove;                                          // 1st colmn: pre-reacted template, 2nd colmn: global IDs
+  std::vector<tagint> glove;                               // global IDs. index is pre-reaction ID-1, value is mapped sim atom ID
   int cuff;                                                // extra space in mega_gloves: default = 1, w/ rescale_charges_flag = 2
   double **my_mega_glove;                                  // local + ghostly reaction instances. for all mega_gloves: first row = rxnID.
   double **local_mega_glove;                               // consolidation of local reaction instances
@@ -216,7 +216,7 @@ class FixBondReact : public Fix {
   int ring_check(Reaction &);
   int check_constraints(Reaction &);
   void get_IDcoords(Constraint::IDType, int, double *, Molecule *);
-  double get_temperature(tagint **, int, int, Molecule *);
+  double get_temperature(std::vector<tagint>);
   double get_totalcharge(Reaction &);
   void customvarnames();                                          // get per-atom variables names used by custom constraint
   void get_customvars();                                          // evaluate local values for variables names used by custom constraint
