@@ -411,11 +411,8 @@ COMPLETER_INIT_FUNC(extra, Extra)
 void CodeEditor::setGroupList()
 {
     QStringList groups;
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    QRegExp groupcmd(QStringLiteral("^\\s*group\\s+(\\S+)(\\s+|$)"));
-#else
     QRegularExpression groupcmd(QStringLiteral("^\\s*group\\s+(\\S+)(\\s+|$)"));
-#endif
+
     auto saved = textCursor();
     // reposition cursor to beginning of text and search for group commands
     auto cursor = textCursor();
@@ -453,11 +450,7 @@ void CodeEditor::setVarNameList()
         }
     }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    QRegExp varcmd(QStringLiteral("^\\s*variable\\s+(\\S+)(\\s+|$)"));
-#else
     QRegularExpression varcmd(QStringLiteral("^\\s*variable\\s+(\\S+)(\\s+|$)"));
-#endif
     auto saved = textCursor();
     // reposition cursor to beginning of text and search for group commands
     auto cursor = textCursor();
@@ -483,11 +476,8 @@ void CodeEditor::setVarNameList()
 void CodeEditor::setComputeIDList()
 {
     QStringList compid;
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    QRegExp compcmd(QStringLiteral("^\\s*compute\\s+(\\S+)\\s+"));
-#else
     QRegularExpression compcmd(QStringLiteral("^\\s*compute\\s+(\\S+)\\s+"));
-#endif
+
     auto saved = textCursor();
     // reposition cursor to beginning of text and search for group commands
     auto cursor = textCursor();
@@ -511,11 +501,8 @@ void CodeEditor::setComputeIDList()
 void CodeEditor::setFixIDList()
 {
     QStringList fixid;
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    QRegExp fixcmd(QStringLiteral("^\\s*fix\\s+(\\S+)\\s+"));
-#else
     QRegularExpression fixcmd(QStringLiteral("^\\s*fix\\s+(\\S+)\\s+"));
-#endif
+
     auto saved = textCursor();
     // reposition cursor to beginning of text and search for group commands
     auto cursor = textCursor();

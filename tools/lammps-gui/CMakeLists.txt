@@ -150,12 +150,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(ICON_RC_FILE ${CMAKE_CURRENT_SOURCE_DIR}/lmpicons.rc)
 endif()
 
-# we require Qt 5 and at least version 5.12 at that.
+# we require Qt 5 and at least version 5.15 at that.
 if(NOT LAMMPS_GUI_USE_QT5)
   find_package(Qt6 6.2 QUIET COMPONENTS Widgets Charts)
 endif()
 if(NOT Qt6_FOUND)
-  find_package(Qt5 5.12 REQUIRED COMPONENTS Widgets Charts)
+  find_package(Qt5 5.15 REQUIRED COMPONENTS Widgets Charts)
   set(QT_VERSION_MAJOR 5)
 else()
   set(QT_VERSION_MAJOR 6)
