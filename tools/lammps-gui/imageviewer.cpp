@@ -181,7 +181,7 @@ ImageViewer::ImageViewer(const QString &fileName, LammpsWrapper *_lammps, QWidge
     xcenter = ycenter = zcenter = 0.5;
     settings.endGroup();
 
-    auto pix    = QPixmap(":/icons/emblem-photos.png");
+    auto pix   = QPixmap(":/icons/emblem-photos.png");
     auto bsize = QFontMetrics(QApplication::font()).size(Qt::TextSingleLine, "Height:  200");
 
     auto *renderstatus = new QLabel(QString());
@@ -422,7 +422,10 @@ void ImageViewer::reset_view()
     button = findChild<QPushButton *>("autobond");
     if (button) button->setChecked(autobond);
     auto *cutoff = findChild<QLineEdit *>("bondcut");
-    if (cutoff) cutoff->setEnabled(autobond);
+    if (cutoff) {
+        cutoff->setEnabled(autobond);
+        cutoff->setText(QString::number(bondcutoff));
+    }
     button = findChild<QPushButton *>("box");
     if (button) button->setChecked(showbox);
     button = findChild<QPushButton *>("axes");
@@ -480,14 +483,14 @@ void ImageViewer::toggle_shiny()
 void ImageViewer::toggle_vdw()
 {
     auto *button = qobject_cast<QPushButton *>(sender());
-    bool do_vdw  = vdwfactor > VDW_CUT;
 
-    if (do_vdw)
-        vdwfactor = VDW_OFF;
-    else
+    if (button->isChecked())
         vdwfactor = VDW_ON;
+    else
+        vdwfactor = VDW_OFF;
 
     // when enabling VDW rendering, we must turn off autobond
+    bool do_vdw = vdwfactor > VDW_CUT;
     if (do_vdw) {
         autobond   = false;
         auto *bond = findChild<QPushButton *>("autobond");
@@ -545,14 +548,14 @@ void ImageViewer::toggle_axes()
 void ImageViewer::do_zoom_in()
 {
     zoom = zoom * 1.1;
-    zoom = std::min(zoom, 5.0);
+    zoom = std::min(zoom, 10.0);
     createImage();
 }
 
 void ImageViewer::do_zoom_out()
 {
     zoom = zoom / 1.1;
-    zoom = std::max(zoom, 0.5);
+    zoom = std::max(zoom, 0.25);
     createImage();
 }
 
