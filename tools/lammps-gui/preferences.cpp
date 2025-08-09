@@ -779,8 +779,8 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     grid->addItem(new QSpacerItem(100, 100, QSizePolicy::Expanding, QSizePolicy::Expanding), i, 2);
     setLayout(grid);
 
-    connect(vval, &QCheckBox::checkStateChanged, this, &SnapshotTab::choose_vdw);
-    connect(uval, &QCheckBox::checkStateChanged, this, &SnapshotTab::choose_bond);
+    connect(vval, &QCheckBox::toggled, this, &SnapshotTab::choose_vdw);
+    connect(uval, &QCheckBox::toggled, this, &SnapshotTab::choose_bond);
 }
 
 void SnapshotTab::choose_vdw()
