@@ -353,6 +353,8 @@ the input script defines, e.g. Angstroms.
 
 ----------
 
+.. versionadded:: TBD
+
 The *autobond* keyword enables drawing bonds for systems where bonds are
 implicit, e.g. for potentials like :doc:`AIREBO <pair_airebo>` or
 :doc:`ReaxFF <pair_reaxff>`.  The first argument is the bond cutoff,
