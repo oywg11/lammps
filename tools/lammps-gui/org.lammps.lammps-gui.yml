@@ -23,6 +23,7 @@ modules:
     subdir: cmake
     config-opts:
       - -D PKG_AMOEBA=yes
+      - -D PKG_APIP=yes
       - -D PKG_ASPHERE=yes
       - -D PKG_AWPMD=yes
       - -D PKG_BOCS=yes
