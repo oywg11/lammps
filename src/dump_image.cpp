@@ -943,7 +943,7 @@ void DumpImage::create_image()
   double **bodyarray,**fixarray;
   double *color,*color1,*color2;
   double *p1,*p2,*p3;
-  double xmid[3],pt1[3],pt2[3],pt3[3];
+  double pt1[3],pt2[3],pt3[3];
   double mat[3][3];
 
   // render my atoms
@@ -1277,6 +1277,7 @@ void DumpImage::create_image()
 
         if (bcolor == ATOM || domain->minimum_image_check(delx,dely,delz)) {
           domain->minimum_image(FLERR, delx,dely,delz);
+          double xmid[3];
           xmid[0] = x[atom1][0] + 0.5*delx;
           xmid[1] = x[atom1][1] + 0.5*dely;
           xmid[2] = x[atom1][2] + 0.5*delz;
@@ -1340,12 +1341,10 @@ void DumpImage::create_image()
       double *rmass = atom->rmass;
       tagint *tag = atom->tag;
       int *type = atom->type;
-      int *jlist;
+
       int *numneigh = list->numneigh;
       int **firstneigh = list->firstneigh;
-      int jj, jnum;
-      double xtmp, ytmp, ztmp, delx, dely, delz, rsq;
-      double cutsq = bondcutoff * bondcutoff;
+      const double cutsq = bondcutoff * bondcutoff;
       int newton_pair = force->newton_pair;
       bool checkmass = false;
 
@@ -1353,16 +1352,16 @@ void DumpImage::create_image()
       if ((strcmp(update->unit_style, "real") == 0) || (strcmp(update->unit_style, "metal") == 0))
         checkmass = true;
 
-      for (i = 0; i < nchoose; i++) {
-        atom1 = clist[i];
-        xtmp = x[atom1][0];
-        ytmp = x[atom1][1];
-        ztmp = x[atom1][2];
+      for (int ii = 0; ii < nchoose; ii++) {
+        atom1 = clist[ii];
+        const double xtmp = x[atom1][0];
+        const double ytmp = x[atom1][1];
+        const double ztmp = x[atom1][2];
 
         // loop over neighbors
-        jlist = firstneigh[atom1];
-        jnum = numneigh[atom1];
-        for (jj = 0; jj < jnum; ++jj) {
+        auto *jlist = firstneigh[atom1];
+        const int jnum = numneigh[atom1];
+        for (int jj = 0; jj < jnum; ++jj) {
           atom2 = jlist[jj] & NEIGHMASK;
           if (!chooseghost[atom2]) continue;
           if ((newton_pair == 0) && (tag[atom1] > tag[atom2])) continue;
@@ -1375,10 +1374,10 @@ void DumpImage::create_image()
               if ((mass[type[atom1]] < 3.0) && (mass[type[atom2]] < 3.0)) continue;
             }
           }
-          delx = x[atom2][0] - xtmp;
-          dely = x[atom2][1] - ytmp;
-          delz = x[atom2][2] - ztmp;
-          rsq = delx*delx + dely*dely + delz*delz;
+          double dx = x[atom2][0] - xtmp;
+          double dy = x[atom2][1] - ytmp;
+          double dz = x[atom2][2] - ztmp;
+          const double rsq = dx*dx + dy*dy + dz*dz;
 
           if (rsq < cutsq) {
             if (acolor == TYPE) {
@@ -1398,16 +1397,17 @@ void DumpImage::create_image()
 
             // draw cylinder in 2 pieces if bcolor = ATOM
             // or bond crosses periodic boundary
+            double xmid[3];
 
-            domain->minimum_image(FLERR, delx,dely,delz);
-            xmid[0] = x[atom1][0] + 0.5*delx;
-            xmid[1] = x[atom1][1] + 0.5*dely;
-            xmid[2] = x[atom1][2] + 0.5*delz;
+            domain->minimum_image(FLERR,dx,dy,dz);
+            xmid[0] = x[atom1][0] + 0.5*dx;
+            xmid[1] = x[atom1][1] + 0.5*dy;
+            xmid[2] = x[atom1][2] + 0.5*dz;
             image->draw_cylinder(x[atom1],xmid,color1,diameter,3);
 
-            xmid[0] = x[atom2][0] - 0.5*delx;
-            xmid[1] = x[atom2][1] - 0.5*dely;
-            xmid[2] = x[atom2][2] - 0.5*delz;
+            xmid[0] = x[atom2][0] - 0.5*dx;
+            xmid[1] = x[atom2][1] - 0.5*dy;
+            xmid[2] = x[atom2][2] - 0.5*dz;
             image->draw_cylinder(xmid,x[atom2],color2,diameter,3);
           }
         }
