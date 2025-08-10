@@ -137,12 +137,13 @@ int get_pte_from_mass(double mass)
 }
 
 const QString blank(" ");
-constexpr double VDW_ON    = 1.6;
-constexpr double VDW_OFF   = 0.5;
-constexpr double VDW_CUT   = 1.0;
-constexpr double SHINY_ON  = 0.6;
-constexpr double SHINY_OFF = 0.2;
-constexpr double SHINY_CUT = 0.4;
+constexpr double VDW_ON       = 1.6;
+constexpr double VDW_OFF      = 0.5;
+constexpr double VDW_CUT      = 1.0;
+constexpr double SHINY_ON     = 0.6;
+constexpr double SHINY_OFF    = 0.2;
+constexpr double SHINY_CUT    = 0.4;
+constexpr double MAX_BOND_CUT = 99.0;
 } // namespace
 
 ImageViewer::ImageViewer(const QString &fileName, LammpsWrapper *_lammps, QWidget *parent) :
@@ -243,12 +244,11 @@ ImageViewer::ImageViewer(const QString &fileName, LammpsWrapper *_lammps, QWidge
     dobond->setToolTip("Toggle dynamic bond representation");
     dobond->setObjectName("autobond");
     auto *bondcut = new QLineEdit(QString::number(bondcutoff));
-    auto *bvalid  = new QDoubleValidator(0.5, 3.0, 10, bondcut);
-    bondcut->setValidator(bvalid);
+    bondcut->setMaxLength(5);
     bondcut->setObjectName("bondcut");
     bondcut->setToolTip("Set dynamic bond cutoff");
     QFontMetrics metrics(bondcut->fontMetrics());
-    bondcut->setFixedSize(metrics.averageCharWidth() * 4, 24); // TODO: determine height
+    bondcut->setFixedSize(metrics.averageCharWidth() * 6, 24); // TODO: determine height
     bondcut->setEnabled(false);
     auto *dobox = new QPushButton(QIcon(":/icons/system-box.png"), "");
     dobox->setCheckable(true);
@@ -509,7 +509,7 @@ void ImageViewer::toggle_bond()
     if (button) autobond = button->isChecked();
     auto *cutoff = findChild<QLineEdit *>("bondcut");
     if (cutoff) cutoff->setEnabled(autobond);
-    bondcutoff = cutoff->text().toDouble();
+    set_bondcut();
 
     // when enabling autobond, we must turn off VDW
     if (autobond) {
@@ -525,7 +525,17 @@ void ImageViewer::toggle_bond()
 void ImageViewer::set_bondcut()
 {
     auto *cutoff = findChild<QLineEdit *>("bondcut");
-    if (cutoff) bondcutoff = cutoff->text().toDouble();
+    if (cutoff) {
+        auto *dptr            = (double *)lammps->extract_global("neigh_cutmax");
+        double max_bondcutoff = (dptr) ? *dptr : 0.0;
+        double new_bondcutoff = cutoff->text().toDouble();
+
+        if ((max_bondcutoff > 0.1) && (new_bondcutoff > max_bondcutoff))
+            new_bondcutoff = max_bondcutoff;
+        if (new_bondcutoff > 0.1) bondcutoff = new_bondcutoff;
+
+        cutoff->setText(QString::number(bondcutoff));
+    }
     createImage();
 }
 
