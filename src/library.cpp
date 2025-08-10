@@ -1624,7 +1624,9 @@ int lammps_extract_setting(void *handle, const char *keyword)
   if (strcmp(keyword,"peri_flag") == 0) return lmp->atom->peri_flag;
 
   if (strcmp(keyword,"thermo_every") == 0) return lmp->output->thermo_every;
-  if (strcmp(keyword,"thermo_norm") == 0) return lmp->output->thermo->normflag;
+  if (lmp->output->thermo) {
+    if (strcmp(keyword,"thermo_norm") == 0) return lmp->output->thermo->normflag;
+  }
 
   return -1;
 }
