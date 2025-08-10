@@ -1304,9 +1304,12 @@ void DumpImage::create_image()
   // if bond is turned off (type < 0), still render
 
   if (bondflag == AUTO) {
-    // grab pair style neighbor list
-    auto *list = neighbor->find_list(force->pair);
-    if (list) {
+    // grab some suitable neighbor list, if available
+    auto *list = neighbor->get_best_pair_list();
+    if (!list) {
+      if (comm->me == 0)
+        error->warning(FLERR, "No suitable existing neighbor list for dump image autobond found");
+    } else {
       int nlocal = atom->nlocal;
 
       // communicate choose flag for ghost atoms to know if they are selected
