@@ -472,11 +472,11 @@ void ImageViewer::toggle_anti()
 void ImageViewer::toggle_shiny()
 {
     auto *button = qobject_cast<QPushButton *>(sender());
-    if (shinyfactor > 0.4)
+    if (shinyfactor > SHINY_CUT)
         shinyfactor = SHINY_OFF;
     else
         shinyfactor = SHINY_ON;
-    button->setChecked(shinyfactor > 0.4);
+    button->setChecked(shinyfactor > SHINY_CUT);
     createImage();
 }
 
