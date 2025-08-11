@@ -605,8 +605,8 @@ Prerequisites and portability
 LAMMPS-GUI version 1.7 and later is programmed in C++ based on the C++17
 standard and using the `Qt GUI framework
 <https://www.qt.io/product/framework>`_.  Currently, Qt version 5.15LTS
-or later is required commended; support for Qt version 6.x is available.
-Building LAMMPS with CMake is required.
+or later is required; support for Qt version 6.x is available.  Building
+LAMMPS with CMake is required.
 
 The LAMMPS-GUI has been successfully compiled and tested on:
 
