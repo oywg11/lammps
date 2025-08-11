@@ -1296,12 +1296,10 @@ void DumpImage::create_image()
     }
   }
 
-  // render automatic bonds for my atoms
-  // both atoms in bond must be selected for bond to be rendered
+  // render dynamic bonds for my atoms
+  // both atoms in pair must be selected and closer than bond cutoff for bond to be rendered
   // if newton_bond is off, only render bond once
   // render bond in 2 pieces if crosses periodic boundary
-  // if bond is deleted (type = 0), do not render
-  // if bond is turned off (type < 0), still render
 
   if (bondflag == AUTO) {
     // grab some suitable neighbor list, if available
