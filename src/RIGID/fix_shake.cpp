@@ -896,8 +896,8 @@ void FixShake::min_post_force(int vflag)
         atom2 = atom->map(shake_atom[i][1]);
         atom3 = atom->map(shake_atom[i][2]);
         if (atom1 == -1 || atom2 == -1 || atom3 == -1)
-          error->one(FLERR,"Shake atoms {} {} {} {} missing on proc {} at step {}{}",
-                     shake_atom[i][0],shake_atom[i][1],shake_atom[i][2],shake_atom[i][3],
+          error->one(FLERR,"Shake atoms {} {} {} missing on proc {} at step {}{}",
+                     shake_atom[i][0],shake_atom[i][1],shake_atom[i][2],
                      comm->me,update->ntimestep,utils::errorurl(5));
         atom1 = domain->closest_image(i, atom1);
         atom2 = domain->closest_image(i, atom2);
