@@ -692,6 +692,7 @@ cuthi
 cutinner
 cutlo
 cutmax
+cutmin
 cutoffA
 cutoffC
 cutsq
