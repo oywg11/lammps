@@ -618,23 +618,31 @@ void ImageViewer::do_recenter()
 
 void ImageViewer::cmd_to_clipboard()
 {
-    auto words    = last_dump_cmd.split(" ");
-    QString blank = QStringLiteral(" ");
-    int modidx    = words.indexOf("modify");
-    int maxidx    = words.size();
+    auto words = split_line(last_dump_cmd.toStdString());
+    int modidx = 0;
+    int maxidx = words.size();
+    for (int i = 0; i < maxidx; ++i) {
+        if (words[i] == "modify") {
+            modidx = i;
+            break;
+        }
+    }
 
-    QString dumpcmd = "dump viz ";
-    dumpcmd += words[1] + " image 100 myimage-*.ppm";
+    std::string dumpcmd = "dump viz ";
+    dumpcmd += words[1];
+    dumpcmd += " image 100 myimage-*.ppm";
     for (int i = 4; i < modidx; ++i)
-        if (words[i] != "noinit") dumpcmd += blank + words[i];
+        if (words[i] != "noinit") dumpcmd += " " + words[i];
     dumpcmd += '\n';
 
     dumpcmd += "dump_modify viz pad 9";
     for (int i = modidx + 1; i < maxidx; ++i)
-        dumpcmd += blank + words[i];
+        dumpcmd += " " + words[i];
     dumpcmd += '\n';
 #if QT_CONFIG(clipboard)
-    QGuiApplication::clipboard()->setText(dumpcmd);
+    QGuiApplication::clipboard()->setText(dumpcmd.c_str());
+#else
+    fprintf(stderr, "# customized dump image command:\n%s", dumpcmd.c_str())
 #endif
 }
 
