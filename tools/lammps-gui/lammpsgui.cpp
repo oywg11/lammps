@@ -2307,7 +2307,7 @@ void LammpsGui::setup_tutorial(int tutno, const QString &dir, bool purgedir, boo
 
     start_lammps();
     lammps.command("clear");
-    lammps.command(QString("shell cd " + dir));
+    lammps.command(QString("shell cd '%1'").arg(dir));
 
     // apply https proxy setting: prefer environment variable or fall back to preferences value
     auto https_proxy = QString::fromLocal8Bit(qgetenv("https_proxy"));
