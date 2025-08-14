@@ -11,6 +11,7 @@
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
+// clang-format on
 
 #include "dump_image.h"
 
@@ -37,6 +38,8 @@
 #include "modify.h"
 #include "molecule.h"
 #include "output.h"
+#include "region.h"
+#include "region_block.h"
 #include "thermo.h"
 #include "tokenizer.h"
 #include "update.h"
@@ -45,6 +48,24 @@
 #include <cctype>
 #include <cmath>
 #include <cstring>
+
+namespace LAMMPS_NS {
+class RegionInfo {
+public:
+  RegionInfo() = delete;
+  RegionInfo(const std::string &_id, Region *_ptr, double *_color, int _style,
+             double _diameter = 0.5) :
+      id(_id), ptr(_ptr), style(_style), color(_color), diameter(_diameter)
+  {
+  }
+
+  Region *ptr;
+  std::string id;
+  int style;
+  double *color;
+  double diameter;
+};
+}    // namespace LAMMPS_NS
 
 using namespace LAMMPS_NS;
 using MathConst::DEG2RAD;
@@ -55,6 +76,9 @@ enum { NUMERIC, ATOM, TYPE, ELEMENT, ATTRIBUTE };
 enum { SPHERE, LINE, TRI };    // also in some Body and Fix child classes
 enum { STATIC, DYNAMIC };
 enum { NO = 0, YES = 1 };
+enum { FILLED, FRAME };
+
+// clang-format off
 
 /* ---------------------------------------------------------------------- */
 
@@ -67,8 +91,7 @@ DumpImage::DumpImage(LAMMPS *lmp, int narg, char **arg) :
     gbuf(nullptr), avec_line(nullptr), avec_tri(nullptr), avec_body(nullptr), fixptr(nullptr),
     image(nullptr), chooseghost(nullptr), bufcopy(nullptr)
 {
-  if (binary || multiproc)
-    error->all(FLERR, 4, "Invalid dump image filename {}", filename);
+  if (binary || multiproc) error->all(FLERR, 4, "Invalid dump image filename {}", filename);
 
   // force binary flag on to avoid corrupted output on Windows
 
@@ -242,6 +265,27 @@ DumpImage::DumpImage(LAMMPS *lmp, int narg, char **arg) :
       fixflag1 = utils::numeric(FLERR,arg[iarg+3],false,lmp);
       fixflag2 = utils::numeric(FLERR,arg[iarg+4],false,lmp);
       iarg += 5;
+
+    } else if (strcmp(arg[iarg],"region") == 0) {
+      if (iarg+4 > narg) utils::missing_cmd_args(FLERR,"dump image region", error);
+      auto *regptr = domain->get_region_by_id(arg[iarg+1]);
+      if (!regptr)
+        error->all(FLERR, iarg+1, "Unknown region {} for dump image", arg[iarg+1]);
+      auto *regcolor = image->color2rgb(arg[iarg+2]);
+      if (!regcolor)
+        error->all(FLERR, iarg+2, "Unknown color {} for dump image", arg[iarg+2]);
+      int drawstyle = FILLED;
+      if (strcmp(arg[iarg+3],"filled") == 0) drawstyle = FILLED;
+      else if (strcmp(arg[iarg+3],"frame") == 0) drawstyle = FRAME;
+      else error->all(FLERR, iarg+3, "Unknown region draw style {}", arg[iarg+3]);
+      double framediam = 0.5;
+      if (drawstyle == FRAME) {
+        if (iarg+5 > narg) utils::missing_cmd_args(FLERR,"dump image region", error);
+        framediam = utils::numeric(FLERR, arg[iarg+4], false, lmp);
+        ++iarg;
+      }
+      iarg += 4;
+      regions.emplace_back(new RegionInfo(regptr->id, regptr, regcolor, drawstyle, framediam));
 
     } else if (strcmp(arg[iarg],"size") == 0) {
       if (iarg+3 > narg) utils::missing_cmd_args(FLERR,"dump image size", error);
@@ -507,6 +551,7 @@ DumpImage::~DumpImage()
 
   delete[] id_grid_compute;
   delete[] id_grid_fix;
+  for (auto *reg : regions) delete reg;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1302,6 +1347,71 @@ void DumpImage::create_image()
           image->draw_cylinder(p3,p1,color,fixflag2,3);
         }
       }
+    }
+  }
+
+  // render regions, if supported
+
+  for (const auto &reg : regions) {
+    utils::print(stderr, "drawing region {}\n", reg->id);
+
+    // check if region has changed or went away
+    auto *ptr = domain->get_region_by_id(reg->id);
+    if (!ptr) error->all(FLERR, "Dump image region {} does not exist");
+    reg->ptr = ptr;
+
+    if (reg->ptr->rotateflag) {
+      utils::logmesg(lmp, "Cannot (yet) handle rotating region {}. Skipping... ", reg->ptr->id);
+      continue;
+    }
+
+    // update internal variables
+    reg->ptr->prematch();
+
+    // compute position offset for moving regions
+
+    double dx = 0.0;
+    double dy = 0.0;
+    double dz = 0.0;
+    if (reg->ptr->moveflag) {
+      dx = reg->ptr->dx;
+      dy = reg->ptr->dy;
+      dz = reg->ptr->dz;
+    }
+
+    std::string regstyle = reg->ptr->style;
+    if (regstyle == "block") {
+      auto *myreg = dynamic_cast<RegBlock *>(reg->ptr);
+      // inconsistent style. should not happen.
+      if (!myreg) continue;
+
+      if (reg->style == FRAME) {
+        double block[8][3];
+        block[0][0] = myreg->xlo + dx; block[0][1] = myreg->ylo + dy; block[0][2] = myreg->zlo + dz;
+        block[1][0] = myreg->xlo + dx; block[1][1] = myreg->ylo + dy; block[1][2] = myreg->zhi + dz;
+        block[2][0] = myreg->xlo + dx; block[2][1] = myreg->yhi + dy; block[2][2] = myreg->zhi + dz;
+        block[3][0] = myreg->xlo + dx; block[3][1] = myreg->yhi + dy; block[3][2] = myreg->zlo + dz;
+        block[4][0] = myreg->xhi + dx; block[4][1] = myreg->ylo + dy; block[4][2] = myreg->zlo + dz;
+        block[5][0] = myreg->xhi + dx; block[5][1] = myreg->ylo + dy; block[5][2] = myreg->zhi + dz;
+        block[6][0] = myreg->xhi + dx; block[6][1] = myreg->yhi + dy; block[6][2] = myreg->zhi + dz;
+        block[7][0] = myreg->xhi + dx; block[7][1] = myreg->yhi + dy; block[7][2] = myreg->zlo + dz;
+        image->draw_cylinder(block[0],block[1],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[1],block[2],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[0],block[3],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[2],block[3],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[0],block[4],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[1],block[5],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[2],block[6],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[3],block[7],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[4],block[5],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[5],block[6],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[4],block[7],reg->color,reg->diameter,3);
+        image->draw_cylinder(block[6],block[7],reg->color,reg->diameter,3);
+      } else if (reg->style == FILLED) {
+      }
+    } else {
+      if (comm->me == 0)
+        error->warning(FLERR, "Region style {} is not yet supported by dump image", regstyle);
     }
   }
 

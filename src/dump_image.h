@@ -100,6 +100,8 @@ class DumpImage : public DumpCustom {
 
   class Image *image;    // class that renders each image
 
+  std::vector<class RegionInfo *> regions;
+
   int *chooseghost;    // extended choose array for comm
   double **bufcopy;    // buffer for communicating bond/atom info
   int maxbufcopy;
