@@ -654,6 +654,10 @@ void FixRHEOThermal::create_bonds()
   int *num_bond = atom->num_bond;
   double **x = atom->x;
 
+  // acquire updated ghost atom positions & build nlist
+  // necessary b/c are calling this after integrate, but before Verlet comm
+
+  comm->forward_comm();
   neighbor->build_one(list);
 
   inum = list->inum;
