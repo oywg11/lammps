@@ -627,8 +627,7 @@ void Image::draw_cylinder(const double *x, const double *y,
   double zmin, zmax;
 
   if (sflag % 2) draw_sphere(x,surfaceColor,diameter);
-  if (sflag/2) draw_sphere(y,surfaceColor,diameter);
-
+  if (sflag / 2) draw_sphere(y,surfaceColor,diameter);
   double radius = 0.5*diameter;
   double radsq = radius*radius;
 
