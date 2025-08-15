@@ -42,6 +42,7 @@
 #include "region_block.h"
 #include "region_cone.h"
 #include "region_cylinder.h"
+#include "region_ellipsoid.h"
 #include "region_sphere.h"
 #include "thermo.h"
 #include "tokenizer.h"
@@ -183,6 +184,95 @@ void ellipsoid2wireframe(LAMMPS_NS::Image *img, int level, const double *color, 
       img->draw_cylinder(tri[0].data(), tri[1].data(), color, diameter, 3);
       img->draw_cylinder(tri[0].data(), tri[2].data(), color, diameter, 3);
       img->draw_cylinder(tri[1].data(), tri[2].data(), color, diameter, 3);
+    }
+  }
+}
+
+void ellipsoid2filled(LAMMPS_NS::Image *img, int level, const double *color, double diameter,
+                         const double *center, const double *radius)
+{
+  // offset
+  vec3 offs = {center[0], center[1], center[2]};
+
+  // define edges of an octahedron
+  vec3 pos1 = {-1.0, 0.0, 0.0};
+  vec3 pos2 = {1.0, 0.0, 0.0};
+  vec3 pos3 = {0.0, -1.0, 0.0};
+  vec3 pos4 = {0.0, 1.0, 0.0};
+  vec3 pos5 = {0.0, 0.0, -1.0};
+  vec3 pos6 = {0.0, 0.0, 1.0};
+
+  // define triangle mesh
+  std::vector<triangle> trilist1;
+  trilist1.emplace_back(triangle{{pos1, pos4, pos5}});
+  trilist1.emplace_back(triangle{{pos5, pos4, pos2}});
+  trilist1.emplace_back(triangle{{pos2, pos4, pos6}});
+  trilist1.emplace_back(triangle{{pos6, pos4, pos1}});
+  trilist1.emplace_back(triangle{{pos5, pos3, pos1}});
+  trilist1.emplace_back(triangle{{pos2, pos3, pos5}});
+  trilist1.emplace_back(triangle{{pos6, pos3, pos2}});
+  trilist1.emplace_back(triangle{{pos1, pos3, pos6}});
+
+  if (level <= 1) {
+    for (auto &tri : trilist1) {
+      // scale and displace
+      for (int i = 0; i < 3; ++i) {
+        auto scale = radscale(radius, tri[i]);
+        tri[i][0] = tri[i][0] * scale + center[0];
+        tri[i][1] = tri[i][1] * scale + center[1];
+        tri[i][2] = tri[i][2] * scale + center[2];
+      }
+      img->draw_triangle(tri[0].data(), tri[1].data(), tri[2].data(), color);
+    }
+  }
+
+  // refine the list of triangles
+  std::vector<triangle> trilist2;
+  if (level >= 2) {
+    for (const auto &tri : trilist1) {
+      vec3 posa = vecnorm(vecadd(tri[0], tri[2]));
+      vec3 posb = vecnorm(vecadd(tri[0], tri[1]));
+      vec3 posc = vecnorm(vecadd(tri[1], tri[2]));
+      trilist2.emplace_back(triangle{{tri[0], posb, posa}});
+      trilist2.emplace_back(triangle{{posb, tri[1], posc}});
+      trilist2.emplace_back(triangle{{posa, posb, posc}});
+      trilist2.emplace_back(triangle{{posa, posc, tri[2]}});
+    }
+
+    if (level == 2) {
+      for (auto tri : trilist2) {
+        for (int i = 0; i < 3; ++i) {
+          auto scale = radscale(radius, tri[i]);
+          tri[i][0] = tri[i][0] * scale + center[0];
+          tri[i][1] = tri[i][1] * scale + center[1];
+          tri[i][2] = tri[i][2] * scale + center[2];
+        }
+        img->draw_triangle(tri[0].data(), tri[1].data(), tri[2].data(), color);
+      }
+    }
+  }
+
+  // refine the list of triangles a second time
+  std::vector<triangle> trilist3;
+  if (level == 3) {
+    for (const auto &tri : trilist2) {
+      vec3 posa = vecnorm(vecadd(tri[0], tri[2]));
+      vec3 posb = vecnorm(vecadd(tri[0], tri[1]));
+      vec3 posc = vecnorm(vecadd(tri[1], tri[2]));
+      trilist3.emplace_back(triangle{{tri[0], posb, posa}});
+      trilist3.emplace_back(triangle{{posb, tri[1], posc}});
+      trilist3.emplace_back(triangle{{posa, posb, posc}});
+      trilist3.emplace_back(triangle{{posa, posc, tri[2]}});
+    }
+
+    for (auto tri : trilist3) {
+      for (int i = 0; i < 3; ++i) {
+        auto scale = radscale(radius, tri[i]);
+        tri[i][0] = tri[i][0] * scale + center[0];
+        tri[i][1] = tri[i][1] * scale + center[1];
+        tri[i][2] = tri[i][2] * scale + center[2];
+      }
+      img->draw_triangle(tri[0].data(), tri[1].data(), tri[2].data(), color);
     }
   }
 }
@@ -1818,6 +1908,21 @@ void DumpImage::create_image()
             }
           }
         }
+      }
+    } else if (regstyle == "ellipsoid") {
+      auto *myreg = dynamic_cast<RegEllipsoid *>(reg->ptr);
+      // inconsistent style. should not happen.
+      if (!myreg) continue;
+
+      double center[3];
+      center[0] = myreg->xc + dx;
+      center[1] = myreg->yc + dy;
+      center[2] = myreg->zc + dz;
+      double radius[3] = {myreg->a, myreg->b, myreg->c};
+      if (reg->style == FRAME) {
+        ellipsoid2wireframe(image, 3, reg->color, reg->diameter, center, radius);
+      } else if (reg->style == FILLED) {
+        ellipsoid2filled(image, 3, reg->color, reg->diameter, center, radius);
       }
     } else if (regstyle == "sphere") {
       auto *myreg = dynamic_cast<RegSphere *>(reg->ptr);
