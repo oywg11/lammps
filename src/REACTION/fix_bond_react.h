@@ -148,8 +148,7 @@ class FixBondReact : public Fix {
   int allnattempt;
 
   Fix *fix1;                                               // nve/limit used to relax reaction sites
-  Fix *fix2;                                               // properties/atom used to indicate 1) relaxing atoms
-                                                           //                                  2) to which 'react' atom belongs
+  Fix *fix2;                                               // properties/atom used to indicate 1) relaxing atoms 2) to which 'react' atom belongs
   Fix *fix3;                                               // property/atom used for system-wide thermostat
   class RanMars **random;                                  // random number for 'prob' keyword
   class RanMars **rrhandom;                                // random number for Arrhenius constraint
@@ -172,21 +171,16 @@ class FixBondReact : public Fix {
   int ndelete, ncreate;                                    // # atoms to delete, create
   int avail_guesses;                                       // num of restore points available
   std::vector<int> guess_branch;                           // used when there is more than two choices when guessing
-  std::vector<int> pioneer_count;                          // counts pioneers
-  struct RestorePoint {
+
+  struct StatePoint {
     int pion, neigh, trace, glove_counter;
-    struct RestoreAtom {
-      tagint glove, pioneer_count, pioneers;
-    };
-    std::vector<RestoreAtom> restore_atoms;
+    std::vector<tagint> glove, pioneer_count, pioneers;
   };
-  std::vector<RestorePoint> restore_pts;
+  std::vector<StatePoint> restore_pts;
 
   int **nxspecial;                                         // full number of 1-4 neighbors
   tagint **xspecial;                                       // full 1-4 neighbor list
 
-  int pion, neigh, trace;                                  // important indices for various loops. required for restore points
-  std::vector<tagint> glove;                               // global IDs. index is pre-reaction ID-1, value is mapped sim atom ID
   int cuff;                                                // extra space in mega_gloves: default = 1, w/ rescale_charges_flag = 2
   std::vector<std::vector<double>> my_mega_glove;          // local + ghostly reaction instances. for all mega_gloves: first row = rxnID.
   std::vector<std::vector<double>> local_mega_glove;       // consolidation of local reaction instances
@@ -198,9 +192,6 @@ class FixBondReact : public Fix {
   int local_num_mega;                                      // num of local reaction instances
   int ghostly_num_mega;                                    // num of ghostly reaction instances
   int global_megasize;                                     // num of reaction instances in global_mega_glove
-  std::vector<int> pioneers;                               // during Superimpose Algorithm, atoms which have been assigned,
-                                                           // but whose first neighbors haven't
-  int glove_counter;                                       // used to determine when to terminate Superimpose Algorithm
 
   void validate_variable_keyword(const char *, int);
   void read_map_file(Reaction &);
@@ -214,23 +205,22 @@ class FixBondReact : public Fix {
   void readID(char *, Reaction::Constraint &, Reaction &, int);
 
   void superimpose_algorithm();
-  void make_a_guess(Reaction &);
-  void neighbor_loop(Reaction &);
-  void check_a_neighbor(Reaction &);
-  void crosscheck_the_neighbor(Reaction &);
-  void inner_crosscheck_loop(Reaction &);
-  int ring_check(Reaction &);
-  int check_constraints(Reaction &);
-  void get_IDcoords(Reaction::Constraint::IDType, int, double *, Molecule *);
+  void make_a_guess(Reaction &, StatePoint &);
+  void neighbor_loop(Reaction &, StatePoint &);
+  void check_a_neighbor(Reaction &, StatePoint &);
+  void crosscheck_the_neighbor(Reaction &, StatePoint &);
+  void inner_crosscheck_loop(Reaction &, StatePoint &);
+  int ring_check(Reaction &, std::vector<tagint>);
+  int check_constraints(Reaction &, std::vector<tagint>);
+  void get_IDcoords(Reaction::Constraint::IDType, int, double *, Molecule *, std::vector<tagint>);
   double get_temperature(std::vector<tagint>);
-  double get_totalcharge(Reaction &);
-  void customvarnames();                                          // get per-atom variables names used by custom constraint
-  void get_customvars();                                          // evaluate local values for variables names used by custom constraint
-  bool custom_constraint(const std::string &, Reaction &);        // evaulate expression for custom constraint
-  double rxnfunction(const std::string &, const std::string &,
-                     const std::string &, Molecule *);            // eval rxn_sum and rxn_ave
+  double get_totalcharge(Reaction &, std::vector<tagint>);
+  void customvarnames();                                   // get per-atom variables names used by custom constraint
+  void get_customvars();                                   // evaluate local values for variables names used by custom constraint
+  bool custom_constraint(const std::string &, Reaction &, std::vector<tagint>);
+  double rxnfunction(const std::string &, const std::string &, const std::string &, Molecule *, std::vector<tagint>);
   void get_atoms2bond(int);
-  int get_chirality(double[12]);                                  // get handedness given an ordered set of coordinates
+  int get_chirality(double[12]);                           // get handedness given an ordered set of coordinates
 
   void readline(char *);
   void parse_keyword(int, char *, char *);

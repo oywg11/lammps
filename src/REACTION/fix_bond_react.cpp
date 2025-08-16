@@ -560,13 +560,8 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   // zero out stats
   global_megasize = 0;
   avail_guesses = 0;
-  glove_counter = 0;
   guess_branch.resize(MAXGUESS, 0);
-  pioneer_count.resize(max_natoms);
   global_mega_glove = nullptr;
-
-  // these are merely loop indices that became important
-  pion = neigh = trace = 0;
 
   custom_exclude_flag = 0;
 
@@ -1154,15 +1149,24 @@ void FixBondReact::superimpose_algorithm()
   localsendlist = (int *) comm->extract("localsendlist",tmp);
 
   // quick description of important global indices you'll see floating about:
-  // 'pion' is the pioneer loop index
-  // 'neigh' in the first neighbor index
-  // 'trace' retraces the first nieghbors
-  // trace: once you choose a first neighbor, you then check for other nieghbors of same type
+  // pion: the pioneer loop index
+  // neigh: in the first neighbor index
+  // trace: retraces the first nieghbors. once you choose a first neighbor, you then check for other nieghbors of same type
+  // pioneers: during Superimpose Algorithm, atoms which have been assigned, but whose first neighbors haven't
+  // glove: global IDs. index indicates is pre-reaction ID-1, value is mapped sim atom ID
+  // glove_counter: used to determine when to terminate Superimpose Algorithm
 
-  glove.resize(max_natoms);
+  StatePoint sp;
+  sp.glove.resize(max_natoms);
+  sp.pioneers.resize(max_natoms);
+  sp.pioneer_count.resize(max_natoms);
+
   restore_pts.resize(MAXGUESS);
-  for (auto &restore_pt : restore_pts) restore_pt.restore_atoms.resize(max_natoms);
-  pioneers.resize(max_natoms);
+  for (auto &restore_pt : restore_pts) {
+    restore_pt.glove.resize(max_natoms);
+    restore_pt.pioneers.resize(max_natoms);
+    restore_pt.pioneer_count.resize(max_natoms);
+  }
   my_mega_glove.resize(max_natoms+cuff); // mega_glove indexing seems inside-out
   for (auto &vec : my_mega_glove) vec.resize(allnattempt, 0);
 
@@ -1172,34 +1176,34 @@ void FixBondReact::superimpose_algorithm()
 
       status = Status::PROCEED;
 
-      glove_counter = 0;
-      std::fill(glove.begin(), glove.end(), 0);
+      sp.pion = sp.neigh = sp.trace = sp.glove_counter = 0;
+      std::fill(sp.glove.begin(), sp.glove.end(), 0);
       std::fill(guess_branch.begin(), guess_branch.end(), 0);
 
-      glove[rxn.ibonding-1] = rxn_attempt[0];
-      glove_counter++;
-      glove[rxn.jbonding-1] = rxn_attempt[1];
-      glove_counter++;
+      sp.glove[rxn.ibonding-1] = rxn_attempt[0];
+      sp.glove_counter++;
+      sp.glove[rxn.jbonding-1] = rxn_attempt[1];
+      sp.glove_counter++;
 
       // special case, only two atoms in reaction templates
       // then: bonding reactant nspecials guaranteed to be equal, and either 0 or 1
-      if (glove_counter == rxn.reactant->natoms) {
-        tagint local_atom1 = atom->map(glove[rxn.ibonding-1]);
-        tagint local_atom2 = atom->map(glove[rxn.jbonding-1]);
+      if (sp.glove_counter == rxn.reactant->natoms) {
+        tagint local_atom1 = atom->map(sp.glove[rxn.ibonding-1]);
+        tagint local_atom2 = atom->map(sp.glove[rxn.jbonding-1]);
         if ( (nxspecial[local_atom1][0] == rxn.reactant->nspecial[rxn.ibonding-1][0] &&
               nxspecial[local_atom2][0] == nxspecial[local_atom1][0]) &&
              (nxspecial[local_atom1][0] == 0 ||
               xspecial[local_atom1][0] == atom->tag[local_atom2]) &&
-             check_constraints(rxn)) {
+             check_constraints(rxn, sp.glove)) {
           if (rxn.fraction < 1.0 &&
               random[rxn.ID]->uniform() >= rxn.fraction) {
             status = Status::REJECT;
           } else {
             status = Status::ACCEPT;
             my_mega_glove[0][my_num_mega] = (double) rxn.ID;
-            if (rxn.rescale_charges_flag) my_mega_glove[1][my_num_mega] = get_totalcharge(rxn);
+            if (rxn.rescale_charges_flag) my_mega_glove[1][my_num_mega] = get_totalcharge(rxn, sp.glove);
             for (int i = 0; i < rxn.reactant->natoms; i++) {
-              my_mega_glove[i+cuff][my_num_mega] = (double) glove[i];
+              my_mega_glove[i+cuff][my_num_mega] = (double) sp.glove[i];
             }
             my_num_mega++;
           }
@@ -1208,34 +1212,31 @@ void FixBondReact::superimpose_algorithm()
 
       avail_guesses = 0;
 
-      for (int i = 0; i < max_natoms; i++)
-        pioneer_count[i] = 0;
+      std::fill(sp.pioneer_count.begin(), sp.pioneer_count.end(), 0);
 
       for (int i = 0; i < rxn.reactant->nspecial[rxn.ibonding-1][0]; i++)
-        pioneer_count[rxn.reactant->special[rxn.ibonding-1][i]-1]++;
+        sp.pioneer_count[rxn.reactant->special[rxn.ibonding-1][i]-1]++;
 
       for (int i = 0; i < rxn.reactant->nspecial[rxn.jbonding-1][0]; i++)
-        pioneer_count[rxn.reactant->special[rxn.jbonding-1][i]-1]++;
+        sp.pioneer_count[rxn.reactant->special[rxn.jbonding-1][i]-1]++;
 
 
       int hang_catch = 0;
       while (status != Status::ACCEPT && status != Status::REJECT) {
 
-        for (int i = 0; i < max_natoms; i++) {
-          pioneers[i] = 0;
-        }
+        for (int i = 0; i < max_natoms; i++) sp.pioneers[i] = 0;
 
         for (int i = 0; i < rxn.reactant->natoms; i++) {
-          if (glove[i] != 0 && pioneer_count[i] < rxn.reactant->nspecial[i][0] && rxn.atoms[i].edge == 0) {
-            pioneers[i] = 1;
+          if (sp.glove[i] != 0 && sp.pioneer_count[i] < rxn.reactant->nspecial[i][0] && rxn.atoms[i].edge == 0) {
+            sp.pioneers[i] = 1;
           }
         }
 
         // run through the pioneers
         // due to use of restore points, 'pion' index can change in loop
-        for (pion = 0; pion < rxn.reactant->natoms; pion++) {
-          if (pioneers[pion] || status == Status::GUESSFAIL) {
-            make_a_guess(rxn);
+        for (sp.pion = 0; sp.pion < rxn.reactant->natoms; sp.pion++) {
+          if (sp.pioneers[sp.pion] || status == Status::GUESSFAIL) {
+            make_a_guess(rxn, sp);
             if (status == Status::ACCEPT || status == Status::REJECT) break;
           }
         }
@@ -1246,9 +1247,9 @@ void FixBondReact::superimpose_algorithm()
               random[rxn.ID]->uniform() >= rxn.fraction) status = Status::REJECT;
           else {
             my_mega_glove[0][my_num_mega] = (double) rxn.ID;
-            if (rxn.rescale_charges_flag) my_mega_glove[1][my_num_mega] = get_totalcharge(rxn);
+            if (rxn.rescale_charges_flag) my_mega_glove[1][my_num_mega] = get_totalcharge(rxn, sp.glove);
             for (int i = 0; i < rxn.reactant->natoms; i++) {
-              my_mega_glove[i+cuff][my_num_mega] = (double) glove[i];
+              my_mega_glove[i+cuff][my_num_mega] = (double) sp.glove[i];
             }
             my_num_mega++;
           }
@@ -1415,10 +1416,10 @@ void FixBondReact::superimpose_algorithm()
   has failed: check for available restore points.
 ------------------------------------------------------------------------- */
 
-void FixBondReact::make_a_guess(Reaction &rxn)
+void FixBondReact::make_a_guess(Reaction &rxn, StatePoint &sp)
 {
   int *type = atom->type;
-  int nfirst_neighs = rxn.reactant->nspecial[pion][0];
+  int nfirst_neighs = rxn.reactant->nspecial[sp.pion][0];
 
   // per-atom property indicating if in bond/react master group
   int flag,cols;
@@ -1433,20 +1434,20 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   if (status == Status::GUESSFAIL && avail_guesses > 0) {
     // load restore point
     for (int i = 0; i < rxn.reactant->natoms; i++) {
-      glove[i] = restore_pts[avail_guesses-1].restore_atoms[i].glove;
-      pioneer_count[i] = restore_pts[avail_guesses-1].restore_atoms[i].pioneer_count;
-      pioneers[i] = restore_pts[avail_guesses-1].restore_atoms[i].pioneers;
+      sp.glove[i] = restore_pts[avail_guesses-1].glove[i];
+      sp.pioneer_count[i] = restore_pts[avail_guesses-1].pioneer_count[i];
+      sp.pioneers[i] = restore_pts[avail_guesses-1].pioneers[i];
     }
-    pion = restore_pts[avail_guesses-1].pion;
-    neigh = restore_pts[avail_guesses-1].neigh;
-    trace = restore_pts[avail_guesses-1].trace;
-    glove_counter = restore_pts[avail_guesses-1].glove_counter;
+    sp.pion = restore_pts[avail_guesses-1].pion;
+    sp.neigh = restore_pts[avail_guesses-1].neigh;
+    sp.trace = restore_pts[avail_guesses-1].trace;
+    sp.glove_counter = restore_pts[avail_guesses-1].glove_counter;
     status = Status::RESTORE;
-    neighbor_loop(rxn);
+    neighbor_loop(rxn, sp);
     if (status != Status::PROCEED) return;
   }
 
-  nfirst_neighs = rxn.reactant->nspecial[pion][0];
+  nfirst_neighs = rxn.reactant->nspecial[sp.pion][0];
 
   //  check if any of first neighbors are in bond_react_MASTER_group
   //  if so, this constitutes a fail
@@ -1454,18 +1455,18 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   //  could technically fail unnecessarily during a wrong guess if near edge atoms
   //  we accept this temporary and infrequent decrease in reaction occurrences
 
-  for (int i = 0; i < nxspecial[atom->map(glove[pion])][0]; i++) {
-    if (atom->map(xspecial[atom->map(glove[pion])][i]) < 0) {
+  for (int i = 0; i < nxspecial[atom->map(sp.glove[sp.pion])][0]; i++) {
+    if (atom->map(xspecial[atom->map(sp.glove[sp.pion])][i]) < 0) {
       error->one(FLERR,"Fix bond/react: Fix bond/react needs ghost atoms from further away"); // parallel issues.
     }
-    if (i_limit_tags[(int)atom->map(xspecial[atom->map(glove[pion])][i])] != 0) {
+    if (i_limit_tags[(int)atom->map(xspecial[atom->map(sp.glove[sp.pion])][i])] != 0) {
       status = Status::GUESSFAIL;
       return;
     }
   }
 
   // check for same number of neighbors between unreacted mol and simulation
-  if (nfirst_neighs != nxspecial[atom->map(glove[pion])][0]) {
+  if (nfirst_neighs != nxspecial[atom->map(sp.glove[sp.pion])][0]) {
     status = Status::GUESSFAIL;
     return;
   }
@@ -1475,7 +1476,7 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   int assigned_count = 0;
   for (int i = 0; i < nfirst_neighs; i++)
     for (int j = 0; j < rxn.reactant->natoms; j++)
-      if (xspecial[atom->map(glove[pion])][i] == glove[j]) {
+      if (xspecial[atom->map(sp.glove[sp.pion])][i] == sp.glove[j]) {
         assigned_count++;
         break;
       }
@@ -1492,8 +1493,8 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   }
 
   for (int i = 0; i < nfirst_neighs; i++) {
-    mol_ntypes[(int)rxn.reactant->type[(int)rxn.reactant->special[pion][i]-1]-1]++;
-    lcl_ntypes[(int)type[(int)atom->map(xspecial[atom->map(glove[pion])][i])]-1]++; //added -1
+    mol_ntypes[(int)rxn.reactant->type[(int)rxn.reactant->special[sp.pion][i]-1]-1]++;
+    lcl_ntypes[(int)type[(int)atom->map(xspecial[atom->map(sp.glove[sp.pion])][i])]-1]++; //added -1
   }
 
   for (int i = 0; i < atom->ntypes; i++) {
@@ -1509,7 +1510,7 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   delete[] lcl_ntypes;
 
   // okay everything seems to be in order. let's assign some ID pairs!!!
-  neighbor_loop(rxn);
+  neighbor_loop(rxn, sp);
 }
 
 /* ----------------------------------------------------------------------
@@ -1517,18 +1518,18 @@ void FixBondReact::make_a_guess(Reaction &rxn)
   Prepare appropriately if we are in Restore Mode.
 ------------------------------------------------------------------------- */
 
-void FixBondReact::neighbor_loop(Reaction &rxn)
+void FixBondReact::neighbor_loop(Reaction &rxn, StatePoint &sp)
 {
-  int nfirst_neighs = rxn.reactant->nspecial[pion][0];
+  int nfirst_neighs = rxn.reactant->nspecial[sp.pion][0];
 
   if (status == Status::RESTORE) {
-    check_a_neighbor(rxn);
+    check_a_neighbor(rxn, sp);
     return;
   }
 
-  for (neigh = 0; neigh < nfirst_neighs; neigh++) {
-    if (glove[(int)rxn.reactant->special[pion][neigh]-1] == 0) {
-      check_a_neighbor(rxn);
+  for (sp.neigh = 0; sp.neigh < nfirst_neighs; sp.neigh++) {
+    if (sp.glove[(int)rxn.reactant->special[sp.pion][sp.neigh]-1] == 0) {
+      check_a_neighbor(rxn, sp);
     }
   }
   // status should still = PROCEED
@@ -1539,43 +1540,43 @@ void FixBondReact::neighbor_loop(Reaction &rxn)
   without guessing. If so, do it! If not, call crosscheck_the_nieghbor().
 ------------------------------------------------------------------------- */
 
-void FixBondReact::check_a_neighbor(Reaction &rxn)
+void FixBondReact::check_a_neighbor(Reaction &rxn, StatePoint &sp)
 {
   int *type = atom->type;
-  int nfirst_neighs = rxn.reactant->nspecial[pion][0];
+  int nfirst_neighs = rxn.reactant->nspecial[sp.pion][0];
 
   if (status != Status::RESTORE) {
     // special consideration for hydrogen atoms (and all first neighbors bonded to no other atoms) (and aren't edge atoms)
-    if (rxn.reactant->nspecial[(int)rxn.reactant->special[pion][neigh]-1][0] == 1 && rxn.atoms[(int)rxn.reactant->special[pion][neigh]-1].edge == 0) {
+    if (rxn.reactant->nspecial[(int)rxn.reactant->special[sp.pion][sp.neigh]-1][0] == 1 && rxn.atoms[(int)rxn.reactant->special[sp.pion][sp.neigh]-1].edge == 0) {
 
       for (int i = 0; i < nfirst_neighs; i++) {
 
-        if (type[(int)atom->map(xspecial[(int)atom->map(glove[pion])][i])] == rxn.reactant->type[(int)rxn.reactant->special[pion][neigh]-1] &&
-            nxspecial[(int)atom->map(xspecial[(int)atom->map(glove[pion])][i])][0] == 1) {
+        if (type[(int)atom->map(xspecial[(int)atom->map(sp.glove[sp.pion])][i])] == rxn.reactant->type[(int)rxn.reactant->special[sp.pion][sp.neigh]-1] &&
+            nxspecial[(int)atom->map(xspecial[(int)atom->map(sp.glove[sp.pion])][i])][0] == 1) {
 
           int already_assigned = 0;
           for (int j = 0; j < rxn.reactant->natoms; j++) {
-            if (glove[j] == xspecial[atom->map(glove[pion])][i]) {
+            if (sp.glove[j] == xspecial[atom->map(sp.glove[sp.pion])][i]) {
               already_assigned = 1;
               break;
             }
           }
 
           if (already_assigned == 0) {
-            glove[(int)rxn.reactant->special[pion][neigh]-1] = xspecial[(int)atom->map(glove[pion])][i];
+            sp.glove[(int)rxn.reactant->special[sp.pion][sp.neigh]-1] = xspecial[(int)atom->map(sp.glove[sp.pion])][i];
 
             //another check for ghost atoms. perhaps remove the one in make_a_guess
-            if (atom->map(glove[(int)rxn.reactant->special[pion][neigh]-1]) < 0) {
+            if (atom->map(sp.glove[(int)rxn.reactant->special[sp.pion][sp.neigh]-1]) < 0) {
               error->one(FLERR,"Fix bond/react: Fix bond/react needs ghost atoms from further away");
             }
 
-            for (int j = 0; j < rxn.reactant->nspecial[rxn.reactant->special[pion][neigh]-1][0]; j++) {
-              pioneer_count[rxn.reactant->special[rxn.reactant->special[pion][neigh]-1][j]-1]++;
+            for (int j = 0; j < rxn.reactant->nspecial[rxn.reactant->special[sp.pion][sp.neigh]-1][0]; j++) {
+              sp.pioneer_count[rxn.reactant->special[rxn.reactant->special[sp.pion][sp.neigh]-1][j]-1]++;
             }
 
-            glove_counter++;
-            if (glove_counter == rxn.reactant->natoms) {
-              if (ring_check(rxn) && check_constraints(rxn)) status = Status::ACCEPT;
+            sp.glove_counter++;
+            if (sp.glove_counter == rxn.reactant->natoms) {
+              if (ring_check(rxn, sp.glove) && check_constraints(rxn, sp.glove)) status = Status::ACCEPT;
               else status = Status::GUESSFAIL;
               return;
             }
@@ -1590,7 +1591,7 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
     }
   }
 
-  crosscheck_the_neighbor(rxn);
+  crosscheck_the_neighbor(rxn, sp);
   if (status != Status::PROCEED) {
     if (status == Status::CONTINUE)
       status = Status::PROCEED;
@@ -1601,32 +1602,32 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
 
   for (int i = 0; i < nfirst_neighs; i++) {
 
-    if (type[atom->map((int)xspecial[(int)atom->map(glove[pion])][i])] == rxn.reactant->type[(int)rxn.reactant->special[pion][neigh]-1]) {
+    if (type[atom->map((int)xspecial[(int)atom->map(sp.glove[sp.pion])][i])] == rxn.reactant->type[(int)rxn.reactant->special[sp.pion][sp.neigh]-1]) {
       int already_assigned = 0;
 
       //check if a first neighbor of the pioneer is already assigned to pre-reacted template
       for (int j = 0; j < rxn.reactant->natoms; j++) {
-        if (glove[j] == xspecial[atom->map(glove[pion])][i]) {
+        if (sp.glove[j] == xspecial[atom->map(sp.glove[sp.pion])][i]) {
           already_assigned = 1;
           break;
         }
       }
 
       if (already_assigned == 0) {
-        glove[(int)rxn.reactant->special[pion][neigh]-1] = xspecial[(int)atom->map(glove[pion])][i];
+        sp.glove[(int)rxn.reactant->special[sp.pion][sp.neigh]-1] = xspecial[(int)atom->map(sp.glove[sp.pion])][i];
 
         //another check for ghost atoms. perhaps remove the one in make_a_guess
-        if (atom->map(glove[(int)rxn.reactant->special[pion][neigh]-1]) < 0) {
+        if (atom->map(sp.glove[(int)rxn.reactant->special[sp.pion][sp.neigh]-1]) < 0) {
           error->one(FLERR,"Fix bond/react: Fix bond/react needs ghost atoms from further away");
         }
 
-        for (int ii = 0; ii < rxn.reactant->nspecial[rxn.reactant->special[pion][neigh]-1][0]; ii++) {
-          pioneer_count[rxn.reactant->special[rxn.reactant->special[pion][neigh]-1][ii]-1]++;
+        for (int ii = 0; ii < rxn.reactant->nspecial[rxn.reactant->special[sp.pion][sp.neigh]-1][0]; ii++) {
+          sp.pioneer_count[rxn.reactant->special[rxn.reactant->special[sp.pion][sp.neigh]-1][ii]-1]++;
         }
 
-        glove_counter++;
-        if (glove_counter == rxn.reactant->natoms) {
-          if (ring_check(rxn) && check_constraints(rxn)) status = Status::ACCEPT;
+        sp.glove_counter++;
+        if (sp.glove_counter == rxn.reactant->natoms) {
+          if (ring_check(rxn, sp.glove) && check_constraints(rxn, sp.glove)) status = Status::ACCEPT;
           else status = Status::GUESSFAIL;
           return;
           // will never complete here when there are edge atoms
@@ -1645,18 +1646,18 @@ void FixBondReact::check_a_neighbor(Reaction &rxn)
   guess by recording a restore point.
 ------------------------------------------------------------------------- */
 
-void FixBondReact::crosscheck_the_neighbor(Reaction &rxn)
+void FixBondReact::crosscheck_the_neighbor(Reaction &rxn, StatePoint &sp)
 {
-  int nfirst_neighs = rxn.reactant->nspecial[pion][0];
+  int nfirst_neighs = rxn.reactant->nspecial[sp.pion][0];
 
   if (status == Status::RESTORE) {
-    inner_crosscheck_loop(rxn);
+    inner_crosscheck_loop(rxn, sp);
     return;
   }
 
-  for (trace = 0; trace < nfirst_neighs; trace++) {
-    if (neigh!=trace && rxn.reactant->type[(int)rxn.reactant->special[pion][neigh]-1] == rxn.reactant->type[(int)rxn.reactant->special[pion][trace]-1] &&
-        glove[rxn.reactant->special[pion][trace]-1] == 0) {
+  for (sp.trace = 0; sp.trace < nfirst_neighs; sp.trace++) {
+    if (sp.neigh != sp.trace && rxn.reactant->type[(int)rxn.reactant->special[sp.pion][sp.neigh]-1] == rxn.reactant->type[(int)rxn.reactant->special[sp.pion][sp.trace]-1] &&
+        sp.glove[rxn.reactant->special[sp.pion][sp.trace]-1] == 0) {
 
       if (avail_guesses == MAXGUESS) {
         error->warning(FLERR,"Fix bond/react: Fix bond/react failed because MAXGUESS set too small. ask developer for info");
@@ -1665,16 +1666,16 @@ void FixBondReact::crosscheck_the_neighbor(Reaction &rxn)
       }
       avail_guesses++;
       for (int i = 0; i < rxn.reactant->natoms; i++) {
-        restore_pts[avail_guesses-1].restore_atoms[i].glove = glove[i];
-        restore_pts[avail_guesses-1].restore_atoms[i].pioneer_count = pioneer_count[i];
-        restore_pts[avail_guesses-1].restore_atoms[i].pioneers = pioneers[i];
+        restore_pts[avail_guesses-1].glove[i] = sp.glove[i];
+        restore_pts[avail_guesses-1].pioneer_count[i] = sp.pioneer_count[i];
+        restore_pts[avail_guesses-1].pioneers[i] = sp.pioneers[i];
       }
-      restore_pts[avail_guesses-1].pion = pion;
-      restore_pts[avail_guesses-1].neigh = neigh;
-      restore_pts[avail_guesses-1].trace = trace;
-      restore_pts[avail_guesses-1].glove_counter = glove_counter;
+      restore_pts[avail_guesses-1].pion = sp.pion;
+      restore_pts[avail_guesses-1].neigh = sp.neigh;
+      restore_pts[avail_guesses-1].trace = sp.trace;
+      restore_pts[avail_guesses-1].glove_counter = sp.glove_counter;
 
-      inner_crosscheck_loop(rxn);
+      inner_crosscheck_loop(rxn, sp);
       return;
     }
   }
@@ -1686,21 +1687,21 @@ void FixBondReact::crosscheck_the_neighbor(Reaction &rxn)
   for this guess, keep track of these.
 ------------------------------------------------------------------------- */
 
-void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
+void FixBondReact::inner_crosscheck_loop(Reaction &rxn, StatePoint &sp)
 {
   int *type = atom->type;
   // arbitrarily limited to 5 identical first neighbors
   tagint tag_choices[5];
-  int nfirst_neighs = rxn.reactant->nspecial[pion][0];
+  int nfirst_neighs = rxn.reactant->nspecial[sp.pion][0];
 
   int num_choices = 0;
   for (int i = 0; i < nfirst_neighs; i++) {
-    if (type[(int)atom->map(xspecial[atom->map(glove[pion])][i])] == rxn.reactant->type[(int)rxn.reactant->special[pion][neigh]-1]) {
+    if (type[(int)atom->map(xspecial[atom->map(sp.glove[sp.pion])][i])] == rxn.reactant->type[(int)rxn.reactant->special[sp.pion][sp.neigh]-1]) {
       if (num_choices == 5) { // here failed because too many identical first neighbors. but really no limit if situation arises
         status = Status::GUESSFAIL;
         return;
       }
-      tag_choices[num_choices++] = xspecial[atom->map(glove[pion])][i];
+      tag_choices[num_choices++] = xspecial[atom->map(sp.glove[sp.pion])][i];
     }
   }
 
@@ -1722,7 +1723,7 @@ void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
   for (int i = guess_branch[avail_guesses-1]-1; i >= 0; i--) {
     int already_assigned = 0;
     for (int j = 0; j < rxn.reactant->natoms; j++) {
-      if (glove[j] == tag_choices[i]) {
+      if (sp.glove[j] == tag_choices[i]) {
         already_assigned = 1;
         break;
       }
@@ -1734,25 +1735,25 @@ void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
         return;
       }
     } else {
-      glove[rxn.reactant->special[pion][neigh]-1] = tag_choices[i];
+      sp.glove[rxn.reactant->special[sp.pion][sp.neigh]-1] = tag_choices[i];
       guess_branch[avail_guesses-1]--;
       break;
     }
   }
 
   //another check for ghost atoms. perhaps remove the one in make_a_guess
-  if (atom->map(glove[(int)rxn.reactant->special[pion][neigh]-1]) < 0) {
+  if (atom->map(sp.glove[(int)rxn.reactant->special[sp.pion][sp.neigh]-1]) < 0) {
     error->one(FLERR,"Fix bond/react: Fix bond/react needs ghost atoms from further away");
   }
 
   if (guess_branch[avail_guesses-1] == 0) avail_guesses--;
 
-  for (int i = 0; i < rxn.reactant->nspecial[rxn.reactant->special[pion][neigh]-1][0]; i++) {
-    pioneer_count[rxn.reactant->special[rxn.reactant->special[pion][neigh]-1][i]-1]++;
+  for (int i = 0; i < rxn.reactant->nspecial[rxn.reactant->special[sp.pion][sp.neigh]-1][0]; i++) {
+    sp.pioneer_count[rxn.reactant->special[rxn.reactant->special[sp.pion][sp.neigh]-1][i]-1]++;
   }
-  glove_counter++;
-  if (glove_counter == rxn.reactant->natoms) {
-    if (ring_check(rxn) && check_constraints(rxn)) status = Status::ACCEPT;
+  sp.glove_counter++;
+  if (sp.glove_counter == rxn.reactant->natoms) {
+    if (ring_check(rxn, sp.glove) && check_constraints(rxn, sp.glove)) status = Status::ACCEPT;
     else status = Status::GUESSFAIL;
     return;
   }
@@ -1764,7 +1765,7 @@ void FixBondReact::inner_crosscheck_loop(Reaction &rxn)
   Necessary for certain ringed structures
 ------------------------------------------------------------------------- */
 
-int FixBondReact::ring_check(Reaction &rxn)
+int FixBondReact::ring_check(Reaction &rxn, std::vector<tagint> glove)
 {
   // ring_check can be made more efficient by re-introducing 'frozen' atoms
   // 'frozen' atoms have been assigned and also are no longer pioneers
@@ -1796,7 +1797,7 @@ int FixBondReact::ring_check(Reaction &rxn)
 evaluate constraints: return 0 if any aren't satisfied
 ------------------------------------------------------------------------- */
 
-int FixBondReact::check_constraints(Reaction &rxn)
+int FixBondReact::check_constraints(Reaction &rxn, std::vector<tagint> glove)
 {
   double x1[3],x2[3],x3[3],x4[3];
   double delx,dely,delz,rsq;
@@ -1815,8 +1816,8 @@ int FixBondReact::check_constraints(Reaction &rxn)
 
   for (auto &constraint : rxn.constraints) {
     if (constraint.type == Reaction::Constraint::Type::DISTANCE) {
-      get_IDcoords(constraint.idtypes[0], constraint.ids[0], x1, rxn.reactant);
-      get_IDcoords(constraint.idtypes[1], constraint.ids[1], x2, rxn.reactant);
+      get_IDcoords(constraint.idtypes[0], constraint.ids[0], x1, rxn.reactant, glove);
+      get_IDcoords(constraint.idtypes[1], constraint.ids[1], x2, rxn.reactant, glove);
       delx = x1[0] - x2[0];
       dely = x1[1] - x2[1];
       delz = x1[2] - x2[2];
@@ -1824,9 +1825,9 @@ int FixBondReact::check_constraints(Reaction &rxn)
       rsq = delx*delx + dely*dely + delz*delz;
       if (rsq < constraint.par[0] || rsq > constraint.par[1]) constraint.satisfied = false;
     } else if (constraint.type == Reaction::Constraint::Type::ANGLE) {
-      get_IDcoords(constraint.idtypes[0], constraint.ids[0], x1, rxn.reactant);
-      get_IDcoords(constraint.idtypes[1], constraint.ids[1], x2, rxn.reactant);
-      get_IDcoords(constraint.idtypes[2], constraint.ids[2], x3, rxn.reactant);
+      get_IDcoords(constraint.idtypes[0], constraint.ids[0], x1, rxn.reactant, glove);
+      get_IDcoords(constraint.idtypes[1], constraint.ids[1], x2, rxn.reactant, glove);
+      get_IDcoords(constraint.idtypes[2], constraint.ids[2], x3, rxn.reactant, glove);
 
       // 1st bond
       delx1 = x1[0] - x2[0];
@@ -1852,10 +1853,10 @@ int FixBondReact::check_constraints(Reaction &rxn)
       if (acos(c) < constraint.par[0] || acos(c) > constraint.par[1]) constraint.satisfied = false;
     } else if (constraint.type == Reaction::Constraint::Type::DIHEDRAL) {
       // phi calculation from dihedral style harmonic
-      get_IDcoords(constraint.idtypes[0], constraint.ids[0], x1, rxn.reactant);
-      get_IDcoords(constraint.idtypes[1], constraint.ids[1], x2, rxn.reactant);
-      get_IDcoords(constraint.idtypes[2], constraint.ids[2], x3, rxn.reactant);
-      get_IDcoords(constraint.idtypes[3], constraint.ids[3], x4, rxn.reactant);
+      get_IDcoords(constraint.idtypes[0], constraint.ids[0], x1, rxn.reactant, glove);
+      get_IDcoords(constraint.idtypes[1], constraint.ids[1], x2, rxn.reactant, glove);
+      get_IDcoords(constraint.idtypes[2], constraint.ids[2], x3, rxn.reactant, glove);
+      get_IDcoords(constraint.idtypes[3], constraint.ids[3], x4, rxn.reactant, glove);
 
       vb1x = x1[0] - x2[0];
       vb1y = x1[1] - x2[1];
@@ -2014,7 +2015,8 @@ fragment: given pre-reacted molID (reactant) and fragID,
           return geometric center (of mapped simulation atoms)
 ------------------------------------------------------------------------- */
 
-void FixBondReact::get_IDcoords(Reaction::Constraint::IDType idtype, int myID, double *center, Molecule *mol)
+void FixBondReact::get_IDcoords(Reaction::Constraint::IDType idtype, int myID,
+                                double *center, Molecule *mol, std::vector<tagint> glove)
 {
   double **x = atom->x;
   if (idtype == Reaction::Constraint::IDType::ATOM) {
@@ -2047,7 +2049,7 @@ void FixBondReact::get_IDcoords(Reaction::Constraint::IDType idtype, int myID, d
 compute local temperature: average over all atoms in reaction template
 ------------------------------------------------------------------------- */
 
-double FixBondReact::get_temperature(std::vector<tagint> myglove)
+double FixBondReact::get_temperature(std::vector<tagint> glove)
 {
   int i,ilocal;
   double adof = domain->dimension;
@@ -2060,21 +2062,21 @@ double FixBondReact::get_temperature(std::vector<tagint> myglove)
   double t = 0.0;
 
   if (rmass) {
-    for (i = 0; i < myglove.size(); i++) {
-      ilocal = atom->map(myglove[i]);
+    for (i = 0; i < glove.size(); i++) {
+      ilocal = atom->map(glove[i]);
       t += (v[ilocal][0]*v[ilocal][0] + v[ilocal][1]*v[ilocal][1] +
             v[ilocal][2]*v[ilocal][2]) * rmass[ilocal];
     }
   } else {
-    for (i = 0; i <  myglove.size(); i++) {
-      ilocal = atom->map(myglove[i]);
+    for (i = 0; i < glove.size(); i++) {
+      ilocal = atom->map(glove[i]);
       t += (v[ilocal][0]*v[ilocal][0] + v[ilocal][1]*v[ilocal][1] +
             v[ilocal][2]*v[ilocal][2]) * mass[type[ilocal]];
     }
   }
 
   // final temperature
-  double dof = adof*myglove.size();
+  double dof = adof*glove.size();
   double tfactor = force->mvv2e / (dof * force->boltz);
   t *= tfactor;
   return t;
@@ -2084,7 +2086,7 @@ double FixBondReact::get_temperature(std::vector<tagint> myglove)
 compute sum of partial charges in rxn site, for updated atoms
 ------------------------------------------------------------------------- */
 
-double FixBondReact::get_totalcharge(Reaction &rxn)
+double FixBondReact::get_totalcharge(Reaction &rxn, std::vector<tagint> glove)
 {
   int j,jj;
   double *q = atom->q;
@@ -2197,7 +2199,7 @@ void FixBondReact::get_customvars()
 evaulate expression for variable constraint
 ------------------------------------------------------------------------- */
 
-bool FixBondReact::custom_constraint(const std::string& varstr, Reaction &rxn)
+bool FixBondReact::custom_constraint(const std::string& varstr, Reaction &rxn, std::vector<tagint> glove)
 {
   std::size_t pos,pos1,pos2,pos3;
   int irxnfunc;
@@ -2233,7 +2235,7 @@ bool FixBondReact::custom_constraint(const std::string& varstr, Reaction &rxn)
       varid = argstr.substr(0,pos2);
       fragid = argstr.substr(pos2+1);
     } else varid = argstr;
-    evlstr.push_back(std::to_string(rxnfunction(rxnfunclist[irxnfunc], varid, fragid, rxn.reactant)));
+    evlstr.push_back(std::to_string(rxnfunction(rxnfunclist[irxnfunc], varid, fragid, rxn.reactant, glove)));
   }
   evlstr.push_back(varstr.substr(prev3+1));
 
@@ -2246,7 +2248,7 @@ currently three 'rxn' functions: rxnsum, rxnave, and rxnbond
 ------------------------------------------------------------------------- */
 
 double FixBondReact::rxnfunction(const std::string& rxnfunc, const std::string& varid,
-                                 const std::string& fragid, Molecule *mol)
+                                 const std::string& fragid, Molecule *mol, std::vector<tagint> glove)
 {
   int ifrag = -1;
   if (fragid != "all") {
