@@ -75,7 +75,6 @@ class FixBondReact : public Fix {
   std::vector<std::string> rxnfunclist;                    // lists current special rxn function
   std::vector<int> peratomflag;                            // 1 if special rxn function uses per-atom variable (vs. per-bond)
   int atoms2bondflag;                                      // 1 if atoms2bond map has been populated on this timestep
-  int narrhenius;
   Status status;
 
   struct Reaction {
@@ -126,9 +125,11 @@ class FixBondReact : public Fix {
       static constexpr int MAXCONIDS = 4;                  // max # of IDs used by any constraint
       std::array<int, MAXCONIDS> ids;
       std::array<IDType, MAXCONIDS> idtypes{};
+      struct Arrhenius { double A, n, E_a, seed; } arrhenius;
       std::array<double, 5> par;                           // max # of constraint parameters = 5
       std::string str;
       bool satisfied;
+      class RanMars *rrhandom;                             // random number for Arrhenius constraint
     };
     std::vector<Constraint> constraints;
   };
@@ -151,7 +152,6 @@ class FixBondReact : public Fix {
   Fix *fix2;                                               // properties/atom used to indicate 1) relaxing atoms 2) to which 'react' atom belongs
   Fix *fix3;                                               // property/atom used for system-wide thermostat
   class RanMars **random;                                  // random number for 'prob' keyword
-  class RanMars **rrhandom;                                // random number for Arrhenius constraint
   class NeighList *list;
   class ResetAtomsMol *reset_mol_ids;                      // class for resetting mol IDs
 

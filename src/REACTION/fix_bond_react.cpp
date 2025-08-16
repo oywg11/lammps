@@ -109,7 +109,6 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   global_freq = 1;
   extvector = 0;
   cuff = 1;
-  narrhenius = 0;
   status = Status::PROCEED;
 
   // reaction functions used by 'custom' constraint
@@ -505,16 +504,10 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   customvarnames();
 
   // initialize Marsaglia RNG with processor-unique seed (Arrhenius prob)
-
-  rrhandom = new RanMars*[narrhenius];
-  int tmp = 0;
-  for (auto &rxn : rxns) {
-    for (auto &constraint : rxn.constraints) {
-      if (constraint.type == Reaction::Constraint::Type::ARRHENIUS) {
-        rrhandom[tmp++] = new RanMars(lmp,(int) constraint.par[4] + comm->me);
-      }
-    }
-  }
+  for (auto &rxn : rxns)
+    for (auto &constraint : rxn.constraints)
+      if (constraint.type == Reaction::Constraint::Type::ARRHENIUS)
+        constraint.rrhandom = new RanMars(lmp, (int) constraint.arrhenius.seed + comm->me);
 
   if (atom->molecular != Atom::MOLECULAR)
     error->all(FLERR,"Fix bond/react: Cannot use fix bond/react with non-molecular systems");
@@ -569,8 +562,9 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
 
 FixBondReact::~FixBondReact()
 {
-  for (int i = 0; i < narrhenius; i++) delete rrhandom[i];
-  delete[] rrhandom;
+  for (auto &rxn : rxns)
+    for (auto &constraint : rxn.constraints)
+      if (constraint.rrhandom) delete constraint.rrhandom;
 
   for (int i = 0; i < rxns.size(); i++) delete random[i];
   delete[] random;
@@ -1155,6 +1149,7 @@ void FixBondReact::superimpose_algorithm()
   Superimpose::StatePoint &sp = super.sp;
   int &avail_guesses = super.avail_guesses;
   std::vector<int> &guess_branch = super.guess_branch;
+  guess_branch.resize(MAXGUESS, 0);
 
   sp.glove.resize(max_natoms);
   sp.pioneers.resize(max_natoms);
@@ -1936,9 +1931,9 @@ int FixBondReact::check_constraints(Reaction &rxn, std::vector<tagint> &glove)
     } else if (constraint.type == Reaction::Constraint::Type::ARRHENIUS) {
       std::vector<tagint> myglove(glove.begin(), glove.begin() + rxn.reactant->natoms);
       t = get_temperature(myglove);
-      prrhob = constraint.par[1]*pow(t,constraint.par[2])*
-        exp(-constraint.par[3]/(force->boltz*t));
-      if (prrhob < rrhandom[(int) constraint.par[0]]->uniform()) constraint.satisfied = false;
+      prrhob = constraint.arrhenius.A*pow(t,constraint.arrhenius.n)*
+        exp(-constraint.arrhenius.E_a/(force->boltz*t));
+      if (prrhob < constraint.rrhandom->uniform()) constraint.satisfied = false;
     } else if (constraint.type == Reaction::Constraint::Type::RMSD) {
       // call superpose
       int iatom;
@@ -3976,11 +3971,11 @@ void FixBondReact::read_map_file(Reaction &rxn)
       EdgeIDs(line, rxn, nedge);
     } else if (strcmp(keyword,"Equivalences") == 0) {
       equivflag = 1;
-      Equivalences(line, rxn);
+      Equivalences(line, rxn, nequivalent);
     } else if (strcmp(keyword,"DeleteIDs") == 0) {
-      DeleteAtoms(line, rxn);
+      DeleteAtoms(line, rxn, ndelete);
     } else if (strcmp(keyword,"CreateIDs") == 0) {
-      CreateAtoms(line, rxn);
+      CreateAtoms(line, rxn, ncreate);
     } else if (strcmp(keyword,"ChiralIDs") == 0) {
       ChiralCenters(line, rxn, nchiral);
     } else if (strcmp(keyword,"Constraints") == 0) {
@@ -4200,13 +4195,12 @@ void FixBondReact::ReadConstraints(char *line, Reaction &rxn)
       constraint.par[3] = tmp[3]/180.0 * MY_PI;
     } else if (strcmp(constraint_type,"arrhenius") == 0) {
       constraint.type = Reaction::Constraint::Type::ARRHENIUS;
-      constraint.par[0] = narrhenius++;
       rv = sscanf(line,"%*s %lg %lg %lg %lg",&tmp[0],&tmp[1],&tmp[2],&tmp[3]);
       if (rv != 4) error->one(FLERR, "Arrhenius constraint is incorrectly formatted");
-      constraint.par[1] = tmp[0];
-      constraint.par[2] = tmp[1];
-      constraint.par[3] = tmp[2];
-      constraint.par[4] = tmp[3];
+      constraint.arrhenius.A = tmp[0];
+      constraint.arrhenius.n = tmp[1];
+      constraint.arrhenius.E_a = tmp[2];
+      constraint.arrhenius.seed = tmp[3];
     } else if (strcmp(constraint_type,"rmsd") == 0) {
       constraint.type = Reaction::Constraint::Type::RMSD;
       strcpy(strargs[0],"0");
