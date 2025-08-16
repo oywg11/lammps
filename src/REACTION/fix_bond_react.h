@@ -167,9 +167,6 @@ class FixBondReact : public Fix {
   int countflag, commflag;
   int nlevels_respa;
 
-  int nedge, nequivalent, nchiral;                         // # edge, equivalent atoms in mapping file
-  int ndelete, ncreate;                                    // # atoms to delete, create
-
   struct Superimpose {
     int avail_guesses;                                     // num of restore points available
     std::vector<int> guess_branch;                         // used when there is more than two choices when guessing
@@ -197,12 +194,12 @@ class FixBondReact : public Fix {
 
   void validate_variable_keyword(const char *, int);
   void read_map_file(Reaction &);
-  void EdgeIDs(char *, Reaction &);
-  void Equivalences(char *, Reaction &);
-  void DeleteAtoms(char *, Reaction &);
-  void CreateAtoms(char *, Reaction &);
+  void EdgeIDs(char *, Reaction &, int);
+  void Equivalences(char *, Reaction &, int);
+  void DeleteAtoms(char *, Reaction &, int);
+  void CreateAtoms(char *, Reaction &, int);
   void CustomCharges(int, Reaction &);
-  void ChiralCenters(char *, Reaction &);
+  void ChiralCenters(char *, Reaction &, int);
   void ReadConstraints(char *, Reaction &);
   void readID(char *, Reaction::Constraint &, Reaction &, int);
 

@@ -3895,7 +3895,7 @@ read map file
 
 void FixBondReact::read_map_file(Reaction &rxn)
 {
-  int rv;
+  int rv, nedge, nequivalent, nchiral, ndelete, ncreate = 0;
   char line[MAXLINE] = {'\0'};
   char keyword[MAXLINE] = {'\0'};
   char *eof,*ptr;
@@ -3908,7 +3908,6 @@ void FixBondReact::read_map_file(Reaction &rxn)
   // skip blank lines or lines that start with "#"
   // stop when read an unrecognized line
 
-  ncreate = 0;
   while (true) {
 
     readline(line);
@@ -3974,7 +3973,7 @@ void FixBondReact::read_map_file(Reaction &rxn)
       if (rxn.jbonding > rxn.reactant->natoms)
         error->one(FLERR,"Fix bond/react: Invalid template atom ID in map file");
     } else if (strcmp(keyword,"EdgeIDs") == 0) {
-      EdgeIDs(line, rxn);
+      EdgeIDs(line, rxn, nedge);
     } else if (strcmp(keyword,"Equivalences") == 0) {
       equivflag = 1;
       Equivalences(line, rxn);
@@ -3983,7 +3982,7 @@ void FixBondReact::read_map_file(Reaction &rxn)
     } else if (strcmp(keyword,"CreateIDs") == 0) {
       CreateAtoms(line, rxn);
     } else if (strcmp(keyword,"ChiralIDs") == 0) {
-      ChiralCenters(line, rxn);
+      ChiralCenters(line, rxn, nchiral);
     } else if (strcmp(keyword,"Constraints") == 0) {
       ReadConstraints(line, rxn);
     } else error->one(FLERR,"Fix bond/react: Unknown section in map file");
@@ -4004,7 +4003,7 @@ void FixBondReact::read_map_file(Reaction &rxn)
     error->all(FLERR,"Fix bond/react: Map file missing InitiatorIDs or Equivalences section\n");
 }
 
-void FixBondReact::EdgeIDs(char *line, Reaction &rxn)
+void FixBondReact::EdgeIDs(char *line, Reaction &rxn, int nedge)
 {
   // puts a 1 at edge(edgeID)
 
@@ -4019,7 +4018,7 @@ void FixBondReact::EdgeIDs(char *line, Reaction &rxn)
   }
 }
 
-void FixBondReact::Equivalences(char *line, Reaction &rxn)
+void FixBondReact::Equivalences(char *line, Reaction &rxn, int nequivalent)
 {
   int tmp1,tmp2,rv;
   for (int i = 0; i < nequivalent; i++) {
@@ -4048,7 +4047,7 @@ void FixBondReact::Equivalences(char *line, Reaction &rxn)
   }
 }
 
-void FixBondReact::DeleteAtoms(char *line, Reaction &rxn)
+void FixBondReact::DeleteAtoms(char *line, Reaction &rxn, int ndelete)
 {
   int tmp,rv;
   for (int i = 0; i < ndelete; i++) {
@@ -4061,7 +4060,7 @@ void FixBondReact::DeleteAtoms(char *line, Reaction &rxn)
   }
 }
 
-void FixBondReact::CreateAtoms(char *line, Reaction &rxn)
+void FixBondReact::CreateAtoms(char *line, Reaction &rxn, int ncreate)
 {
   rxn.create_atoms_flag = 1;
   int tmp,rv;
@@ -4086,7 +4085,7 @@ void FixBondReact::CustomCharges(int ifragment, Reaction &rxn)
       rxn.atoms[i].recharged = 0;
 }
 
-void FixBondReact::ChiralCenters(char *line, Reaction &rxn)
+void FixBondReact::ChiralCenters(char *line, Reaction &rxn, int nchiral)
 {
   int tmp,rv;
   for (int i = 0; i < nchiral; i++) {
