@@ -172,14 +172,17 @@ QStringList defaultcolors = {
 // clang-format on
 
 const QString blank(" ");
-constexpr double VDW_ON       = 1.6;
-constexpr double VDW_OFF      = 0.5;
-constexpr double VDW_CUT      = 1.0;
-constexpr double SHINY_ON     = 0.6;
-constexpr double SHINY_OFF    = 0.2;
-constexpr double SHINY_CUT    = 0.4;
-constexpr double MAX_BOND_CUT = 99.0;
-constexpr int DEFAULT_BUFLEN  = 1024;
+constexpr double VDW_ON           = 1.6;
+constexpr double VDW_OFF          = 0.5;
+constexpr double VDW_CUT          = 1.0;
+constexpr double SHINY_ON         = 0.6;
+constexpr double SHINY_OFF        = 0.2;
+constexpr double SHINY_CUT        = 0.4;
+constexpr double MAX_BOND_CUT     = 99.0;
+constexpr int DEFAULT_BUFLEN      = 1024;
+constexpr int DEFAULT_NPOINTS     = 100000;
+constexpr double DEFAULT_DIAMETER = 0.2;
+
 enum { FRAME, FILLED, POINTS };
 
 } // namespace
@@ -443,13 +446,6 @@ ImageViewer::ImageViewer(const QString &fileName, LammpsWrapper *_lammps, QWidge
     updateActions();
     setLayout(mainLayout);
     update_regions();
-}
-
-ImageViewer::~ImageViewer()
-{
-    delete menuBar;
-    delete imageLabel;
-    delete scrollArea;
 }
 
 void ImageViewer::reset_view()
@@ -794,7 +790,7 @@ void ImageViewer::region_settings()
     if (!rv) return;
 
     // retrieve data from dialog and store in map
-    for (int idx = 2; idx < regions.size() + 2; ++idx) {
+    for (int idx = 2; idx < (int)regions.size() + 2; ++idx) {
         auto *item            = layout->itemAtPosition(idx, 0);
         auto *label           = qobject_cast<QLabel *>(item->widget());
         auto id               = label->text().toStdString();
@@ -1150,8 +1146,9 @@ void ImageViewer::update_regions()
             std::string id = buffer;
             if (regions.count(id) == 0) {
                 const auto &color = defaultcolors[i % defaultcolors.size()].toStdString();
-                auto *reginfo     = new RegionInfo(false, FRAME, color, 0.2, 10000);
-                regions[id]       = reginfo;
+                auto *reginfo =
+                    new RegionInfo(false, FRAME, color, DEFAULT_DIAMETER, DEFAULT_NPOINTS);
+                regions[id] = reginfo;
             }
         }
     }
