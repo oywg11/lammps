@@ -123,11 +123,28 @@ Installing Pre-compiled LAMMPS-GUI Packages
 -------------------------------------------
 
 LAMMPS-GUI is available for download as pre-compiled binary packages for
-Linux x86\_64 (Ubuntu 20.04LTS or later and compatible), macOS (version
+Linux x86\_64 (Ubuntu 22.04LTS or later and compatible), macOS (version
 11 aka Big Sur or later), and Windows (version 10 or later) from the
 `LAMMPS release pages on GitHub <https://github.com/lammps/lammps/releases/>`_.
 A backup download location is at https://download.lammps.org/static/
 Alternately, LAMMPS-GUI can be compiled from source when building LAMMPS.
+
+.. admonition:: GPU support and MPI parallelization
+   :class: note
+
+   The pre-compiled packages include support for GPUs through the GPU
+   package with OpenCL (in mixed precision).  However, this requires
+   that you have a compatible driver and the OpenCL runtime installed.
+   This is not always available and when using the flatpak package, the
+   flatpak sandbox prevents accessing the GPU.  GPU support through
+   KOKKOS is currently not available for technical reasons, but serial
+   and OpenMP multi-threading is available.
+
+   The design decisions for LAMMPS-GUI and how it launches LAMMPS
+   conflict with parallel runs using MPI.  You have to :doc:`use a
+   regular LAMMPS executable <Run_basics>` compiled with MPI support for
+   that.  For the use cases that LAMMPS-GUI has been conceived for this
+   is not a significant limitation.
 
 Windows 10 and later
 ^^^^^^^^^^^^^^^^^^^^
@@ -178,7 +195,6 @@ listed with:
 .. code-block:: sh
 
    ls $(flatpak info --show-location org.lammps.lammps-gui )/files/bin
-
 
 Compiling from Source
 ^^^^^^^^^^^^^^^^^^^^^
