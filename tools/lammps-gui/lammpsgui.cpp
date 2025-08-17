@@ -2220,7 +2220,7 @@ void LammpsGui::start_lammps()
      .. versionchanged:: TBD
         must update this check before next feature release
     */
-    if (lammps.version() < 20250822) {
+    if (lammps.version() < 20250722) {
         QMessageBox::critical(this, "Incompatible LAMMPS Version",
                               "LAMMPS-GUI version " LAMMPS_GUI_VERSION " requires\n"
                               "a LAMMPS version of at least 22 July 2025");
