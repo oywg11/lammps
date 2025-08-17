@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QCompleter>
 #include <QCoreApplication>
 #include <QDialogButtonBox>
 #include <QDoubleValidator>
@@ -40,6 +41,7 @@
 #include <QSpacerItem>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <QValidator>
 #if defined(_OPENMP)
 #include <QThread>
 #endif
@@ -59,7 +61,7 @@
 #include <unistd.h>
 #endif
 
-// convenience class
+// convenience classes
 namespace {
 class QHline : public QFrame {
 public:
@@ -69,6 +71,69 @@ public:
         setFrameShape(QFrame::HLine);
         setFrameShadow(QFrame::Sunken);
     }
+};
+
+class QColorValidator : public QValidator {
+public:
+    QColorValidator(const QStringList &_colors, QWidget *parent = nullptr) :
+        QValidator(parent), colors(_colors)
+    {
+    }
+
+    void fixup(QString &input) const override
+    {
+        // remove leading/trailing whitespace and make lowercase
+        input = input.trimmed();
+        input = input.toLower();
+    }
+
+    QValidator::State validate(QString &input, int &pos) const override
+    {
+        QString match;
+
+        // find if input string is contained in list of colors
+        for (auto color : colors) {
+            if (color.startsWith(input)) {
+                match = color;
+                break;
+            }
+        }
+
+        if (match == input) {
+            return QValidator::Acceptable;
+        } else if (match.size() > 0) {
+            return QValidator::Intermediate;
+        }
+        return QValidator::Invalid;
+    }
+
+private:
+    const QStringList colors;
+};
+
+// clang-format off
+QStringList imagecolors = {
+    "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
+    "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
+    "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
+    "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki", "darkmagenta", "darkolivegreen",
+    "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen", "darkslateblue",
+    "darkslategray", "darkturquoise", "darkviolet", "deeppink", "deepskyblue", "dimgray",
+    "dodgerblue", "firebrick", "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite",
+    "gold", "goldenrod", "gray", "green", "greenyellow", "honeydew", "hotpink", "indianred",
+    "indigo", "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon",
+    "lightblue", "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgreen", "lightgrey",
+    "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightsteelblue",
+    "lightyellow", "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine",
+    "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue",
+    "mediumspringgreen", "mediumturquoise", "mediumvioletred", "midnightblue", "mintcream",
+    "mistyrose", "moccasin", "navajowhite", "navy", "oldlace", "olive", "olivedrab", "orange",
+    "orangered", "orchid", "palegoldenrod", "palegreen", "paleturquoise", "palevioletred",
+    "papayawhip", "peachpuff", "peru", "pink", "plum", "powderblue", "purple", "red", "rosybrown",
+    "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver",
+    "skyblue", "slateblue", "slategray", "snow", "springgreen", "steelblue", "tan", "teal",
+    "thistle", "tomato", "turquoise", "violet", "wheat", "white", "whitesmoke", "yellow",
+    "yellowgreen"
 };
 } // namespace
 
@@ -180,10 +245,10 @@ void Preferences::accept()
     if (box) settings->setValue("vdwstyle", box->isChecked());
     box = tabWidget->findChild<QCheckBox *>("autobond");
     if (box) settings->setValue("autobond", box->isChecked());
-    auto *combo = tabWidget->findChild<QComboBox *>("background");
-    if (combo) settings->setValue("background", combo->currentText());
-    combo = tabWidget->findChild<QComboBox *>("boxcolor");
-    if (combo) settings->setValue("boxcolor", combo->currentText());
+    field = tabWidget->findChild<QLineEdit *>("background");
+    if (field && field->hasAcceptableInput()) settings->setValue("background", field->text());
+    field = tabWidget->findChild<QLineEdit *>("boxcolor");
+    if (field && field->hasAcceptableInput()) settings->setValue("boxcolor", field->text());
     settings->endGroup();
 
     // general settings
@@ -254,7 +319,7 @@ void Preferences::accept()
     settings->beginGroup("charts");
     field = tabWidget->findChild<QLineEdit *>("title");
     if (field) settings->setValue("title", field->text());
-    combo = tabWidget->findChild<QComboBox *>("smoothchoice");
+    auto *combo = tabWidget->findChild<QComboBox *>("smoothchoice");
     if (combo) settings->setValue("smoothchoice", combo->currentIndex());
     combo = tabWidget->findChild<QComboBox *>("rawbrush");
     if (combo) settings->setValue("rawbrush", combo->currentIndex());
@@ -726,24 +791,24 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     zval->setValidator(new QDoubleValidator(0.01, 100.0, 100, this));
     zval->setObjectName("zoom");
 
-    auto *background = new QComboBox;
-    background->setObjectName("background");
-    background->addItem("black");
-    background->addItem("darkgray");
-    background->addItem("gray");
-    background->addItem("silver");
-    background->addItem("white");
-    background->setCurrentText(settings->value("background", "black").toString());
+    auto *colorcompleter = new QCompleter(imagecolors);
+    colorcompleter->setCompletionMode(QCompleter::InlineCompletion);
+    colorcompleter->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
+    auto *colorvalidator = new QColorValidator(imagecolors);
+    QFontMetrics metrics(fontMetrics());
 
-    auto *boxcolor = new QComboBox;
+    auto *background = new QLineEdit(settings->value("background", "black").toString());
+    background->setObjectName("background");
+    background->setCompleter(colorcompleter);
+    background->setValidator(colorvalidator);
+    background->setFixedSize(metrics.averageCharWidth() * 12, metrics.height() + 4);
+
+    auto *boxcolor = new QLineEdit(settings->value("boxcolor", "yellow").toString());
     boxcolor->setObjectName("boxcolor");
-    boxcolor->addItem("yellow");
-    boxcolor->addItem("silver");
-    boxcolor->addItem("gray");
-    boxcolor->addItem("darkred");
-    boxcolor->addItem("darkgreen");
-    boxcolor->addItem("darkblue");
-    boxcolor->setCurrentText(settings->value("boxcolor", "yellow").toString());
+    boxcolor->setCompleter(colorcompleter);
+    boxcolor->setValidator(colorvalidator);
+    boxcolor->setFixedSize(metrics.averageCharWidth() * 12, metrics.height() + 4);
+
     settings->endGroup();
 
     int i = 0;

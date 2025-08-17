@@ -33,6 +33,7 @@
 #include <QIcon>
 #include <QImage>
 #include <QImageReader>
+#include <QIntValidator>
 #include <QKeySequence>
 #include <QLabel>
 #include <QLineEdit>
@@ -48,6 +49,7 @@
 #include <QSpinBox>
 #include <QStringList>
 #include <QVBoxLayout>
+#include <QValidator>
 #include <QVariant>
 
 #include <algorithm>
@@ -168,9 +170,48 @@ QStringList imagecolors = {
 QStringList defaultcolors = {
     "white", "gray", "magenta", "cyan", "yellow", "blue", "green", "red", "orange", "brown"
 };
-
 // clang-format on
 
+// convenience class
+class QColorValidator : public QValidator {
+public:
+    QColorValidator(const QStringList &_colors, QWidget *parent = nullptr) :
+        QValidator(parent), colors(_colors)
+    {
+    }
+
+    void fixup(QString &input) const override
+    {
+        // remove leading/trailing whitespace and make lowercase
+        input = input.trimmed();
+        input = input.toLower();
+    }
+
+    QValidator::State validate(QString &input, int &pos) const override
+    {
+        QString match;
+
+        // find if input string is contained in list of colors
+        for (auto color : colors) {
+            if (color.startsWith(input)) {
+                match = color;
+                break;
+            }
+        }
+
+        if (match == input) {
+            return QValidator::Acceptable;
+        } else if (match.size() > 0) {
+            return QValidator::Intermediate;
+        }
+        return QValidator::Invalid;
+    }
+
+private:
+    const QStringList colors;
+};
+
+// constants
 const QString blank(" ");
 constexpr double VDW_ON           = 1.6;
 constexpr double VDW_OFF          = 0.5;
@@ -738,6 +779,7 @@ void ImageViewer::region_settings()
     auto *colorcompleter = new QCompleter(imagecolors);
     colorcompleter->setCompletionMode(QCompleter::InlineCompletion);
     colorcompleter->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
+    auto *colorvalidator = new QColorValidator(imagecolors);
     auto *framevalidator = new QDoubleValidator(1.0e-10, 1.0e10, 10);
     auto *pointvalidator = new QIntValidator(100, 1000000);
     QFontMetrics metrics(regionview.fontMetrics());
@@ -759,6 +801,7 @@ void ImageViewer::region_settings()
         layout->addWidget(style, idx, 2);
         auto *color = new QLineEdit(reg.second->color.c_str());
         color->setCompleter(colorcompleter);
+        color->setValidator(colorvalidator);
         color->setFixedSize(metrics.averageCharWidth() * 12, metrics.height() + 4);
         color->setText(reg.second->color.c_str());
         layout->addWidget(color, idx, 3);
@@ -791,24 +834,24 @@ void ImageViewer::region_settings()
 
     // retrieve data from dialog and store in map
     for (int idx = 2; idx < (int)regions.size() + 2; ++idx) {
-        auto *item            = layout->itemAtPosition(idx, 0);
-        auto *label           = qobject_cast<QLabel *>(item->widget());
-        auto id               = label->text().toStdString();
-        item                  = layout->itemAtPosition(idx, 1);
-        auto *box             = qobject_cast<QCheckBox *>(item->widget());
-        regions[id]->enabled  = (box->checkState() == Qt::Checked);
-        item                  = layout->itemAtPosition(idx, 2);
-        auto *combo           = qobject_cast<QComboBox *>(item->widget());
-        regions[id]->style    = combo->currentIndex();
-        item                  = layout->itemAtPosition(idx, 3);
-        auto *line            = qobject_cast<QLineEdit *>(item->widget());
-        regions[id]->color    = line->text().toStdString();
-        item                  = layout->itemAtPosition(idx, 4);
-        line                  = qobject_cast<QLineEdit *>(item->widget());
-        regions[id]->diameter = line->text().toDouble();
-        item                  = layout->itemAtPosition(idx, 5);
-        line                  = qobject_cast<QLineEdit *>(item->widget());
-        regions[id]->npoints  = line->text().toInt();
+        auto *item           = layout->itemAtPosition(idx, 0);
+        auto *label          = qobject_cast<QLabel *>(item->widget());
+        auto id              = label->text().toStdString();
+        item                 = layout->itemAtPosition(idx, 1);
+        auto *box            = qobject_cast<QCheckBox *>(item->widget());
+        regions[id]->enabled = (box->checkState() == Qt::Checked);
+        item                 = layout->itemAtPosition(idx, 2);
+        auto *combo          = qobject_cast<QComboBox *>(item->widget());
+        regions[id]->style   = combo->currentIndex();
+        item                 = layout->itemAtPosition(idx, 3);
+        auto *line           = qobject_cast<QLineEdit *>(item->widget());
+        if (line && line->hasAcceptableInput()) regions[id]->color = line->text().toStdString();
+        item = layout->itemAtPosition(idx, 4);
+        line = qobject_cast<QLineEdit *>(item->widget());
+        if (line && line->hasAcceptableInput()) regions[id]->diameter = line->text().toDouble();
+        item = layout->itemAtPosition(idx, 5);
+        line = qobject_cast<QLineEdit *>(item->widget());
+        if (line && line->hasAcceptableInput()) regions[id]->npoints = line->text().toInt();
     }
     createImage();
 }
