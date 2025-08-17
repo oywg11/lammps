@@ -119,20 +119,18 @@ class FixBondReact : public Fix {
 
     struct Constraint {
       int ID;
-      enum class Type { DISTANCE, ANGLE, DIHEDRAL,
-                        ARRHENIUS, RMSD, CUSTOM } type;
-      enum class IDType { ATOM, FRAG };
-      static constexpr int MAXCONIDS = 4;                  // max # of IDs used by any constraint
-      std::array<int, MAXCONIDS> ids;
-      std::array<IDType, MAXCONIDS> idtypes{};
+      enum class Type { DISTANCE, ANGLE, DIHEDRAL, ARRHENIUS, RMSD, CUSTOM } type;
       struct Distance { double rminsq, rmaxsq; } distance;
       struct Angle { double amin, amax; } angle;
       struct Dihedral { double amin, amax, amin2, amax2; } dihedral;
-      struct RMSD { double RMSDmax; } rmsd;
-      struct Arrhenius { double A, n, E_a, seed; } arrhenius;
-      std::string str;
+      struct RMSD { double rmsdmax; } rmsd;
+      struct Arrhenius { double A, n, E_a, seed; class RanMars *rrhandom; } arrhenius;
+      struct Custom { std::string str; } custom;
+      enum class IDType { ATOM, FRAG };
+      static constexpr int MAXCONIDS = 4;
+      std::array<int, MAXCONIDS> ids;
+      std::array<IDType, MAXCONIDS> idtypes{};
       bool satisfied;
-      class RanMars *rrhandom;                             // random number for Arrhenius constraint
     };
     std::vector<Constraint> constraints;
   };

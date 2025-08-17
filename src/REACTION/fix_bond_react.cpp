@@ -507,7 +507,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   for (auto &rxn : rxns)
     for (auto &constraint : rxn.constraints)
       if (constraint.type == Reaction::Constraint::Type::ARRHENIUS)
-        constraint.rrhandom = new RanMars(lmp, (int) constraint.arrhenius.seed + comm->me);
+        constraint.arrhenius.rrhandom = new RanMars(lmp, (int) constraint.arrhenius.seed + comm->me);
 
   if (atom->molecular != Atom::MOLECULAR)
     error->all(FLERR,"Fix bond/react: Cannot use fix bond/react with non-molecular systems");
@@ -564,7 +564,8 @@ FixBondReact::~FixBondReact()
 {
   for (auto &rxn : rxns)
     for (auto &constraint : rxn.constraints)
-      if (constraint.rrhandom) delete constraint.rrhandom;
+      if (constraint.type == Reaction::Constraint::Type::ARRHENIUS)
+        delete constraint.arrhenius.rrhandom;
 
   for (int i = 0; i < rxns.size(); i++) delete random[i];
   delete[] random;
@@ -1922,7 +1923,7 @@ int FixBondReact::check_constraints(Reaction &rxn, std::vector<tagint> &glove)
       } else {
         if (phi > constraint.dihedral.amin || phi < constraint.dihedral.amax) ANDgate = 1;
       }
-      if (constraint.diheral.amin2 < constraint.dihedral.amax2) {
+      if (constraint.dihedral.amin2 < constraint.dihedral.amax2) {
         if (phi > constraint.dihedral.amin2 && phi < constraint.dihedral.amax2) ANDgate = 1;
       } else {
         if (phi > constraint.dihedral.amin2 || phi < constraint.dihedral.amax2) ANDgate = 1;
@@ -1933,7 +1934,7 @@ int FixBondReact::check_constraints(Reaction &rxn, std::vector<tagint> &glove)
       t = get_temperature(myglove);
       prrhob = constraint.arrhenius.A*pow(t,constraint.arrhenius.n)*
         exp(-constraint.arrhenius.E_a/(force->boltz*t));
-      if (prrhob < constraint.rrhandom->uniform()) constraint.satisfied = false;
+      if (prrhob < constraint.arrhenius.rrhandom->uniform()) constraint.satisfied = false;
     } else if (constraint.type == Reaction::Constraint::Type::RMSD) {
       // call superpose
       int iatom;
@@ -1980,9 +1981,9 @@ int FixBondReact::check_constraints(Reaction &rxn, std::vector<tagint> &glove)
       double rmsd = superposer.Superpose(xfrozen, xmobile);
       memory->destroy(xfrozen);
       memory->destroy(xmobile);
-      if (rmsd > constraint.RMSD.RMSDmax) constraint.satisfied = false;
+      if (rmsd > constraint.rmsd.rmsdmax) constraint.satisfied = false;
     } else if (constraint.type == Reaction::Constraint::Type::CUSTOM) {
-      constraint.satisfied = custom_constraint(constraint.str, rxn, glove);
+      constraint.satisfied = custom_constraint(constraint.custom.str, rxn, glove);
     }
   }
 
@@ -2130,7 +2131,7 @@ void FixBondReact::customvarnames()
   for (auto &rxn : rxns) {
     for (auto &constraint : rxn.constraints) {
       if (constraint.type == Reaction::Constraint::Type::CUSTOM) {
-        varstr = constraint.str;
+        varstr = constraint.custom.str;
         prev3 = -1;
         while (true) {
           // find next reaction special function occurrence
@@ -2213,7 +2214,7 @@ void FixBondReact::get_customvars()
 evaulate expression for variable constraint
 ------------------------------------------------------------------------- */
 
-bool FixBondReact::custom_constraint(const std::string& varstr, Reaction &rxn, std::vector<tagint> &glove)
+bool FixBondReact::custom_constraint(const std::string &varstr, Reaction &rxn, std::vector<tagint> &glove)
 {
   std::size_t pos,pos1,pos2,pos3;
   int irxnfunc;
@@ -4206,7 +4207,7 @@ void FixBondReact::ReadConstraints(char *line, Reaction &rxn)
       strcpy(strargs[0],"0");
       rv = sscanf(line,"%*s %lg %s",&tmp[0],strargs[0]);
       if (rv != 1 && rv != 2) error->one(FLERR, "RMSD constraint is incorrectly formatted");
-      constraint.RMSD.RMSDmax = tmp[0];
+      constraint.rmsd.rmsdmax = tmp[0];
       constraint.ids[0] = -1; // optional molecule fragment
       if (isalpha(strargs[0][0])) {
         int ifragment = rxn.reactant->findfragment(strargs[0]);
@@ -4216,7 +4217,7 @@ void FixBondReact::ReadConstraints(char *line, Reaction &rxn)
     } else if (strcmp(constraint_type,"custom") == 0) {
       constraint.type = Reaction::Constraint::Type::CUSTOM;
       std::vector<std::string> args = utils::split_words(line);
-      constraint.str = args[1];
+      constraint.custom.str = args[1];
     } else error->one(FLERR,"Fix bond/react: Illegal constraint type in 'Constraints' section of map file");
   }
   rxn.constraintstr += ")"; // close boolean constraint logic string
