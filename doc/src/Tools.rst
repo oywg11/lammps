@@ -602,11 +602,11 @@ Prerequisites and portability
 
 .. versionchanged:: TBD
 
-LAMMPS-GUI version 1.7 and later is programmed in C++ based on the C++17
+LAMMPS-GUI version 1.7.1 and later is programmed in C++ based on the C++17
 standard and using the `Qt GUI framework
 <https://www.qt.io/product/framework>`_.  Currently, Qt version 5.15LTS
 or later is required; support for Qt version 6.x is available.  Building
-LAMMPS with CMake is required.
+LAMMPS with CMake (version 3.20 or later) is required.
 
 The LAMMPS-GUI has been successfully compiled and tested on:
 
@@ -702,6 +702,12 @@ This is usually auto-detected on the first run and can be changed in the
 LAMMPS-GUI *Preferences* dialog.  The command-line flag allows to reset
 this path to a valid value in case the original setting has become
 invalid.  An empty path ("") as argument restores the default setting.
+
+.. versionchanged:: TBD
+
+When loading a LAMMPS library, it must be at least version 27 August
+2025 for LAMMPS-GUI version 1.7.1, since it uses features only available
+since that LAMMPS version.  Older LAMMPS versions will be rejected.
 
 Platform notes
 ^^^^^^^^^^^^^^
