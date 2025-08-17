@@ -1748,13 +1748,14 @@ QWizardPage *LammpsGui::tutorial_intro(const int ntutorial, const QString &infot
     page->setPixmap(QWizard::WatermarkPixmap,
                     QPixmap(QString(":/icons/tutorial%1-logo.png").arg(ntutorial)));
 
-    // XXX TODO: update URL to published tutorial DOI
+    // TBD: TODO: update URL to published tutorial DOI
     auto *label = new QLabel(
         QString("<p>This dialog will help you to select and populate a folder with materials "
                 "required to work through tutorial ") +
         QString::number(ntutorial) +
-        QString(" from the LAMMPS tutorials article by Simon Gravelle, Jake Gissinger, and Axel "
-                "Kohlmeyer.</p><p>The materials for this tutorial are downloaded from:<br><b><a "
+        QString(" from the LAMMPS tutorials article by Simon Gravelle, Cecilia Alvares, "
+                "Jake Gissinger, and Axel Kohlmeyer.</p>"
+                "<p>The materials for this tutorial are downloaded from:<br><b><a "
                 "href=\"https://github.com/lammpstutorials/lammpstutorials-article\">https://"
                 "github.com/lammpstutorials/lammpstutorials-article</a></b></p>") +
         infotext);

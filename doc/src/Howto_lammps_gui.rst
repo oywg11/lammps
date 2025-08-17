@@ -1194,7 +1194,7 @@ Window), and `Ctrl-Q` (Quit Application) are supported.
 
 .. _Gravelle1:
 
-**(Gravelle1)** Gravelle, Gissinger, Kohlmeyer, `arXiv:2503.14020 \[physics.comp-ph\] <https://doi.org/10.48550/arXiv.2503.14020>`_ (2025)
+**(Gravelle1)** Gravelle, Alvares, Gissinger, Kohlmeyer, `arXiv:2503.14020 \[physics.comp-ph\] <https://doi.org/10.48550/arXiv.2503.14020>`_ (2025)
 
 .. _Gravelle2:
 
