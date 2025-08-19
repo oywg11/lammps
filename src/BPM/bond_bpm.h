@@ -58,7 +58,7 @@ class BondBPM : public Bond {
   FnPtrPack *pack_choice;    // ptrs to pack functions
   double *output_data;
 
-  int property_atom_flag, nvalues, overlay_flag, break_flag, ignore_special_flag;
+  int property_atom_flag, nvalues, overlay_flag, break_flag;
   int index_x_ref, index_y_ref, index_z_ref;
 
   int n_histories;

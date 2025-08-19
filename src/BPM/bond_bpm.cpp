@@ -58,7 +58,6 @@ BondBPM::BondBPM(LAMMPS *_lmp) :
     fix_update_special_bonds(nullptr), pack_choice(nullptr), output_data(nullptr)
 {
   overlay_flag = 0;
-  ignore_special_flag = 0;
   property_atom_flag = 0;
   break_flag = 1;
   nvalues = 0;
@@ -120,14 +119,19 @@ void BondBPM::init_style()
     fix_store_local->nvalues = nvalues;
   }
 
-  if (!ignore_special_flag) {
+  if (overlay_flag) {
+    // With break no, overlay/pair doesn't really do anything
+    // Only double checks that special weights are unity
+    if (force->special_lj[1] != 1.0 || force->special_lj[2] != 1.0 ||
+        force->special_lj[3] != 1.0 || force->special_coul[1] != 1.0 ||
+        force->special_coul[2] != 1.0 || force->special_coul[3] != 1.0)
+      error->all(FLERR,
+                 "With overlay/pair yes, BPM bond styles require a value of 1.0 for all "
+                 "special_bonds weights");
+  }
+
+  if (break_flag) {
     if (overlay_flag) {
-      if (force->special_lj[1] != 1.0 || force->special_lj[2] != 1.0 ||
-          force->special_lj[3] != 1.0 || force->special_coul[1] != 1.0 ||
-          force->special_coul[2] != 1.0 || force->special_coul[3] != 1.0)
-        error->all(FLERR,
-                   "With overlay/pair yes, BPM bond styles require a value of 1.0 for all "
-                   "special_bonds weights");
       if (id_fix_update_special_bonds) {
         modify->delete_fix(id_fix_update_special_bonds);
         delete[] id_fix_update_special_bonds;
@@ -135,24 +139,23 @@ void BondBPM::init_style()
       }
     } else {
       // Require atoms know about all of their bonds and if they break
-      if (force->newton_bond && break_flag)
+      if (force->newton_bond)
         error->all(FLERR,
-                   "With overlay/pair no, or break yes, BPM bond styles require Newton bond off");
+                   "With overlay/pair no and break yes, BPM bond styles require Newton bond off");
 
       // special lj must be 0 1 1 to censor pair forces between bonded particles
       if (force->special_lj[1] != 0.0 || force->special_lj[2] != 1.0 || force->special_lj[3] != 1.0)
         error->all(FLERR,
                    "With overlay/pair no, BPM bond styles require special LJ weights = 0,1,1");
-      // if bonds can break, special coulomb must be 1 1 1 to ensure all pairs are included in the
+      // special coulomb must be 1 1 1 to ensure all pairs are included in the
       //    neighbor list and 1-3 and 1-4 special bond lists are skipped
-      if (break_flag &&
-          (force->special_coul[1] != 1.0 || force->special_coul[2] != 1.0 ||
-           force->special_coul[3] != 1.0))
+      if (force->special_coul[1] != 1.0 || force->special_coul[2] != 1.0 ||
+           force->special_coul[3] != 1.0)
         error->all(FLERR,
-                   "With overlay/pair no, and break yes, BPM bond styles requires special Coulomb "
+                   "With overlay/pair no and break yes, BPM bond styles requires special Coulomb "
                    "weights = 1,1,1");
 
-      if (id_fix_dummy_special && break_flag) {
+      if (id_fix_dummy_special) {
         // check if an update fix already exists, if so use it
         auto fixes = modify->get_fix_by_style("UPDATE_SPECIAL_BONDS");
         if (fixes.size() > 0 ) {
@@ -173,13 +176,17 @@ void BondBPM::init_style()
     if (force->special_lj[2] != 1.0 || force->special_lj[3] != 1.0 ||
         force->special_coul[2] != 1.0 || force->special_coul[3] != 1.0)
       error->all(FLERR, "Bond style bpm requires 1-3 and 1-4 special weights of 1.0");
-  }
 
-  if (break_flag) {
     if (force->angle || force->dihedral || force->improper)
       error->all(FLERR, "Bond style bpm cannot break with 3,4-body interactions");
     if (atom->molecular == 2)
       error->all(FLERR, "Bond style bpm cannot break with atom style template");
+  } else {
+    if (id_fix_update_special_bonds) {
+      modify->delete_fix(id_fix_update_special_bonds);
+      delete[] id_fix_update_special_bonds;
+      id_fix_update_special_bonds = nullptr;
+    }
   }
 
   // find all instances of bond history to delete/shift data
