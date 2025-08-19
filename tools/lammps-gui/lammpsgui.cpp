@@ -1478,11 +1478,7 @@ void LammpsGui::render_image()
             // add a run 0 and thus create the state of the initial system without running.
             // this will allow us to create a snapshot image.
             auto saved = ui->textEdit->textCursor();
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-            if (ui->textEdit->find(QRegExp(QStringLiteral("^\\s*(run|minimize)\\s+")))) {
-#else
             if (ui->textEdit->find(QRegularExpression(QStringLiteral("^\\s*(run|minimize)\\s+")))) {
-#endif
                 auto cursor = ui->textEdit->textCursor();
                 cursor.movePosition(QTextCursor::PreviousBlock);
                 cursor.movePosition(QTextCursor::EndOfLine);
@@ -1752,13 +1748,14 @@ QWizardPage *LammpsGui::tutorial_intro(const int ntutorial, const QString &infot
     page->setPixmap(QWizard::WatermarkPixmap,
                     QPixmap(QString(":/icons/tutorial%1-logo.png").arg(ntutorial)));
 
-    // XXX TODO: update URL to published tutorial DOI
+    // TBD: TODO: update URL to published tutorial DOI
     auto *label = new QLabel(
         QString("<p>This dialog will help you to select and populate a folder with materials "
                 "required to work through tutorial ") +
         QString::number(ntutorial) +
-        QString(" from the LAMMPS tutorials article by Simon Gravelle, Jake Gissinger, and Axel "
-                "Kohlmeyer.</p><p>The materials for this tutorial are downloaded from:<br><b><a "
+        QString(" from the LAMMPS tutorials article by Simon Gravelle, Cecilia Alvares, "
+                "Jake Gissinger, and Axel Kohlmeyer.</p>"
+                "<p>The materials for this tutorial are downloaded from:<br><b><a "
                 "href=\"https://github.com/lammpstutorials/lammpstutorials-article\">https://"
                 "github.com/lammpstutorials/lammpstutorials-article</a></b></p>") +
         infotext);
@@ -2218,12 +2215,15 @@ void LammpsGui::start_lammps()
     lammps.open(narg, args);
     lammpsstatus->show();
 
-    // must have a version newer than the 29 August 2024 release of LAMMPS
-    // TODO: must update this check before next feature release
-    if (lammps.version() < 20240829) {
+    // Must have a LAMMPS version that was released after the 22 July 2025 version
+    /*
+     .. versionchanged:: TBD
+        must update this check before next feature release
+    */
+    if (lammps.version() < 20250722) {
         QMessageBox::critical(this, "Incompatible LAMMPS Version",
                               "LAMMPS-GUI version " LAMMPS_GUI_VERSION " requires\n"
-                              "a LAMMPS version of at least 29 August 2024");
+                              "a LAMMPS version of at least 22 July 2025");
         exit(1);
     }
 
@@ -2311,7 +2311,7 @@ void LammpsGui::setup_tutorial(int tutno, const QString &dir, bool purgedir, boo
 
     start_lammps();
     lammps.command("clear");
-    lammps.command(QString("shell cd " + dir));
+    lammps.command(QString("shell cd '%1'").arg(dir));
 
     // apply https proxy setting: prefer environment variable or fall back to preferences value
     auto https_proxy = QString::fromLocal8Bit(qgetenv("https_proxy"));

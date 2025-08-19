@@ -11,34 +11,36 @@
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef QADDON_H
+#define QADDON_H
 
-#include <QString>
-#include <string>
-#include <vector>
+#include <QCompleter>
+#include <QFrame>
+#include <QValidator>
 
-// duplicate string
-extern char *mystrdup(const std::string &text);
-extern char *mystrdup(const char *text);
-extern char *mystrdup(const QString &text);
+// draw horizontal line
+class QHline : public QFrame {
+public:
+    QHline(QWidget *parent = nullptr);
+};
 
-// split string into words while respecting quotes
-extern std::vector<std::string> split_line(const std::string &text);
+// complete color inputs
+class QColorCompleter : public QCompleter {
+public:
+    QColorCompleter(QWidget *parent = nullptr);
+};
 
-// get pointer to LAMMPS-GUI main widget
-extern class QWidget *get_main_widget();
+// validate color inputs
+class QColorValidator : public QValidator {
+public:
+    QColorValidator(QWidget *parent = nullptr);
 
-// find if executable is in path
-extern bool has_exe(const QString &exe);
-
-// recursively purge a directory
-extern void purge_directory(const QString &dir);
-
-// flag if light or dark theme
-extern bool is_light_theme();
+    void fixup(QString &input) const override;
+    QValidator::State validate(QString &input, int &pos) const override;
+};
 
 #endif
+
 // Local Variables:
 // c-basic-offset: 4
 // End:

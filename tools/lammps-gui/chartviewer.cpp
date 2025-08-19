@@ -16,6 +16,7 @@
 #include "helpers.h"
 #include "lammpsgui.h"
 #include "rangeslider.h"
+#include "qaddon.h"
 
 #include <QAction>
 #include <QApplication>
@@ -63,17 +64,6 @@ const QList<QBrush> mybrushes = {
     QBrush(QColor(120, 120, 120)), // grey
 };
 
-// convenience class
-
-class QHline : public QFrame {
-public:
-    QHline(QWidget *parent = nullptr) : QFrame(parent)
-    {
-        setGeometry(QRect(0, 0, 100, 3));
-        setFrameShape(QFrame::HLine);
-        setFrameShadow(QFrame::Sunken);
-    }
-};
 } // namespace
 
 ChartWindow::ChartWindow(const QString &_filename, QWidget *parent) :
