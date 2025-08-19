@@ -2649,6 +2649,10 @@ template<int NEIGHFLAG, int EVFLAG>
 KOKKOS_INLINE_FUNCTION
 void PairReaxFFKokkos<DeviceType>::operator()(TagPairReaxComputeAngularPreprocessed<NEIGHFLAG,EVFLAG>, const int &apack, EV_FLOAT_REAX& ev) const {
 
+  // this variable needs to be FP64 to prevent overflow
+
+  double trm8;
+
   auto v_f = ScatterViewHelper<NeedDup_v<NEIGHFLAG,DeviceType>,decltype(dup_f),decltype(ndup_f)>::get(dup_f,ndup_f);
   auto a_f = v_f.template access<AtomicDup_v<NEIGHFLAG,DeviceType>>();
   Kokkos::View<KK_FLOAT**, typename decltype(d_Cdbo)::array_layout,KKDeviceType,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value>> a_Cdbo = d_Cdbo;
@@ -2663,7 +2667,7 @@ void PairReaxFFKokkos<DeviceType>::operator()(TagPairReaxComputeAngularPreproces
   KK_FLOAT p_val6, p_val7, p_val10;
   KK_FLOAT p_pen1, p_pen2, p_pen3, p_pen4;
   KK_FLOAT p_coa1, p_coa2, p_coa3, p_coa4;
-  KK_FLOAT trm8, expval6, expval7, expval2theta, expval12theta, exp3ij, exp3jk;
+  KK_FLOAT expval6, expval7, expval2theta, expval12theta, exp3ij, exp3jk;
   KK_FLOAT exp_pen2ij, exp_pen2jk, exp_pen3, exp_pen4, trm_pen34, exp_coa2;
   KK_FLOAT dSBO1, dSBO2, SBO2, CSBO2;
   KK_FLOAT CEval1, CEval2, CEval3, CEval4, CEval5, CEval6, CEval7, CEval8;
