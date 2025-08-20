@@ -60,6 +60,7 @@ BondBPM::BondBPM(LAMMPS *_lmp) :
   overlay_flag = 0;
   property_atom_flag = 0;
   break_flag = 1;
+  ignore_special_flag = 1;
   nvalues = 0;
   writedata = 0;
 
@@ -130,7 +131,7 @@ void BondBPM::init_style()
                  "special_bonds weights");
   }
 
-  if (break_flag) {
+  if (!ignore_special_flag && break_flag) {
     if (overlay_flag) {
       if (id_fix_update_special_bonds) {
         modify->delete_fix(id_fix_update_special_bonds);
