@@ -558,6 +558,12 @@ They must be specified in uppercase.
    *  - ARMV81
       - HOST
       - ARMv8.1 Compatible CPU
+   *  - ARMV84
+      - HOST
+      - ARMv8.4 Compatible CPU
+   *  - ARMV84_SVE
+      - HOST
+      - Generic ARMv8.4 with SVE support (-march=armv8.4-a+sve)
    *  - ARMV8_THUNDERX
       - HOST
       - ARMv8 Cavium ThunderX CPU
@@ -627,6 +633,9 @@ They must be specified in uppercase.
    *  - RISCV_RVA22V
       - HOST
       - RVA22V (RISC-V) CPUs
+   *  - RISCV_U74MC
+      - HOST
+      - U74MC (RISC-V) CPUs
    *  - KEPLER30
       - GPU
       - NVIDIA Kepler generation CC 3.0
@@ -669,6 +678,9 @@ They must be specified in uppercase.
    *  - AMPERE86
       - GPU
       - NVIDIA Ampere generation CC 8.6
+   *  - AMPERE87
+      - GPU
+      - NVIDIA Ampere generation CC 8.7
    *  - ADA89
       - GPU
       - NVIDIA Ada generation CC 8.9
@@ -733,7 +745,7 @@ They must be specified in uppercase.
       - GPU
       - Intel GPU DG2
 
-This list was last updated for version 4.6.2 of the Kokkos library.
+This list was last updated for version 4.7.0 of the Kokkos library.
 
 .. tabs::
 
