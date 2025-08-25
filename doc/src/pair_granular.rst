@@ -179,7 +179,7 @@ lose contact.
    contact, e.g. *jkr*. Instead, the maximum radius for each particle
    type is first calculated then used to calculate a maximum per-type
    cutoff distance. For polydisperse systems, this affects the performance
-   of the :doc:`multi neighbor <neigh_modify.rst>` option where one should
+   of the :doc:`multi neighbor <neigh_modify>` option where one should
    assign atoms of similar radii the same type. See the
    :doc:`pair lj/cut/sphere <pair_lj_cut_sphere>` page for a related discussion.
 
