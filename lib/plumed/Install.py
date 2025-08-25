@@ -19,7 +19,7 @@ parser = ArgumentParser(prog='Install.py',
 # Note: must also adjust check for supported API versions in
 # fix_plumed.cpp when version changes from v2.n.x to v2.n+1.y
 
-version = "2.9.3"
+version = "2.9.4"
 mode = "static"
 
 # help message
@@ -53,6 +53,7 @@ checksums = { \
         '2.9.1' : 'c3b2d31479c1e9ce211719d40e9efbd7', \
         '2.9.2' : '04862602a372c1013bdfee2d6d03bace', \
         '2.9.3' : 'ee1249805fe94bccee17d10610d3f6f1', \
+        '2.9.4' : 'e540bf5132e3270e843398a6080d00c7', \
         }
 
 # parse and process arguments
