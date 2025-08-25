@@ -6263,7 +6263,7 @@ as a C-style string instead of reading it from a file.
  *
  * \param  handle   pointer to a previously created LAMMPS instance
  * \param  id       molecule-ID
- * \param  json     molecule data in JSON format as C-style string */
+ * \param  jsonstr  molecule data in JSON format as C-style string */
 
 void lammps_create_molecule(void *handle, const char *id, const char *jsonstr)
 {
