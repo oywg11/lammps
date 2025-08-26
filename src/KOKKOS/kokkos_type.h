@@ -190,6 +190,10 @@ using KKScatterView = Kokkos::Experimental::ScatterView<DataType, Layout, Device
 
 // set ExecutionSpace struct with variable "space"
 
+// Warning: the templated version here returns the Kokkos host
+//  "HostKK" space. If the legacy Host space is required instead, do not use
+//  these templates (use "Host" space directly)
+
 template<class Device>
 struct ExecutionSpaceFromDevice;
 
@@ -994,6 +998,12 @@ struct TransformView {
       sync_hostkk(buffer,async_flag);
     }
   }
+
+  // Warning: these templated calls (e.g. t_view.view<DeviceType>()
+  //  and t_view.sync<DeviceType>()) specify Kokkos host "HostKK" views
+  //  (i.e. h_viewkk). Use non-templated calls (e.g. t_view.h_view and
+  //  t_view.sync_host()) to specify legacy "Host" views (h_view)
+  //  instead
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
