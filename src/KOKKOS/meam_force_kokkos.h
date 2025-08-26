@@ -11,7 +11,7 @@ void MEAMKokkos<DeviceType>::meam_force(
     typename AT::t_kkacc_1d eatom, int ntype, typename AT::t_int_1d type,
     typename AT::t_int_1d d_map, typename AT::t_kkfloat_1d_3_lr x, typename AT::t_int_1d numneigh,
     typename AT::t_int_1d numneigh_full, typename AT::t_kkacc_1d_3 f,
-    typename AT::t_kkacc_1d_16 vatom, typename AT::t_int_1d d_ilist_half,
+    typename AT::t_kkacc_1d_6 vatom, typename AT::t_int_1d d_ilist_half,
     typename AT::t_int_1d d_offset, typename AT::t_neighbors_2d d_neighbors_half,
     typename AT::t_neighbors_2d d_neighbors_full, int neighflag, int need_dup, EV_FLOAT &ev_all)
 {
