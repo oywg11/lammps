@@ -126,10 +126,10 @@ class PairVashishtaKokkos : public PairVashishta {
   typename AT::t_tagint_1d tag;
   typename AT::t_int_1d_randomread type;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   typename AT::t_int_1d_randomread d_type2frho;
   typename AT::t_int_2d_dl_randomread d_type2rhor;

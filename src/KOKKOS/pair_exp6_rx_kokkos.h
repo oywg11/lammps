@@ -151,10 +151,10 @@ class PairExp6rxKokkos : public PairExp6rx {
   t_kkfloat_1d_3_thread t_f;
   t_kkfloat_1d_thread t_uCG, t_uCGnew;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   DAT::tdual_int_scalar k_error_flag;
 

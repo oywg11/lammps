@@ -1148,7 +1148,9 @@ KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[3], Kokkos::LayoutRight, kkfloat_1d_3_lr)
 KOKKOS_DEVICE_DUALVIEW(KK_SUM_FLOAT*[3], LMPDeviceLayout, kksum_1d_3)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[4], LMPDeviceLayout, kkfloat_1d_4)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[6], LMPDeviceLayout, kkfloat_1d_6)
+KOKKOS_DEVICE_DUALVIEW(KK_SUM_FLOAT*[6], LMPDeviceLayout, kksum_1d_6)
 
+typedef TransformView<KK_SUM_FLOAT*, double*, LMPDeviceLayout> ttransform_kksum_1d;
 typedef TransformView<int**, int**, LMPDeviceLayout> ttransform_int_2d;
 typedef TransformView<LAMMPS_NS::tagint**, LAMMPS_NS::tagint**, LMPDeviceLayout> ttransform_tagint_2d;
 typedef TransformView<KK_FLOAT**, double**, LMPDeviceLayout> ttransform_kkfloat_2d;
@@ -1159,6 +1161,7 @@ typedef TransformView<KK_FLOAT*[3], double*[3], Kokkos::LayoutRight> ttransform_
 typedef TransformView<KK_SUM_FLOAT*[3], double*[3], LMPDeviceLayout> ttransform_kksum_1d_3;
 typedef TransformView<KK_FLOAT*[4], double*[4], LMPDeviceLayout> ttransform_kkfloat_1d_4;
 typedef TransformView<KK_FLOAT*[6], double*[6], LMPDeviceLayout> ttransform_kkfloat_1d_6;
+typedef TransformView<KK_SUM_FLOAT*[6], double*[6], LMPDeviceLayout> ttransform_kksum_1d_6;
 
 // 3D view types
 
@@ -1239,6 +1242,7 @@ KOKKOS_HOST_DUALVIEW(KK_FLOAT*[3], Kokkos::LayoutRight, kkfloat_1d_3_lr)
 KOKKOS_HOST_DUALVIEW(KK_SUM_FLOAT*[3], LMPDeviceLayout, kksum_1d_3)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[4], LMPDeviceLayout, kkfloat_1d_4)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[6], LMPDeviceLayout, kkfloat_1d_6)
+KOKKOS_HOST_DUALVIEW(KK_SUM_FLOAT*[6], LMPDeviceLayout, kksum_1d_6)
 
 // 3D view types
 

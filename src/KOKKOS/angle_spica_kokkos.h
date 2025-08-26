@@ -77,10 +77,10 @@ class AngleSPICAKokkos : public AngleSPICA {
   typename AT::t_kksum_1d_3 f;
   typename AT::t_int_2d_lr anglelist;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   int nlocal,newton_bond;
   int eflag,vflag;

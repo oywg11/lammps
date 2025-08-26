@@ -60,8 +60,8 @@ class DihedralClass2Kokkos : public DihedralClass2 {
                           const KK_FLOAT &vb2x, const KK_FLOAT &vb2y, const KK_FLOAT &vb2z,
                           const KK_FLOAT &vb3x, const KK_FLOAT &vb3y, const KK_FLOAT &vb3z) const;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
 
  protected:
 
@@ -70,8 +70,8 @@ class DihedralClass2Kokkos : public DihedralClass2 {
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kksum_1d_3 f;
   typename AT::t_int_2d_lr dihedrallist;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   int nlocal,newton_bond;
   int eflag,vflag;

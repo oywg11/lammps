@@ -60,8 +60,8 @@ class AngleClass2Kokkos : public AngleClass2 {
                      const KK_FLOAT &delx1, const KK_FLOAT &dely1, const KK_FLOAT &delz1,
                      const KK_FLOAT &delx2, const KK_FLOAT &dely2, const KK_FLOAT &delz2) const;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
 
  protected:
 
@@ -70,8 +70,8 @@ class AngleClass2Kokkos : public AngleClass2 {
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kksum_1d_3 f;
   typename AT::t_int_2d_lr anglelist;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   int nlocal,newton_bond;
   int eflag,vflag;

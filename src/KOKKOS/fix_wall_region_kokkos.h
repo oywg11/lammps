@@ -53,8 +53,8 @@ class FixWallRegionKokkos : public FixWallRegion {
   typename AT::t_kkfloat_1d d_radius;
   typename AT::t_int_1d d_mask;
 
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   KOKKOS_INLINE_FUNCTION
   KK_FLOAT lj93(KK_FLOAT, KK_FLOAT&) const;

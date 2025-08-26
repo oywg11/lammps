@@ -125,11 +125,11 @@ class FixShakeKokkos : public FixShake, public KokkosBase {
   typename AT::t_int_1d d_type;
   typename AT::t_int_1d d_mask;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  typename AT::t_kkfloat_1d d_eatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  typename AT::t_kksum_1d d_eatom;
 
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   DAT::tdual_kkfloat_1d k_bond_distance; // constraint distances
   typename AT::t_kkfloat_1d d_bond_distance;
@@ -191,12 +191,12 @@ class FixShakeKokkos : public FixShake, public KokkosBase {
   using NonDupScatterView = KKScatterView<DataType, Layout, KKDeviceType, KKScatterSum, KKScatterNonDuplicated>;
 
   DupScatterView<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout> dup_f;
-  DupScatterView<KK_FLOAT*, typename DAT::t_kkfloat_1d::array_layout> dup_eatom;
-  DupScatterView<KK_FLOAT*[6], typename DAT::t_kkfloat_1d_6::array_layout> dup_vatom;
+  DupScatterView<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout> dup_eatom;
+  DupScatterView<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout> dup_vatom;
 
   NonDupScatterView<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout> ndup_f;
-  NonDupScatterView<KK_FLOAT*, typename DAT::t_kkfloat_1d::array_layout> ndup_eatom;
-  NonDupScatterView<KK_FLOAT*[6], typename DAT::t_kkfloat_1d_6::array_layout> ndup_vatom;
+  NonDupScatterView<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout> ndup_eatom;
+  NonDupScatterView<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout> ndup_vatom;
 
   int neighflag,need_dup;
 

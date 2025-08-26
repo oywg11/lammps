@@ -61,8 +61,8 @@ class ImproperHarmonicKokkos : public ImproperHarmonic {
                           const KK_FLOAT &vb3x, const KK_FLOAT &vb3y, const KK_FLOAT &vb3z) const;
 
   typedef typename KKDevice<DeviceType>::value KKDeviceType;
-  TransformView<KK_FLOAT*,double*,Kokkos::LayoutRight,KKDeviceType> k_eatom;
-  TransformView<KK_FLOAT*[6],double*[6],LMPDeviceLayout,KKDeviceType> k_vatom;
+  TransformView<KK_SUM_FLOAT*,double*,Kokkos::LayoutRight,KKDeviceType> k_eatom;
+  TransformView<KK_SUM_FLOAT*[6],double*[6],LMPDeviceLayout,KKDeviceType> k_vatom;
 
  protected:
 
@@ -71,8 +71,8 @@ class ImproperHarmonicKokkos : public ImproperHarmonic {
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename Kokkos::View<KK_SUM_FLOAT*[3],DAT::t_kksum_1d_3::array_layout,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic> > f;
   typename AT::t_int_2d_lr improperlist;
-  Kokkos::View<KK_FLOAT*,Kokkos::LayoutRight,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic> > d_eatom;
-  Kokkos::View<KK_FLOAT*[6],LMPDeviceLayout,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic> > d_vatom;
+  Kokkos::View<KK_SUM_FLOAT*,Kokkos::LayoutRight,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic>> d_eatom;
+  Kokkos::View<KK_SUM_FLOAT*[6],LMPDeviceLayout,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic>> d_vatom;
 
   int nlocal,newton_bond;
   int eflag,vflag;

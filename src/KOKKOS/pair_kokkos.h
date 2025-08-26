@@ -63,8 +63,8 @@ struct PairComputeFunctor  {
   // The copy of the pair style
   PairStyle c;
   typename AT::t_kksum_1d_3 f;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
   int inum;
 
   using KKDeviceType = typename KKDevice<device_type>::value;
@@ -76,13 +76,13 @@ struct PairComputeFunctor  {
   KKScatterView<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout,KKDeviceType,KKScatterSum,DUP> dup_f;
 
   // The eatom and vatom arrays are atomic for Half/Thread neighbor style
-  //Kokkos::View<KK_FLOAT*, typename DAT::t_kkfloat_1d::array_layout,
+  //Kokkos::View<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,
   //             typename KKDevice<device_type>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > eatom;
-  KKScatterView<KK_FLOAT*, typename DAT::t_kkfloat_1d::array_layout,KKDeviceType,KKScatterSum,DUP> dup_eatom;
+  KKScatterView<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,KKDeviceType,KKScatterSum,DUP> dup_eatom;
 
-  //Kokkos::View<KK_FLOAT*[6], typename DAT::t_kkfloat_1d_6::array_layout,
+  //Kokkos::View<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,
   //             typename KKDevice<device_type>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > vatom;
-  KKScatterView<KK_FLOAT*[6], typename DAT::t_kkfloat_1d_6::array_layout,KKDeviceType,KKScatterSum,DUP> dup_vatom;
+  KKScatterView<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,KKDeviceType,KKScatterSum,DUP> dup_vatom;
 
   NeighListKokkos<device_type> list;
 

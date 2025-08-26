@@ -84,10 +84,10 @@ class PairLJCutDipoleCutKokkos : public PairLJCutDipoleCut {
   typename AT::t_kkfloat_1d_4_randomread mu;
   typename AT::t_kkfloat_1d_4 c_mu;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   DAT::ttransform_kkfloat_2d k_cutsq;
   typename AT::t_kkfloat_2d d_cutsq;

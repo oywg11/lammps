@@ -66,13 +66,13 @@ template <class DeviceType> class MEAMKokkos : public MEAM {
   typename AT::t_neighbors_2d d_neighbors_full;
   typename AT::t_int_1d d_ilist_half;
   typename AT::t_kksum_1d_3 f;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   // parameters to meam_dens_final
 
   typename AT::t_int_scalar d_errorflag;
   int eflag_either, eflag_global, eflag_atom, vflag_either, vflag_global, vflag_atom;
-  typename AT::t_kkfloat_1d d_eatom;
+  typename AT::t_kksum_1d d_eatom;
 
  public:
   void meam_dens_setup(int, int, int) override;

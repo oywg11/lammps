@@ -766,8 +766,8 @@ void PairVashishtaKokkos<DeviceType>::ev_tally(EV_FLOAT &ev, const int &i, const
 
   // The eatom and vatom arrays are atomic for half/thread neighbor list
 
-  Kokkos::View<KK_FLOAT*, typename DAT::t_kkfloat_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
-  Kokkos::View<KK_FLOAT*[6], typename DAT::t_kkfloat_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
+  Kokkos::View<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
+  Kokkos::View<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
 
 
   if (eflag_atom) {
@@ -842,8 +842,8 @@ void PairVashishtaKokkos<DeviceType>::ev_tally3(EV_FLOAT &ev, const int &i, cons
 
 // The eatom and vatom arrays are atomic for half/thread neighbor list
 
-  Kokkos::View<KK_FLOAT*, typename DAT::t_kkfloat_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
-  Kokkos::View<KK_FLOAT*[6], typename DAT::t_kkfloat_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
+  Kokkos::View<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
+  Kokkos::View<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
 
   if (eflag_atom) {
     epairthird = THIRD * (evdwl + ecoul);

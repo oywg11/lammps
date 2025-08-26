@@ -75,8 +75,8 @@ class FixEfieldKokkos : public FixEfield {
   Few<double,6> h;
   int triclinic;
 
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   KOKKOS_INLINE_FUNCTION
   void v_tally(value_type, int, KK_FLOAT*) const;

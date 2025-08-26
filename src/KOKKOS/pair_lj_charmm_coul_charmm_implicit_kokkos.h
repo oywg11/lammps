@@ -83,10 +83,10 @@ class PairLJCharmmCoulCharmmImplicitKokkos : public PairLJCharmmCoulCharmmImplic
   typename AT::t_int_1d_randomread type;
   typename AT::t_kkfloat_1d_randomread q;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   int newton_pair;
 

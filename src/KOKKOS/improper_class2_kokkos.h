@@ -71,8 +71,8 @@ class ImproperClass2Kokkos : public ImproperClass2 {
                           const KK_FLOAT &vb2x, const KK_FLOAT &vb2y, const KK_FLOAT &vb2z,
                           const KK_FLOAT &vb3x, const KK_FLOAT &vb3y, const KK_FLOAT &vb3z) const;
 
-  DAT::ttransform_kkfloat_1d k_eatom;
-  DAT::ttransform_kkfloat_1d_6 k_vatom;
+  DAT::ttransform_kksum_1d k_eatom;
+  DAT::ttransform_kksum_1d_6 k_vatom;
 
  protected:
 
@@ -81,8 +81,8 @@ class ImproperClass2Kokkos : public ImproperClass2 {
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename Kokkos::View<KK_SUM_FLOAT*[3],DAT::t_kksum_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic> > f;
   typename AT::t_int_2d_lr improperlist;
-  typename AT::t_kkfloat_1d d_eatom;
-  typename AT::t_kkfloat_1d_6 d_vatom;
+  typename AT::t_kksum_1d d_eatom;
+  typename AT::t_kksum_1d_6 d_vatom;
 
   int nlocal,newton_bond;
   int eflag,vflag;
