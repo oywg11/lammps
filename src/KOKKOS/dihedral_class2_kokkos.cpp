@@ -199,7 +199,7 @@ KOKKOS_INLINE_FUNCTION
 void DihedralClass2Kokkos<DeviceType>::operator()(TagDihedralClass2Compute<NEWTON_BOND,EVFLAG>, const int &n, EV_FLOAT& ev) const {
 
   // The f array is atomic
-  Kokkos::View<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > a_f = f;
+  Kokkos::View<KK_ACC_FLOAT*[3], typename DAT::t_kkacc_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > a_f = f;
 
   const int i1 = dihedrallist(n,0);
   const int i2 = dihedrallist(n,1);
@@ -1019,8 +1019,8 @@ void DihedralClass2Kokkos<DeviceType>::ev_tally(EV_FLOAT &ev, const int i1, cons
   KK_FLOAT v[6];
 
   // The eatom and vatom arrays are atomic
-  Kokkos::View<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > v_eatom = d_eatom;
-  Kokkos::View<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > v_vatom = d_vatom;
+  Kokkos::View<KK_ACC_FLOAT*, typename DAT::t_kkacc_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > v_eatom = d_eatom;
+  Kokkos::View<KK_ACC_FLOAT*[6], typename DAT::t_kkacc_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > v_vatom = d_vatom;
 
   if (eflag_either) {
     if (eflag_global) {

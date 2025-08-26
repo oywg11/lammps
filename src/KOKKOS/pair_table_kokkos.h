@@ -105,13 +105,13 @@ class PairTableKokkos : public PairTable {
 
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kkfloat_1d_3_lr_const c_x;
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
   typename AT::t_int_1d_randomread type;
 
-  DAT::ttransform_kksum_1d k_eatom;
-  DAT::ttransform_kksum_1d_6 k_vatom;
-  typename AT::t_kksum_1d d_eatom;
-  typename AT::t_kksum_1d_6 d_vatom;
+  DAT::ttransform_kkacc_1d k_eatom;
+  DAT::ttransform_kkacc_1d_6 k_vatom;
+  typename AT::t_kkacc_1d d_eatom;
+  typename AT::t_kkacc_1d_6 d_vatom;
 
  protected:
   int nlocal,nall,eflag,vflag,neighflag,newton_pair;

@@ -78,13 +78,13 @@ class PairLJSPICAKokkos : public PairLJSPICA {
   KK_FLOAT m_cutsq[MAX_TYPES_STACKPARAMS+1][MAX_TYPES_STACKPARAMS+1];
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kkfloat_1d_3_lr c_x;
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
   typename AT::t_int_1d_randomread type;
 
-  DAT::ttransform_kksum_1d k_eatom;
-  DAT::ttransform_kksum_1d_6 k_vatom;
-  typename AT::t_kksum_1d d_eatom;
-  typename AT::t_kksum_1d_6 d_vatom;
+  DAT::ttransform_kkacc_1d k_eatom;
+  DAT::ttransform_kkacc_1d_6 k_vatom;
+  typename AT::t_kkacc_1d d_eatom;
+  typename AT::t_kkacc_1d_6 d_vatom;
 
   int newton_pair;
   KK_FLOAT special_lj[4];

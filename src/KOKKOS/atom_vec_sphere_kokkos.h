@@ -86,7 +86,7 @@ class AtomVecSphereKokkos : public AtomVecKokkos, public AtomVecSphere {
 
   DAT::t_kkfloat_1d_3_lr d_x;
   DAT::t_kkfloat_1d_3 d_v;
-  DAT::t_kksum_1d_3 d_f;
+  DAT::t_kkacc_1d_3 d_f;
   DAT::t_kkfloat_1d d_radius;
   HAT::t_kkfloat_1d h_radius;
   DAT::t_kkfloat_1d d_rmass;

@@ -59,7 +59,7 @@ class FixFreezeKokkos : public FixFreeze {
   void operator()(const int i, OriginalForce &original) const;
 
  private:
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
   typename AT::t_kkfloat_1d_3 torque;
   typename AT::t_int_1d mask;
 };

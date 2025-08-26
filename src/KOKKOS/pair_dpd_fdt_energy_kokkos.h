@@ -130,7 +130,7 @@ class PairDPDfdtEnergyKokkos : public PairDPDfdtEnergy {
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kkfloat_1d_3_lr c_x;
   typename AT::t_kkfloat_1d_3_randomread v;
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
   typename AT::t_int_1d_randomread type;
   typename AT::t_kkfloat_1d_randomread mass;
   typename AT::t_kkfloat_1d rmass;
@@ -138,10 +138,10 @@ class PairDPDfdtEnergyKokkos : public PairDPDfdtEnergy {
   typename AT::t_kkfloat_1d d_duCond,d_duMech;
   HAT::t_double_1d h_duCond,h_duMech;
 
-  DAT::ttransform_kksum_1d k_eatom;
-  DAT::ttransform_kksum_1d_6 k_vatom;
-  typename AT::t_kksum_1d d_eatom;
-  typename AT::t_kksum_1d_6 d_vatom;
+  DAT::ttransform_kkacc_1d k_eatom;
+  DAT::ttransform_kkacc_1d_6 k_vatom;
+  typename AT::t_kkacc_1d d_eatom;
+  typename AT::t_kkacc_1d_6 d_vatom;
 
   typename AT::t_neighbors_2d d_neighbors;
   typename AT::t_int_1d_randomread d_ilist;

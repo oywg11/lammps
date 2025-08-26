@@ -48,7 +48,7 @@ class FixEnforce2DKokkos : public FixEnforce2D {
 
  private:
   typename AT::t_kkfloat_1d_3 v;
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
 
   typename AT::t_kkfloat_1d_3 omega;
   typename AT::t_kkfloat_1d_3 angmom;

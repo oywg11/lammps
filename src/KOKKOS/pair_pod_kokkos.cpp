@@ -1823,7 +1823,7 @@ void PairPODKokkos<DeviceType>::savedatafordebugging()
   savematrix2binfile("podkkabfy.bin", abfy, kmax, nij);
   savematrix2binfile("podkkabfz.bin", abfz, kmax, nij);
   savematrix2binfile("podkkbd.bin", bd, ni, Mdesc);
-  savematrix2binfile("podkksumU.bin", sumU, nelements * K3 * nrbfmax, ni);
+  savematrix2binfile("podkkaccU.bin", sumU, nelements * K3 * nrbfmax, ni);
   savematrix2binfile("podkkrij.bin", rij, 3, nij);
   savematrix2binfile("podkkfij.bin", fij, 3, nij);
   savematrix2binfile("podkkei.bin", ei, ni, 1);

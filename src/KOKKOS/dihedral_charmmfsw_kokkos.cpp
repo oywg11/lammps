@@ -97,7 +97,7 @@ void DihedralCharmmfswKokkos<DeviceType>::compute(int eflag_in, int vflag_in)
       memoryKK->destroy_kokkos(k_eatom,eatom);
       memoryKK->create_kokkos(k_eatom,eatom,maxeatom,"dihedral:eatom");
       d_eatom = k_eatom.template view<DeviceType>();
-      k_eatom_pair = TransformView<KK_SUM_FLOAT*,double*,Kokkos::LayoutRight,KKDeviceType>("dihedral:eatom_pair",maxeatom);
+      k_eatom_pair = TransformView<KK_ACC_FLOAT*,double*,Kokkos::LayoutRight,KKDeviceType>("dihedral:eatom_pair",maxeatom);
       d_eatom_pair = k_eatom_pair.template view<DeviceType>();
     //}
   }
@@ -106,7 +106,7 @@ void DihedralCharmmfswKokkos<DeviceType>::compute(int eflag_in, int vflag_in)
       memoryKK->destroy_kokkos(k_vatom,vatom);
       memoryKK->create_kokkos(k_vatom,vatom,maxvatom,"dihedral:vatom");
       d_vatom = k_vatom.template view<DeviceType>();
-      k_vatom_pair = TransformView<KK_SUM_FLOAT*[6],double*[6],LMPDeviceLayout,KKDeviceType>("dihedral:vatom_pair",maxvatom);
+      k_vatom_pair = TransformView<KK_ACC_FLOAT*[6],double*[6],LMPDeviceLayout,KKDeviceType>("dihedral:vatom_pair",maxvatom);
       d_vatom_pair = k_vatom_pair.template view<DeviceType>();
     //}
   }
@@ -215,7 +215,7 @@ KOKKOS_INLINE_FUNCTION
 void DihedralCharmmfswKokkos<DeviceType>::operator()(TagDihedralCharmmfswCompute<NEWTON_BOND,EVFLAG>, const int &n, EVM_FLOAT& evm) const {
 
   // The f array is atomic
-  Kokkos::View<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > a_f = f;
+  Kokkos::View<KK_ACC_FLOAT*[3], typename DAT::t_kkacc_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic|Kokkos::Unmanaged> > a_f = f;
 
   const int i1 = dihedrallist(n,0);
   const int i2 = dihedrallist(n,1);

@@ -120,7 +120,7 @@ class AtomVecKokkos : virtual public AtomVec {
  protected:
   HAT::t_kkfloat_1d_3_lr h_x;
   HAT::t_kkfloat_1d_3 h_v;
-  HAT::t_kksum_1d_3 h_f;
+  HAT::t_kkacc_1d_3 h_f;
 
   size_t buffer_size;
   void* buffer;

@@ -715,12 +715,12 @@ struct AtomVecKokkos_PackReverse {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename AT::t_kksum_1d_3_randomread _f;
+  typename AT::t_kkacc_1d_3_randomread _f;
   typename AT::t_double_2d_lr _buf;
   int _first;
 
   AtomVecKokkos_PackReverse(
-      const typename DAT::ttransform_kksum_1d_3 &f,
+      const typename DAT::ttransform_kkacc_1d_3 &f,
       const typename DAT::tdual_double_2d_lr &buf,
       const int& first):_f(f.view<DeviceType>()),
                         _first(first) {
@@ -761,13 +761,13 @@ struct AtomVecKokkos_UnPackReverseSelf {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename AT::t_kksum_1d_3_randomread _f;
-  typename AT::t_kksum_1d_3 _fw;
+  typename AT::t_kkacc_1d_3_randomread _f;
+  typename AT::t_kkacc_1d_3 _fw;
   int _nfirst;
   typename AT::t_int_1d_const _list;
 
   AtomVecKokkos_UnPackReverseSelf(
-      const typename DAT::ttransform_kksum_1d_3 &f,
+      const typename DAT::ttransform_kkacc_1d_3 &f,
       const int &nfirst,
       const typename DAT::tdual_int_1d &list):
       _f(f.view<DeviceType>()),_fw(f.view<DeviceType>()),_nfirst(nfirst),_list(list.view<DeviceType>()) {
@@ -808,12 +808,12 @@ struct AtomVecKokkos_UnPackReverse {
   typedef DeviceType device_type;
   typedef ArrayTypes<DeviceType> AT;
 
-  typename AT::t_kksum_1d_3 _f;
+  typename AT::t_kkacc_1d_3 _f;
   typename AT::t_double_2d_lr_const _buf;
   typename AT::t_int_1d_const _list;
 
   AtomVecKokkos_UnPackReverse(
-      const typename DAT::ttransform_kksum_1d_3 &f,
+      const typename DAT::ttransform_kkacc_1d_3 &f,
       const typename DAT::tdual_double_2d_lr &buf,
       const typename DAT::tdual_int_1d &list):
       _f(f.view<DeviceType>()),_list(list.view<DeviceType>()) {

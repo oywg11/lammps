@@ -271,7 +271,7 @@ KOKKOS_INLINE_FUNCTION
 void PairBrownianKokkos<DeviceType>::operator()(TagPairBrownianCompute<NEIGHFLAG,NEWTON_PAIR,VFLAG,FLAGFLD>, const int ii, EV_FLOAT &ev) const {
 
   // The f and torque arrays are atomic for Half/Thread neighbor style
-  Kokkos::View<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > a_f = f;
+  Kokkos::View<KK_ACC_FLOAT*[3], typename DAT::t_kkacc_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > a_f = f;
   Kokkos::View<KK_FLOAT*[3], typename DAT::t_kkfloat_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > a_torque = torque;
 
   rand_type rand_gen = rand_pool.get_state();
@@ -287,13 +287,13 @@ void PairBrownianKokkos<DeviceType>::operator()(TagPairBrownianCompute<NEIGHFLAG
   KK_FLOAT a_sq, a_sh, a_pu;
   KK_FLOAT xl[3], p1[3], p2[3], p3[3];
 
-  KK_SUM_FLOAT fx_i = 0.0;
-  KK_SUM_FLOAT fy_i = 0.0;
-  KK_SUM_FLOAT fz_i = 0.0;
+  KK_ACC_FLOAT fx_i = 0.0;
+  KK_ACC_FLOAT fy_i = 0.0;
+  KK_ACC_FLOAT fz_i = 0.0;
 
-  KK_SUM_FLOAT torquex_i = 0.0;
-  KK_SUM_FLOAT torquey_i = 0.0;
-  KK_SUM_FLOAT torquez_i = 0.0;
+  KK_ACC_FLOAT torquex_i = 0.0;
+  KK_ACC_FLOAT torquey_i = 0.0;
+  KK_ACC_FLOAT torquez_i = 0.0;
 
   if (FLAGFLD) {
     fx_i = prethermostat * sqrt(R0) * (rand_gen.drand() - 0.5);
@@ -497,7 +497,7 @@ void PairBrownianKokkos<DeviceType>::ev_tally_xyz(EV_FLOAT & ev, int i, int j,
                                                         KK_FLOAT fx, KK_FLOAT fy, KK_FLOAT fz,
                                                         KK_FLOAT delx, KK_FLOAT dely, KK_FLOAT delz) const
 {
-  Kokkos::View<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
+  Kokkos::View<KK_ACC_FLOAT*[6], typename DAT::t_kkacc_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
 
   const KK_FLOAT v0 = delx*fx;
   const KK_FLOAT v1 = dely*fy;

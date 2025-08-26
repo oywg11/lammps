@@ -64,14 +64,14 @@ class BondHarmonicKokkos : public BondHarmonic {
   class NeighborKokkos *neighborKK;
 
   typename AT::t_kkfloat_1d_3_lr_randomread x;
-  typename Kokkos::View<KK_SUM_FLOAT*[3],DAT::t_kksum_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic> > f;
+  typename Kokkos::View<KK_ACC_FLOAT*[3],DAT::t_kkacc_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<Kokkos::Atomic> > f;
   typename AT::t_int_2d_lr bondlist;
 
   typedef typename KKDevice<DeviceType>::value KKDeviceType;
-  TransformView<KK_SUM_FLOAT*,double*,Kokkos::LayoutRight,KKDeviceType> k_eatom;
-  TransformView<KK_SUM_FLOAT*[6],double*[6],LMPDeviceLayout,KKDeviceType> k_vatom;
-  Kokkos::View<KK_SUM_FLOAT*,Kokkos::LayoutRight,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic>> d_eatom;
-  Kokkos::View<KK_SUM_FLOAT*[6],LMPDeviceLayout,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic>> d_vatom;
+  TransformView<KK_ACC_FLOAT*,double*,Kokkos::LayoutRight,KKDeviceType> k_eatom;
+  TransformView<KK_ACC_FLOAT*[6],double*[6],LMPDeviceLayout,KKDeviceType> k_vatom;
+  Kokkos::View<KK_ACC_FLOAT*,Kokkos::LayoutRight,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic>> d_eatom;
+  Kokkos::View<KK_ACC_FLOAT*[6],LMPDeviceLayout,KKDeviceType,Kokkos::MemoryTraits<Kokkos::Atomic>> d_vatom;
 
   int nlocal,newton_bond;
   int eflag,vflag;

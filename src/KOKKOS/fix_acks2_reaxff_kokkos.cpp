@@ -1511,16 +1511,16 @@ void FixACKS2ReaxFFKokkos<DeviceType>::operator() (TagACKS2SparseMatvec3_Full, c
 {
   int i = d_ilist[team.league_rank()];
   if (mask[i] & groupbit) {
-    KK_SUM_FLOAT sum;
-    KK_SUM_FLOAT sum2;
+    KK_ACC_FLOAT sum;
+    KK_ACC_FLOAT sum2;
 
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, d_firstnbr[i], d_firstnbr[i] + d_numnbrs[i]), [&] (const bigint &jj, KK_SUM_FLOAT &sum) {
+    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, d_firstnbr[i], d_firstnbr[i] + d_numnbrs[i]), [&] (const bigint &jj, KK_ACC_FLOAT &sum) {
       const int j = d_jlist(jj);
       sum += d_val(jj) * d_xx[j];
     }, sum);
     team.team_barrier();
 
-    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, d_firstnbr_X[i], d_firstnbr_X[i] + d_numnbrs_X[i]), [&] (const bigint &jj, KK_SUM_FLOAT &sum2) {
+    Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team, d_firstnbr_X[i], d_firstnbr_X[i] + d_numnbrs_X[i]), [&] (const bigint &jj, KK_ACC_FLOAT &sum2) {
       const int j = d_jlist_X(jj);
       sum2 += d_val_X(jj) * d_xx[NN + j];
     }, sum2);

@@ -74,10 +74,10 @@ class AtomVecHybridKokkos : public AtomVecKokkos, public AtomVecHybrid {
 
   DAT::t_kkfloat_1d_3_lr d_x;
   DAT::t_kkfloat_1d_3 d_v;
-  DAT::t_kksum_1d_3 d_f;
+  DAT::t_kkacc_1d_3 d_f;
   HAT::t_kkfloat_1d_3_lr h_x;
   HAT::t_kkfloat_1d_3 h_v;
-  HAT::t_kksum_1d_3 h_f;
+  HAT::t_kkacc_1d_3 h_f;
 
   DAT::t_kkfloat_1d_3 d_omega, d_angmom;
   HAT::t_kkfloat_1d_3 h_omega, h_angmom;

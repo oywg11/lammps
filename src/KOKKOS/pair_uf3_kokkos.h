@@ -132,22 +132,22 @@ template <class DeviceType> class PairUF3Kokkos : public PairUF3 {
 
   template <int NEIGHFLAG>
   KOKKOS_INLINE_FUNCTION void ev_tally3(EV_FLOAT &ev, const int &i, const int &j, int &k,
-                                        const KK_FLOAT &evdwl, const KK_FLOAT &ecoul, KK_SUM_FLOAT *fj,
-                                        KK_SUM_FLOAT *fk, KK_FLOAT *drji, KK_FLOAT *drki) const;
+                                        const KK_FLOAT &evdwl, const KK_FLOAT &ecoul, KK_ACC_FLOAT *fj,
+                                        KK_ACC_FLOAT *fk, KK_FLOAT *drji, KK_FLOAT *drki) const;
 
   typename AT::t_kkfloat_1d_3_lr_randomread x;
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
   typename AT::t_tagint_1d tag;
   typename AT::t_int_1d_randomread type;
 
-  DAT::ttransform_kksum_1d k_eatom;
-  DAT::ttransform_kksum_1d_6 k_vatom;
-  typename AT::t_kksum_1d d_eatom;
-  typename AT::t_kksum_1d_6 d_vatom;
+  DAT::ttransform_kkacc_1d k_eatom;
+  DAT::ttransform_kkacc_1d_6 k_vatom;
+  typename AT::t_kkacc_1d d_eatom;
+  typename AT::t_kkacc_1d_6 d_vatom;
 
   using KKDeviceType = typename KKDevice<DeviceType>::value;
 
-  using ScatterFType = Kokkos::Experimental::ScatterView<KK_SUM_FLOAT *[3], DAT::t_kksum_1d_3::array_layout,
+  using ScatterFType = Kokkos::Experimental::ScatterView<KK_ACC_FLOAT *[3], DAT::t_kkacc_1d_3::array_layout,
                                                          KKDeviceType>;
   ScatterFType fscatter;
   using ScatterVType = Kokkos::Experimental::ScatterView<KK_FLOAT *[6], LMPDeviceLayout,

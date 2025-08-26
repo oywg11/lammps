@@ -377,19 +377,19 @@ public:
 
 #if defined (LMP_KOKKOS_SINGLE_SINGLE) // single
 typedef float KK_FLOAT;
-typedef float KK_SUM_FLOAT;
+typedef float KK_ACC_FLOAT;
 #elif defined (LMP_KOKKOS_DOUBLE_DOUBLE)  // double
 typedef double KK_FLOAT;
-typedef double KK_SUM_FLOAT;
+typedef double KK_ACC_FLOAT;
 #elif defined (LMP_KOKKOS_SINGLE_DOUBLE) // mixed
 typedef float KK_FLOAT;
-typedef double KK_SUM_FLOAT;
+typedef double KK_ACC_FLOAT;
 #endif
 
 struct s_EV_FLOAT {
-  KK_SUM_FLOAT evdwl;
-  KK_SUM_FLOAT ecoul;
-  KK_SUM_FLOAT v[6];
+  KK_ACC_FLOAT evdwl;
+  KK_ACC_FLOAT ecoul;
+  KK_ACC_FLOAT v[6];
   KOKKOS_INLINE_FUNCTION
   s_EV_FLOAT() {
     evdwl = 0;
@@ -409,10 +409,10 @@ struct s_EV_FLOAT {
 typedef struct s_EV_FLOAT EV_FLOAT;
 
 struct s_EV_FLOAT_REAX {
-  KK_SUM_FLOAT evdwl;
-  KK_SUM_FLOAT ecoul;
-  KK_SUM_FLOAT v[6];
-  KK_SUM_FLOAT ereax[9];
+  KK_ACC_FLOAT evdwl;
+  KK_ACC_FLOAT ecoul;
+  KK_ACC_FLOAT v[6];
+  KK_ACC_FLOAT ereax[9];
   KOKKOS_INLINE_FUNCTION
   s_EV_FLOAT_REAX() {
     evdwl = 0;
@@ -436,10 +436,10 @@ struct s_EV_FLOAT_REAX {
 typedef struct s_EV_FLOAT_REAX EV_FLOAT_REAX;
 
 struct s_FEV_FLOAT {
-  KK_SUM_FLOAT f[3];
-  KK_SUM_FLOAT evdwl;
-  KK_SUM_FLOAT ecoul;
-  KK_SUM_FLOAT v[6];
+  KK_ACC_FLOAT f[3];
+  KK_ACC_FLOAT evdwl;
+  KK_ACC_FLOAT ecoul;
+  KK_ACC_FLOAT v[6];
   KOKKOS_INLINE_FUNCTION
   s_FEV_FLOAT() {
     evdwl = 0;
@@ -1122,7 +1122,7 @@ KOKKOS_DEVICE_DUALVIEW(tagint*, Kokkos::LayoutRight, tagint_1d)
 KOKKOS_DEVICE_DUALVIEW(imageint*, Kokkos::LayoutRight, imageint_1d)
 KOKKOS_DEVICE_DUALVIEW(double*, Kokkos::LayoutRight, double_1d)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*, Kokkos::LayoutRight, kkfloat_1d)
-KOKKOS_DEVICE_DUALVIEW(KK_SUM_FLOAT*, Kokkos::LayoutRight, kksum_1d)
+KOKKOS_DEVICE_DUALVIEW(KK_ACC_FLOAT*, Kokkos::LayoutRight, kkacc_1d)
 
 typedef TransformView<KK_FLOAT*, double*, Kokkos::LayoutRight> ttransform_kkfloat_1d;
 
@@ -1145,12 +1145,12 @@ KOKKOS_DEVICE_DUALVIEW(KK_FLOAT**, LMPDeviceType::array_layout, kkfloat_2d_dl)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[2], LMPDeviceLayout, kkfloat_1d_2)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[3], LMPDeviceLayout, kkfloat_1d_3)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[3], Kokkos::LayoutRight, kkfloat_1d_3_lr)
-KOKKOS_DEVICE_DUALVIEW(KK_SUM_FLOAT*[3], LMPDeviceLayout, kksum_1d_3)
+KOKKOS_DEVICE_DUALVIEW(KK_ACC_FLOAT*[3], LMPDeviceLayout, kkacc_1d_3)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[4], LMPDeviceLayout, kkfloat_1d_4)
 KOKKOS_DEVICE_DUALVIEW(KK_FLOAT*[6], LMPDeviceLayout, kkfloat_1d_6)
-KOKKOS_DEVICE_DUALVIEW(KK_SUM_FLOAT*[6], LMPDeviceLayout, kksum_1d_6)
+KOKKOS_DEVICE_DUALVIEW(KK_ACC_FLOAT*[6], LMPDeviceLayout, kkacc_1d_6)
 
-typedef TransformView<KK_SUM_FLOAT*, double*, LMPDeviceLayout> ttransform_kksum_1d;
+typedef TransformView<KK_ACC_FLOAT*, double*, LMPDeviceLayout> ttransform_kkacc_1d;
 typedef TransformView<int**, int**, LMPDeviceLayout> ttransform_int_2d;
 typedef TransformView<LAMMPS_NS::tagint**, LAMMPS_NS::tagint**, LMPDeviceLayout> ttransform_tagint_2d;
 typedef TransformView<KK_FLOAT**, double**, LMPDeviceLayout> ttransform_kkfloat_2d;
@@ -1158,10 +1158,10 @@ typedef TransformView<KK_FLOAT**, double**, Kokkos::LayoutRight> ttransform_kkfl
 typedef TransformView<KK_FLOAT*[2], double*[2], LMPDeviceLayout> ttransform_kkfloat_1d_2;
 typedef TransformView<KK_FLOAT*[3], double*[3], LMPDeviceLayout> ttransform_kkfloat_1d_3;
 typedef TransformView<KK_FLOAT*[3], double*[3], Kokkos::LayoutRight> ttransform_kkfloat_1d_3_lr;
-typedef TransformView<KK_SUM_FLOAT*[3], double*[3], LMPDeviceLayout> ttransform_kksum_1d_3;
+typedef TransformView<KK_ACC_FLOAT*[3], double*[3], LMPDeviceLayout> ttransform_kkacc_1d_3;
 typedef TransformView<KK_FLOAT*[4], double*[4], LMPDeviceLayout> ttransform_kkfloat_1d_4;
 typedef TransformView<KK_FLOAT*[6], double*[6], LMPDeviceLayout> ttransform_kkfloat_1d_6;
-typedef TransformView<KK_SUM_FLOAT*[6], double*[6], LMPDeviceLayout> ttransform_kksum_1d_6;
+typedef TransformView<KK_ACC_FLOAT*[6], double*[6], LMPDeviceLayout> ttransform_kkacc_1d_6;
 
 // 3D view types
 
@@ -1218,7 +1218,7 @@ KOKKOS_HOST_DUALVIEW(tagint*, Kokkos::LayoutRight, tagint_1d)
 KOKKOS_HOST_DUALVIEW(imageint*, Kokkos::LayoutRight, imageint_1d)
 KOKKOS_HOST_DUALVIEW(double*, Kokkos::LayoutRight, double_1d)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*, Kokkos::LayoutRight, kkfloat_1d)
-KOKKOS_HOST_DUALVIEW(KK_SUM_FLOAT*, Kokkos::LayoutRight, kksum_1d)
+KOKKOS_HOST_DUALVIEW(KK_ACC_FLOAT*, Kokkos::LayoutRight, kkacc_1d)
 
 // 2D view types
 
@@ -1239,10 +1239,10 @@ KOKKOS_HOST_DUALVIEW(KK_FLOAT**, LMPDeviceType::array_layout, kkfloat_2d_dl)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[2], LMPDeviceLayout, kkfloat_1d_2)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[3], LMPDeviceLayout, kkfloat_1d_3)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[3], Kokkos::LayoutRight, kkfloat_1d_3_lr)
-KOKKOS_HOST_DUALVIEW(KK_SUM_FLOAT*[3], LMPDeviceLayout, kksum_1d_3)
+KOKKOS_HOST_DUALVIEW(KK_ACC_FLOAT*[3], LMPDeviceLayout, kkacc_1d_3)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[4], LMPDeviceLayout, kkfloat_1d_4)
 KOKKOS_HOST_DUALVIEW(KK_FLOAT*[6], LMPDeviceLayout, kkfloat_1d_6)
-KOKKOS_HOST_DUALVIEW(KK_SUM_FLOAT*[6], LMPDeviceLayout, kksum_1d_6)
+KOKKOS_HOST_DUALVIEW(KK_ACC_FLOAT*[6], LMPDeviceLayout, kkacc_1d_6)
 
 // 3D view types
 

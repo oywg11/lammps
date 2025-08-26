@@ -69,7 +69,7 @@ class AtomVecBondKokkos : public AtomVecKokkos, public AtomVecBond {
 
   DAT::t_kkfloat_1d_3_lr d_x;
   DAT::t_kkfloat_1d_3 d_v;
-  DAT::t_kksum_1d_3 d_f;
+  DAT::t_kkacc_1d_3 d_f;
 
   DAT::t_tagint_1d d_molecule;
   DAT::t_int_2d d_nspecial;

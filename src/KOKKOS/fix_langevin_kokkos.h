@@ -124,7 +124,7 @@ namespace LAMMPS_NS {
     HAT::t_double_1d h_tforce;
 
     typename AT::t_kkfloat_1d_3 v;
-    typename AT::t_kksum_1d_3 f;
+    typename AT::t_kkacc_1d_3 f;
     typename AT::t_int_1d type;
     typename AT::t_int_1d mask;
 

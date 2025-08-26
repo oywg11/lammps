@@ -216,8 +216,8 @@ KOKKOS_INLINE_FUNCTION
 void PairCoulWolfKokkos<DeviceType>::operator()(TagPairCoulWolfKernelA<NEIGHFLAG,NEWTON_PAIR,EVFLAG>, const int &ii, EV_FLOAT& ev) const {
 
   // The f array is atomic for Half/Thread neighbor style
-  Kokkos::View<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > a_f = f;
-  Kokkos::View<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
+  Kokkos::View<KK_ACC_FLOAT*[3], typename DAT::t_kkacc_1d_3::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > a_f = f;
+  Kokkos::View<KK_ACC_FLOAT*, typename DAT::t_kkacc_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
 
   const int i = d_ilist[ii];
   const KK_FLOAT xtmp = x(i,0);
@@ -237,9 +237,9 @@ void PairCoulWolfKokkos<DeviceType>::operator()(TagPairCoulWolfKernelA<NEIGHFLAG
   //const AtomNeighborsConst d_neighbors_i = k_list.get_neighbors_const(i);
   const int jnum = d_numneigh[i];
 
-  KK_SUM_FLOAT fxtmp = 0.0;
-  KK_SUM_FLOAT fytmp = 0.0;
-  KK_SUM_FLOAT fztmp = 0.0;
+  KK_ACC_FLOAT fxtmp = 0.0;
+  KK_ACC_FLOAT fytmp = 0.0;
+  KK_ACC_FLOAT fztmp = 0.0;
 
   for (int jj = 0; jj < jnum; jj++) {
     //int j = d_neighbors_i(jj);
@@ -313,8 +313,8 @@ void PairCoulWolfKokkos<DeviceType>::ev_tally(EV_FLOAT &ev, const int &i, const 
   const int VFLAG = vflag_either;
 
   // The eatom and vatom arrays are atomic for Half/Thread neighbor style
-  Kokkos::View<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
-  Kokkos::View<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
+  Kokkos::View<KK_ACC_FLOAT*, typename DAT::t_kkacc_1d::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_eatom = d_eatom;
+  Kokkos::View<KK_ACC_FLOAT*[6], typename DAT::t_kkacc_1d_6::array_layout,typename KKDevice<DeviceType>::value,Kokkos::MemoryTraits<AtomicF<NEIGHFLAG>::value> > v_vatom = d_vatom;
 
   if (EFLAG) {
     if (eflag_atom) {

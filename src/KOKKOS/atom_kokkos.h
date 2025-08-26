@@ -33,7 +33,7 @@ class AtomKokkos : public Atom {
   DAT::tdual_imageint_1d k_image;
   DAT::ttransform_kkfloat_1d_3_lr k_x;
   DAT::ttransform_kkfloat_1d_3 k_v;
-  DAT::ttransform_kksum_1d_3 k_f;
+  DAT::ttransform_kkacc_1d_3 k_f;
 
   DAT::ttransform_kkfloat_1d k_mass;
 
@@ -65,8 +65,8 @@ class AtomKokkos : public Atom {
   // SPIN package
 
   DAT::ttransform_kkfloat_1d_4 k_sp;
-  DAT::ttransform_kksum_1d_3 k_fm;
-  DAT::ttransform_kksum_1d_3 k_fm_long;
+  DAT::ttransform_kkacc_1d_3 k_fm;
+  DAT::ttransform_kkacc_1d_3 k_fm_long;
 
   // DPD-REACT package
 

@@ -69,12 +69,12 @@ class PairSWKokkos : public PairSW {
   KOKKOS_INLINE_FUNCTION
   void ev_tally3(EV_FLOAT &ev, const int &i, const int &j, int &k,
             const KK_FLOAT &evdwl, const KK_FLOAT &ecoul,
-                       KK_SUM_FLOAT *fj, KK_SUM_FLOAT *fk, KK_FLOAT *drji, KK_FLOAT *drki) const;
+                       KK_ACC_FLOAT *fj, KK_ACC_FLOAT *fk, KK_FLOAT *drji, KK_FLOAT *drki) const;
 
   KOKKOS_INLINE_FUNCTION
   void ev_tally3_atom(EV_FLOAT &ev, const int &i,
             const KK_FLOAT &evdwl, const KK_FLOAT &ecoul,
-                       KK_SUM_FLOAT *fj, KK_SUM_FLOAT *fk, KK_FLOAT *drji, KK_FLOAT *drki) const;
+                       KK_ACC_FLOAT *fj, KK_ACC_FLOAT *fk, KK_FLOAT *drji, KK_FLOAT *drki) const;
 
  protected:
   typename AT::t_int_3d_randomread d_elem3param;
@@ -93,17 +93,17 @@ class PairSWKokkos : public PairSW {
 
   KOKKOS_INLINE_FUNCTION
   void threebody_kk(const Param&, const Param&, const Param&, const KK_FLOAT&, const KK_FLOAT&, KK_FLOAT *, KK_FLOAT *,
-                    KK_SUM_FLOAT *, KK_SUM_FLOAT *, const int&, KK_FLOAT&) const;
+                    KK_ACC_FLOAT *, KK_ACC_FLOAT *, const int&, KK_FLOAT&) const;
 
   typename AT::t_kkfloat_1d_3_lr_randomread x;
-  typename AT::t_kksum_1d_3 f;
+  typename AT::t_kkacc_1d_3 f;
   typename AT::t_tagint_1d tag;
   typename AT::t_int_1d_randomread type;
 
-  DAT::ttransform_kksum_1d k_eatom;
-  DAT::ttransform_kksum_1d_6 k_vatom;
-  typename AT::t_kksum_1d d_eatom;
-  typename AT::t_kksum_1d_6 d_vatom;
+  DAT::ttransform_kkacc_1d k_eatom;
+  DAT::ttransform_kkacc_1d_6 k_vatom;
+  typename AT::t_kkacc_1d d_eatom;
+  typename AT::t_kkacc_1d_6 d_vatom;
 
   int need_dup;
 
@@ -115,13 +115,13 @@ class PairSWKokkos : public PairSW {
   template<typename DataType, typename Layout>
   using NonDupScatterView = KKScatterView<DataType, Layout, KKDeviceType, KKScatterSum, KKScatterNonDuplicated>;
 
-  DupScatterView<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout> dup_f;
-  DupScatterView<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout> dup_eatom;
-  DupScatterView<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout> dup_vatom;
+  DupScatterView<KK_ACC_FLOAT*[3], typename DAT::t_kkacc_1d_3::array_layout> dup_f;
+  DupScatterView<KK_ACC_FLOAT*, typename DAT::t_kkacc_1d::array_layout> dup_eatom;
+  DupScatterView<KK_ACC_FLOAT*[6], typename DAT::t_kkacc_1d_6::array_layout> dup_vatom;
 
-  NonDupScatterView<KK_SUM_FLOAT*[3], typename DAT::t_kksum_1d_3::array_layout> ndup_f;
-  NonDupScatterView<KK_SUM_FLOAT*, typename DAT::t_kksum_1d::array_layout> ndup_eatom;
-  NonDupScatterView<KK_SUM_FLOAT*[6], typename DAT::t_kksum_1d_6::array_layout> ndup_vatom;
+  NonDupScatterView<KK_ACC_FLOAT*[3], typename DAT::t_kkacc_1d_3::array_layout> ndup_f;
+  NonDupScatterView<KK_ACC_FLOAT*, typename DAT::t_kkacc_1d::array_layout> ndup_eatom;
+  NonDupScatterView<KK_ACC_FLOAT*[6], typename DAT::t_kkacc_1d_6::array_layout> ndup_vatom;
 
   typename AT::t_int_1d_randomread d_type2frho;
   typename AT::t_int_2d_dl_randomread d_type2rhor;
