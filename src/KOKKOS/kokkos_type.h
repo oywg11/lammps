@@ -627,7 +627,12 @@ struct TransformView {
 
  private:
   kk_view k_view;
-  int SINGLE_DEVICE;
+
+  // does the DualView have only one device
+
+  static constexpr int SINGLE_DEVICE =
+    std::is_same_v<typename kk_view::t_dev::device_type, typename kk_view::t_host::device_type>;
+
  public:
   typename kk_view::t_dev d_view;
   typename kk_view::t_host h_viewkk;
@@ -657,8 +662,6 @@ struct TransformView {
     d_view = {};
     h_viewkk = {};
     h_view = {};
-
-    SINGLE_DEVICE = (k_view.d_view.data() == k_view.h_view.data());
   }
 
   template <typename... Indices>
@@ -674,8 +677,6 @@ struct TransformView {
       h_view = legacy_view(name, ns...);
     else
       h_view = h_viewkk;
-
-    SINGLE_DEVICE = (k_view.d_view.data() == k_view.h_view.data());
   }
 
   template <typename... Indices>
@@ -697,8 +698,6 @@ struct TransformView {
       }
     } else
       h_view = h_viewkk;
-
-    SINGLE_DEVICE = (k_view.d_view.data() == k_view.h_view.data());
   }
 
   // mark device as modified wrt legacy
