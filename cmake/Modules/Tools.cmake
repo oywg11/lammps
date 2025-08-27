@@ -42,7 +42,25 @@ if(BUILD_TOOLS)
 endif()
 
 if(BUILD_LAMMPS_GUI)
-  get_filename_component(LAMMPS_GUI_DIR ${LAMMPS_SOURCE_DIR}/../tools/lammps-gui ABSOLUTE)
-  get_filename_component(LAMMPS_GUI_BIN ${CMAKE_BINARY_DIR}/lammps-gui-build ABSOLUTE)
-  add_subdirectory(${LAMMPS_GUI_DIR} ${LAMMPS_GUI_BIN})
+  include(ExternalProject)
+  option(LAMMPS_GUI_USE_PLUGIN "Load LAMMPS library dynamically at runtime" OFF)
+  option(LAMMPS_GUI_BUILD_DOCS "Build LAMMPS-GUI HTML documentation" OFF)
+  ExternalProject_Add(lammps-gui_build
+    GIT_REPOSITORY https://github.com/akohlmey/lammps-gui.git
+    GIT_TAG main
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+    CMAKE_ARGS -D BUILD_DOC=${LAMMPS_GUI_BUILD_DOCS}
+               -D LAMMPS_GUI_USE_PLUGIN=${LAMMPS_GUI_USE_PLUGIN}
+               -D LAMMPS_SOURCE_DIR=${LAMMPS_SOURCE_DIR}
+               -D LAMMPS_LIBRARY=$<TARGET_FILE:lammps>
+               -D CMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -D CMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+               -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -D CMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+               -D CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    DEPENDS lammps
+    BUILD_BYPRODUCTS <INSTALL_DIR>/bin/lammps-gui
+  )
 endif()
