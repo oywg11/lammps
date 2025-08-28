@@ -64,6 +64,8 @@ namespace LAMMPS_NS {
   template<class DeviceType>
   class FixLangevinKokkos : public FixLangevin, public KokkosBase {
    public:
+    typedef ArrayTypes<DeviceType> AT;
+
     FixLangevinKokkos(class LAMMPS *, int, char **);
     ~FixLangevinKokkos() override;
 
@@ -94,7 +96,7 @@ namespace LAMMPS_NS {
       void zero_force_item(int) const;
 
     KOKKOS_INLINE_FUNCTION
-      double compute_energy_item(int) const;
+      KK_FLOAT compute_energy_item(int) const;
 
     KOKKOS_INLINE_FUNCTION
       void end_of_step_item(int) const;
@@ -103,40 +105,40 @@ namespace LAMMPS_NS {
       void end_of_step_rmass_item(int) const;
 
   private:
-    typename ArrayTypes<DeviceType>::t_float_1d rmass;
-    typename ArrayTypes<DeviceType>::t_float_1d mass;
-    typename ArrayTypes<DeviceType>::tdual_double_2d k_franprev;
-    typename ArrayTypes<DeviceType>::t_double_2d d_franprev;
-    HAT::t_double_2d h_franprev;
+    typename AT::t_kkfloat_1d rmass;
+    typename AT::t_kkfloat_1d mass;
+    DAT::ttransform_kkfloat_2d k_franprev;
+    typename AT::t_kkfloat_2d d_franprev;
+    HAT::t_double_2d_lr h_franprev;
 
-    typename ArrayTypes<DeviceType>::tdual_double_2d k_lv;
-    typename ArrayTypes<DeviceType>::t_double_2d d_lv;
-    HAT::t_double_2d h_lv;
+    DAT::ttransform_kkfloat_2d k_lv;
+    typename AT::t_kkfloat_2d d_lv;
+    HAT::t_double_2d_lr h_lv;
 
-    typename ArrayTypes<DeviceType>::tdual_double_2d k_flangevin;
-    typename ArrayTypes<DeviceType>::t_double_2d d_flangevin;
-    HAT::t_double_2d h_flangevin;
+    DAT::ttransform_kkfloat_2d k_flangevin;
+    typename AT::t_kkfloat_2d d_flangevin;
+    HAT::t_double_2d_lr h_flangevin;
 
-    typename ArrayTypes<DeviceType>::tdual_double_1d k_tforce;
-    typename ArrayTypes<DeviceType>::t_double_1d d_tforce;
+    DAT::ttransform_kkfloat_1d k_tforce;
+    typename AT::t_kkfloat_1d d_tforce;
     HAT::t_double_1d h_tforce;
 
-    typename ArrayTypes<DeviceType>::t_v_array v;
-    typename ArrayTypes<DeviceType>::t_f_array f;
-    typename ArrayTypes<DeviceType>::t_int_1d type;
-    typename ArrayTypes<DeviceType>::t_int_1d mask;
+    typename AT::t_kkfloat_1d_3 v;
+    typename AT::t_kkacc_1d_3 f;
+    typename AT::t_int_1d type;
+    typename AT::t_int_1d mask;
 
-    typename ArrayTypes<DeviceType>::tdual_double_1d k_gfactor1, k_gfactor2, k_ratio;
-    typename ArrayTypes<DeviceType>::t_double_1d d_gfactor1, d_gfactor2, d_ratio;
+    DAT::ttransform_kkfloat_1d k_gfactor1, k_gfactor2, k_ratio;
+    typename AT::t_kkfloat_1d d_gfactor1, d_gfactor2, d_ratio;
     HAT::t_double_1d h_gfactor1, h_gfactor2, h_ratio;
 
-    typedef Kokkos::DualView<double[3], DeviceType>
-      tdual_double_1d_3n;
-    tdual_double_1d_3n k_fsumall;
-    typename tdual_double_1d_3n::t_dev d_fsumall;
-    typename tdual_double_1d_3n::t_host h_fsumall;
+    typedef Kokkos::DualView<KK_FLOAT[3], DeviceType>
+      tdual_kkfloat_1d_3n;
+    tdual_kkfloat_1d_3n k_fsumall;
+    typename tdual_kkfloat_1d_3n::t_dev d_fsumall;
+    typename tdual_kkfloat_1d_3n::t_host h_fsumall;
 
-    double boltz,dt,mvv2e,ftm2v,fran_prop_const,fran_prop_const_gjf;
+    KK_FLOAT boltz,dt,mvv2e,ftm2v,fran_prop_const,fran_prop_const_gjf;
 
     void compute_target();
 
