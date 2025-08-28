@@ -454,7 +454,7 @@ void Neighbor::init()
           ri = collection2cut[i]*0.5;
           for (j = 0; j < ncollections; j++){
             rj = collection2cut[j]*0.5;
-            tmp = force->pair->radii2cut(ri, rj) + skin;
+            tmp = ri + rj + skin;
             cutcollectionsq[i][j] = tmp*tmp;
           }
         }
@@ -2974,9 +2974,10 @@ void Neighbor::build_collection(int istart)
 
   if (finite_cut_flag) {
     double cut;
+    double *radius = atom->radius;
     int icollection;
     for (int i = istart; i < nmax; i++){
-      cut = force->pair->atom2cut(i);
+      cut = 2 * radius[i];
       collection[i] = -1;
 
       for (icollection = 0; icollection < ncollections; icollection++){
