@@ -60,7 +60,7 @@ BondBPM::BondBPM(LAMMPS *_lmp) :
   overlay_flag = 0;
   property_atom_flag = 0;
   break_flag = 1;
-  ignore_special_flag = 1;
+  ignore_special_flag = 0;
   nvalues = 0;
   writedata = 0;
 
@@ -338,6 +338,10 @@ void BondBPM::settings(int narg, char **arg)
     delete[] id_fix_dummy_history;
     id_fix_dummy_history = nullptr;
   }
+
+  // If bonds don't break and there's no overlay, can ignore special requirements
+  if (break_flag == 0 && overlay_flag == 0)
+    ignore_special_flag = 1;
 }
 
 /* ----------------------------------------------------------------------
