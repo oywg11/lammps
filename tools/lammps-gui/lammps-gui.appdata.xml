@@ -57,7 +57,13 @@
   <releases>
     <release version="1.7.1" timestamp="1754346906">
       <description>
-        (none)
+        Remove workarounds for compatibility with Qt 5.12 on Ubuntu 20.04LTS.
+        Qt 5.15LTS is now the minimum required version and thus Ubuntu 22.04LTS.
+        Fix bugs when using filenames or paths with blanks.
+        Support new "dump image autobond" feature in image viewer.
+        Support new "dump image region" feature in image viewer.
+        Change color selections for dump image to text fields with completion and validation.
+        Update minimum required LAMMPS version.
       </description>
     </release>
     <release version="1.7.0" timestamp="1751978344">
@@ -65,6 +71,7 @@
         Reset minor version number for upcoming stable release and tutorial session.
         Refactor chartviewer title line to have two rows and add display of units and normalization
         Replace rubberband-zoom feature and button to reset zoom with two range sliders
+        Update minimum required LAMMPS version.
       </description>
     </release>
     <release version="1.6.15" timestamp="1751751132">

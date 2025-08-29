@@ -18,7 +18,7 @@ display visualizations created with the :doc:`dump image command
 LAMMPS commands and styles, and directly integrates with a collection
 of LAMMPS tutorials (:ref:`Gravelle1 <Gravelle1>`).
 
-This document describes **LAMMPS-GUI version 1.7**.
+This document describes **LAMMPS-GUI version 1.7.1**.
 
 -----
 
@@ -123,11 +123,28 @@ Installing Pre-compiled LAMMPS-GUI Packages
 -------------------------------------------
 
 LAMMPS-GUI is available for download as pre-compiled binary packages for
-Linux x86\_64 (Ubuntu 20.04LTS or later and compatible), macOS (version
+Linux x86\_64 (Ubuntu 22.04LTS or later and compatible), macOS (version
 11 aka Big Sur or later), and Windows (version 10 or later) from the
 `LAMMPS release pages on GitHub <https://github.com/lammps/lammps/releases/>`_.
 A backup download location is at https://download.lammps.org/static/
 Alternately, LAMMPS-GUI can be compiled from source when building LAMMPS.
+
+.. admonition:: GPU support and MPI parallelization
+   :class: note
+
+   The pre-compiled packages include support for GPUs through the GPU
+   package with OpenCL (in mixed precision).  However, this requires
+   that you have a compatible driver and the OpenCL runtime installed.
+   This is not always available and when using the flatpak package, the
+   flatpak sandbox prevents accessing the GPU.  GPU support through
+   KOKKOS is currently not available for technical reasons, but serial
+   and OpenMP multi-threading is available.
+
+   The design decisions for LAMMPS-GUI and how it launches LAMMPS
+   conflict with parallel runs using MPI.  You have to :doc:`use a
+   regular LAMMPS executable <Run_basics>` compiled with MPI support for
+   that.  For the use cases that LAMMPS-GUI has been conceived for this
+   is not a significant limitation.
 
 Windows 10 and later
 ^^^^^^^^^^^^^^^^^^^^
@@ -178,7 +195,6 @@ listed with:
 .. code-block:: sh
 
    ls $(flatpak info --show-location org.lammps.lammps-gui )/files/bin
-
 
 Compiling from Source
 ^^^^^^^^^^^^^^^^^^^^^
@@ -563,19 +579,29 @@ Lennard-Jones type potential, it will extract the *sigma* parameter for
 each atom type and assign atom diameters from those numbers.  For cases
 where atom diameters are not auto-detected, the *Atom size* field can be
 edited and a suitable value set manually. The default value is inferred
-from the x-direction lattice spacing.
+from the x-direction lattice spacing. It is also possible to visualize
+regions and have bonds computed dynamically for potentials, where the
+bonds are determined implicitly (like :doc:`AIREBO <pair_airebo>`.
+Please see the documentation of the :doc:`dump image command
+<dump_image>` for more details on these two features.
 
 If elements cannot be detected the default sequence of colors of the
 :doc:`dump image <dump_image>` command is assigned to the different atom
 types.
 
 .. |gui-image1| image:: JPG/lammps-gui-image.png
-   :width: 48%
+   :width: 24%
 
 .. |gui-image2| image:: JPG/lammps-gui-funnel.png
-   :width: 48%
+   :width: 24%
 
-|gui-image1|  |gui-image2|
+.. |gui-image3| image:: JPG/lammps-gui-regions.png
+   :width: 24%
+
+.. |gui-image4| image:: JPG/lammps-gui-autobond.png
+   :width: 24%
+
+|gui-image1|  |gui-image2|  |gui-image3|  |gui-image4|
 
 The default image size, some default image quality settings, the view
 style and some colors can be changed in the *Preferences* dialog window.
@@ -1168,7 +1194,7 @@ Window), and `Ctrl-Q` (Quit Application) are supported.
 
 .. _Gravelle1:
 
-**(Gravelle1)** Gravelle, Gissinger, Kohlmeyer, `arXiv:2503.14020 \[physics.comp-ph\] <https://doi.org/10.48550/arXiv.2503.14020>`_ (2025)
+**(Gravelle1)** Gravelle, Alvares, Gissinger, Kohlmeyer, `arXiv:2503.14020 \[physics.comp-ph\] <https://doi.org/10.48550/arXiv.2503.14020>`_ (2025)
 
 .. _Gravelle2:
 

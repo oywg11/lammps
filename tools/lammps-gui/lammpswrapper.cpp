@@ -135,6 +135,19 @@ int LammpsWrapper::id_count(const char *idtype)
     return val;
 }
 
+int LammpsWrapper::has_id(const char *idtype, const char *id)
+{
+    int val = 0;
+    if (lammps_handle) {
+#if defined(LAMMPS_GUI_USE_PLUGIN)
+        val = ((liblammpsplugin_t *)plugin_handle)->has_id(lammps_handle, idtype, id);
+#else
+        val = lammps_has_id(lammps_handle, idtype, id);
+#endif
+    }
+    return val;
+}
+
 int LammpsWrapper::id_name(const char *keyword, int idx, char *buf, int len)
 {
     int val = 0;

@@ -16,6 +16,7 @@
 #include "helpers.h"
 #include "lammpsgui.h"
 #include "lammpswrapper.h"
+#include "qaddon.h"
 #include "ui_lammpsgui.h"
 
 #include <QApplication>
@@ -40,6 +41,7 @@
 #include <QSpacerItem>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <QValidator>
 #if defined(_OPENMP)
 #include <QThread>
 #endif
@@ -58,19 +60,6 @@
 #else
 #include <unistd.h>
 #endif
-
-// convenience class
-namespace {
-class QHline : public QFrame {
-public:
-    QHline(QWidget *parent = nullptr) : QFrame(parent)
-    {
-        setGeometry(QRect(0, 0, 100, 3));
-        setFrameShape(QFrame::HLine);
-        setFrameShadow(QFrame::Sunken);
-    }
-};
-}
 
 Preferences::Preferences(LammpsWrapper *_lammps, QWidget *parent) :
     QDialog(parent), tabWidget(new QTabWidget),
@@ -178,10 +167,12 @@ void Preferences::accept()
     if (box) settings->setValue("axes", box->isChecked());
     box = tabWidget->findChild<QCheckBox *>("vdwstyle");
     if (box) settings->setValue("vdwstyle", box->isChecked());
-    auto *combo = tabWidget->findChild<QComboBox *>("background");
-    if (combo) settings->setValue("background", combo->currentText());
-    combo = tabWidget->findChild<QComboBox *>("boxcolor");
-    if (combo) settings->setValue("boxcolor", combo->currentText());
+    box = tabWidget->findChild<QCheckBox *>("autobond");
+    if (box) settings->setValue("autobond", box->isChecked());
+    field = tabWidget->findChild<QLineEdit *>("background");
+    if (field && field->hasAcceptableInput()) settings->setValue("background", field->text());
+    field = tabWidget->findChild<QLineEdit *>("boxcolor");
+    if (field && field->hasAcceptableInput()) settings->setValue("boxcolor", field->text());
     settings->endGroup();
 
     // general settings
@@ -252,7 +243,7 @@ void Preferences::accept()
     settings->beginGroup("charts");
     field = tabWidget->findChild<QLineEdit *>("title");
     if (field) settings->setValue("title", field->text());
-    combo = tabWidget->findChild<QComboBox *>("smoothchoice");
+    auto *combo = tabWidget->findChild<QComboBox *>("smoothchoice");
     if (combo) settings->setValue("smoothchoice", combo->currentIndex());
     combo = tabWidget->findChild<QComboBox *>("rawbrush");
     if (combo) settings->setValue("rawbrush", combo->currentIndex());
@@ -683,6 +674,8 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     auto *bbox  = new QLabel("Show Box:");
     auto *axes  = new QLabel("Show Axes:");
     auto *vdw   = new QLabel("VDW Style:");
+    auto *bond  = new QLabel("Dynamic Bonds:");
+    auto *bclbl  = new QLabel("Bond Cutoff:");
     auto *cback = new QLabel("Background Color:");
     auto *cbox  = new QLabel("Box Color:");
     settings->beginGroup("snapshot");
@@ -695,6 +688,9 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     auto *bval = new QCheckBox;
     auto *eval = new QCheckBox;
     auto *vval = new QCheckBox;
+    auto *uval = new QCheckBox;
+    auto *bcut = new QLineEdit(settings->value("bondcut", "1.6").toString());
+
     sval->setCheckState(settings->value("ssao", false).toBool() ? Qt::Checked : Qt::Unchecked);
     sval->setObjectName("ssao");
     aval->setCheckState(settings->value("antialias", false).toBool() ? Qt::Checked : Qt::Unchecked);
@@ -707,6 +703,9 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     eval->setObjectName("axes");
     vval->setCheckState(settings->value("vdwstyle", false).toBool() ? Qt::Checked : Qt::Unchecked);
     vval->setObjectName("vdwstyle");
+    uval->setCheckState(settings->value("autobond", false).toBool() ? Qt::Checked : Qt::Unchecked);
+    uval->setObjectName("autobond");
+    bcut->setObjectName("bondcut");
 
     auto *intval = new QIntValidator(100, 100000, this);
     xval->setValidator(intval);
@@ -716,24 +715,22 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     zval->setValidator(new QDoubleValidator(0.01, 100.0, 100, this));
     zval->setObjectName("zoom");
 
-    auto *background = new QComboBox;
-    background->setObjectName("background");
-    background->addItem("black");
-    background->addItem("darkgray");
-    background->addItem("gray");
-    background->addItem("silver");
-    background->addItem("white");
-    background->setCurrentText(settings->value("background", "black").toString());
+    auto *colorcompleter = new QColorCompleter();
+    auto *colorvalidator = new QColorValidator();
+    QFontMetrics metrics(fontMetrics());
 
-    auto *boxcolor = new QComboBox;
+    auto *background = new QLineEdit(settings->value("background", "black").toString());
+    background->setObjectName("background");
+    background->setCompleter(colorcompleter);
+    background->setValidator(colorvalidator);
+    background->setFixedSize(metrics.averageCharWidth() * 12, metrics.height() + 4);
+
+    auto *boxcolor = new QLineEdit(settings->value("boxcolor", "yellow").toString());
     boxcolor->setObjectName("boxcolor");
-    boxcolor->addItem("yellow");
-    boxcolor->addItem("silver");
-    boxcolor->addItem("gray");
-    boxcolor->addItem("darkred");
-    boxcolor->addItem("darkgreen");
-    boxcolor->addItem("darkblue");
-    boxcolor->setCurrentText(settings->value("boxcolor", "yellow").toString());
+    boxcolor->setCompleter(colorcompleter);
+    boxcolor->setValidator(colorvalidator);
+    boxcolor->setFixedSize(metrics.averageCharWidth() * 12, metrics.height() + 4);
+
     settings->endGroup();
 
     int i = 0;
@@ -755,6 +752,10 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     grid->addWidget(eval, i++, 1, Qt::AlignVCenter);
     grid->addWidget(vdw, i, 0, Qt::AlignTop);
     grid->addWidget(vval, i++, 1, Qt::AlignVCenter);
+    grid->addWidget(bond, i, 0, Qt::AlignTop);
+    grid->addWidget(uval, i++, 1, Qt::AlignVCenter);
+    grid->addWidget(bclbl, i, 0, Qt::AlignTop);
+    grid->addWidget(bcut, i++, 1, Qt::AlignVCenter);
     grid->addWidget(cback, i, 0, Qt::AlignTop);
     grid->addWidget(background, i++, 1, Qt::AlignVCenter);
     grid->addWidget(cbox, i, 0, Qt::AlignTop);
@@ -764,6 +765,27 @@ SnapshotTab::SnapshotTab(QSettings *_settings, QWidget *parent) :
     grid->addItem(new QSpacerItem(100, 100, QSizePolicy::Minimum, QSizePolicy::Expanding), i, 1);
     grid->addItem(new QSpacerItem(100, 100, QSizePolicy::Expanding, QSizePolicy::Expanding), i, 2);
     setLayout(grid);
+
+    connect(vval, &QCheckBox::toggled, this, &SnapshotTab::choose_vdw);
+    connect(uval, &QCheckBox::toggled, this, &SnapshotTab::choose_bond);
+}
+
+void SnapshotTab::choose_vdw()
+{
+    auto *vdw = findChild<QCheckBox *>("vdwstyle");
+    auto *bnd = findChild<QCheckBox *>("autobond");
+    if (vdw && bnd) {
+        if (vdw->isChecked()) bnd->setCheckState(Qt::Unchecked);
+    }
+}
+
+void SnapshotTab::choose_bond()
+{
+    auto *vdw = findChild<QCheckBox *>("vdwstyle");
+    auto *bnd = findChild<QCheckBox *>("autobond");
+    if (vdw && bnd) {
+        if (bnd->isChecked()) vdw->setCheckState(Qt::Unchecked);
+    }
 }
 
 EditorTab::EditorTab(QSettings *_settings, QWidget *parent) : QWidget(parent), settings(_settings)
