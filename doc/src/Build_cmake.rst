@@ -52,9 +52,9 @@ software or for people that want to modify or extend LAMMPS.
   compilers can be configured and built concurrently from the same
   source tree.
 - Simplified packaging of LAMMPS for Linux distributions, environment
-  modules, or automated build tools like `Homebrew <https://brew.sh/>`_.
-- Integration of automated unit and regression testing (the LAMMPS side
-  of this is still under active development).
+  modules, or automated build tools like `Spack <https://spack.io>`_
+  or `Homebrew <https://brew.sh/>`_.
+- Integration of automated unit and regression testing.
 
 .. _cmake_build:
 
@@ -118,6 +118,13 @@ This will install the LAMMPS executable and library, some tools (if
 configured) and additional files like LAMMPS API headers, manpages,
 potential and force field files.  The location of the installation tree
 defaults to ``${HOME}/.local``.
+
+.. note::
+
+   If you have set `-D CMAKE_INSTALL_PREFIX` to install LAMMPS into a
+   system location on a Linux machine , you may also have to run (as
+   root) the `ldconfig` program to update the cache file for fast lookup
+   of system shared libraries.
 
 .. _cmake_options:
 
@@ -210,6 +217,5 @@ Most Linux distributions offer pre-compiled cmake packages through their
 package management system. If you do not have CMake or a recent enough
 version (Note: for CentOS 7.x you need to enable the EPEL repository),
 you can download the latest version from `https://cmake.org/download/
-<https://cmake.org/download/>`_.  Instructions on how to install it on
-various platforms can be found `on this page
-<https://cmake.org/install/>`_.
+<https://cmake.org/download/>`_.  Links to more details on CMake can
+be found `on this page <https://cmake.org/resources/>`_.

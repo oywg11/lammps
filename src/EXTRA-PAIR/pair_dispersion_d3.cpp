@@ -26,14 +26,18 @@
 #include "comm.h"
 #include "error.h"
 #include "force.h"
+#include "info.h"
 #include "memory.h"
 #include "neigh_list.h"
 #include "neighbor.h"
+#include "update.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <cctype>
 #include <unordered_map>
+#include <utility>
 
 using namespace LAMMPS_NS;
 
@@ -58,11 +62,14 @@ static constexpr double autoang = 0.52917725;    // atomic units (Bohr) to Angst
 static constexpr double autoev = 27.21140795;    // atomic units (Hartree) to eV
 
 #include "d3_parameters.h"
+
 /* ----------------------------------------------------------------------
    Constructor (Required)
 ------------------------------------------------------------------------- */
 
-PairDispersionD3::PairDispersionD3(LAMMPS *lmp) : Pair(lmp)
+PairDispersionD3::PairDispersionD3(LAMMPS *lmp) :
+    Pair(lmp), r2r4(nullptr), rcov(nullptr), mxci(nullptr), r0ab(nullptr), c6ab(nullptr),
+    cn(nullptr), dc6(nullptr)
 {
   nmax = 0;
   comm_forward = 2;
@@ -72,6 +79,9 @@ PairDispersionD3::PairDispersionD3(LAMMPS *lmp) : Pair(lmp)
   manybody_flag = 1;
   one_coeff = 1;
   single_enable = 0;
+
+  dampingCode = 0;
+  s6 = s8 = s18 = rs6 = rs8 = rs18 = a1 = a2 = alpha = alpha6 = alpha8 = 0.0;
 }
 
 /* ----------------------------------------------------------------------
@@ -126,12 +136,20 @@ void PairDispersionD3::allocate()
 
 void PairDispersionD3::settings(int narg, char **arg)
 {
-  if (narg != 4) error->all(FLERR, "Pair_style dispersion/d3 needs 4 arguments");
+  if (narg != 4) error->all(FLERR, "Pair style dispersion/d3 needs 4 arguments");
+  if (strcmp("metal", update->unit_style) != 0)
+    error->all(FLERR, Error::NOLASTLINE, "Pair style dispersion/d3 requires metal units");
 
-  damping_type = arg[0];
+  std::string damping_type = arg[0];
   std::string functional_name = arg[1];
 
   std::transform(damping_type.begin(), damping_type.end(), damping_type.begin(), ::tolower);
+  std::unordered_map<std::string, int> dampingMap = {
+      {"original", 1}, {"zero", 1}, {"zerom", 2}, {"bj", 3}, {"bjm", 4}};
+  if (!dampingMap.count(damping_type))
+    error->all(FLERR, Error::NOPOINTER, "Unknown damping type {} for pair style dispersion/d3",
+               damping_type);
+  dampingCode = dampingMap[damping_type];
 
   rthr = utils::numeric(FLERR, arg[2], false, lmp);
   cn_thr = utils::numeric(FLERR, arg[3], false, lmp);
@@ -150,7 +168,7 @@ int PairDispersionD3::find_atomic_number(std::string &key)
 {
   std::transform(key.begin(), key.end(), key.begin(), ::tolower);
   if (key.length() == 1) key += " ";
-  key.resize(2);
+  if (key.length() > 2) return -1;
 
   std::vector<std::string> element_table = {
       "h ", "he", "li", "be", "b ", "c ", "n ", "o ", "f ", "ne", "na", "mg", "al", "si",
@@ -232,8 +250,8 @@ void PairDispersionD3::read_c6ab(int *atomic_numbers, int ntypes)
   for (int i = 0; i < N_PARS_ROWS; i++) {
     const double ref_c6 = c6ab_table[i][0];
 
-    int atom_number_1 = std::round(c6ab_table[i][1]);
-    int atom_number_2 = std::round(c6ab_table[i][2]);
+    int atom_number_1 = (int)std::round(c6ab_table[i][1]);
+    int atom_number_2 = (int)std::round(c6ab_table[i][2]);
 
     set_limit_in_pars_array(atom_number_1, atom_number_2, grid_i, grid_j);
 
@@ -279,6 +297,8 @@ void PairDispersionD3::coeff(int narg, char **arg)
   for (int i = 0; i < ntypes; i++) {
     element = arg[i + 2];
     atomic_numbers[i] = find_atomic_number(element);
+    if (atomic_numbers[i] < 0)
+      error->all(FLERR, Error::NOLASTLINE, "Element {} not supported", element);
   }
 
   int count = 0;
@@ -289,7 +309,7 @@ void PairDispersionD3::coeff(int narg, char **arg)
     }
   }
 
-  if (count == 0) error->all(FLERR, "Incorrect args for pair coefficients");
+  if (count == 0) error->all(FLERR, "Incorrect args for pair coefficients" + utils::errorurl(21));
 
   for (int i = 1; i <= ntypes; i++) {
     r2r4[i] = r2r4_ref[atomic_numbers[i - 1]];
@@ -358,7 +378,7 @@ void PairDispersionD3::calc_coordination_number()
 
       double rr = sqrt(rsq);
       double rcov_ij = (rcov[itype] + rcov[jtype]) * autoang;
-      double cn_ij = 1.0f / (1.0f + expf(-K1 * ((rcov_ij / rr) - 1.0f)));
+      double cn_ij = 1.0 / (1.0 + exp(-K1 * ((rcov_ij / rr) - 1.0)));
 
       // update coordination number
       cn[i] += cn_ij;
@@ -385,7 +405,7 @@ double *PairDispersionD3::get_dC6(int iat, int jat, double cni, double cnj)
   double expterm, term;
   double num, den, d_num_i, d_num_j, d_den_i, d_den_j;
 
-  c6mem = -1.0e20f, r_save = 1.0e20f;
+  c6mem = -1.0e20, r_save = 1.0e20;
   num = 0;
   den = 0;
   d_num_i = 0;
@@ -446,11 +466,6 @@ double *PairDispersionD3::get_dC6(int iat, int jat, double cni, double cnj)
 
 void PairDispersionD3::compute(int eflag, int vflag)
 {
-
-  std::unordered_map<std::string, int> dampingMap = {
-      {"zero", 1}, {"zerom", 2}, {"bj", 3}, {"bjm", 4}};
-  int dampingCode = dampingMap[damping_type];
-
   double evdwl = 0.0;
   ev_init(eflag, vflag);
 
@@ -481,8 +496,6 @@ void PairDispersionD3::compute(int eflag, int vflag)
     int jnum = numneigh[i];
     int *jlist = firstneigh[i];
 
-    // fprintf(stderr, "> i, type[i], CN[i], C6[i,i] :  %d, %d, %f, %f\n", atom->tag[i], type[i], cn[i], get_dC6(type[i],type[i],cn[i],cn[i])[0]/(autoev*pow(autoang,6)));
-
     for (int jj = 0; jj < jnum; jj++) {
 
       int j = jlist[jj];
@@ -498,7 +511,7 @@ void PairDispersionD3::compute(int eflag, int vflag)
       if (rsq < cutsq[type[i]][type[j]]) {
 
         double r = sqrt(rsq);
-        double r2inv = 1.0f / rsq;
+        double r2inv = 1.0 / rsq;
         double r6inv = r2inv * r2inv * r2inv;
         double r8inv = r2inv * r2inv * r2inv * r2inv;
         double r10inv = r2inv * r2inv * r2inv * r2inv * r2inv;
@@ -513,16 +526,18 @@ void PairDispersionD3::compute(int eflag, int vflag)
 
         double t6, t8, damp6, damp8, e6, e8;
         double tmp6, tmp8, fpair1, fpair2, fpair;
+        t6 = t8 = e6 = e8 = evdwl = fpair = fpair1 = fpair2 = 0.0;
 
         switch (dampingCode) {
-          case 1: {    // zero
+
+          case 1: {    // original
 
             double r0 = r / r0ab[type[i]][type[j]];
 
             t6 = pow(rs6 / r0, alpha6);
-            damp6 = 1.0f / (1.0f + 6.0f * t6);
+            damp6 = 1.0 / (1.0 + 6.0 * t6);
             t8 = pow(rs8 / r0, alpha8);
-            damp8 = 1.0f / (1.0f + 6.0f * t8);
+            damp8 = 1.0 / (1.0 + 6.0 * t8);
 
             e6 = C6 * damp6 * r6inv;
             e8 = C8 * damp8 * r8inv;
@@ -531,19 +546,20 @@ void PairDispersionD3::compute(int eflag, int vflag)
             tmp8 = 8 * s8 * C8 * r10inv * damp8;
 
             fpair1 = -tmp6 - tmp8;
-            fpair2 = tmp6 * alpha6 * t6 * damp6 + (3.0f / 4) * tmp8 * alpha8 * t8 * damp8;
+            fpair2 = tmp6 * alpha6 * t6 * damp6 + (3.0 / 4.0) * tmp8 * alpha8 * t8 * damp8;
 
             fpair = fpair1 + fpair2;
             fpair *= factor_lj;
           } break;
+
           case 2: {    // zerom
 
             double r0 = r0ab[type[i]][type[j]];
 
             t6 = pow((r / (rs6 * r0)) + rs8 * r0, -alpha6);
-            damp6 = 1.0f / (1.0f + 6.0f * t6);
+            damp6 = 1.0 / (1.0 + 6.0 * t6);
             t8 = pow((r / r0) + rs8 * r0, -alpha8);
-            damp8 = 1.0f / (1.0f + 6.0f * t8);
+            damp8 = 1.0 / (1.0 + 6.0 * t8);
 
             e6 = C6 * damp6 * r6inv;
             e8 = C8 * damp8 * r8inv;
@@ -556,11 +572,12 @@ void PairDispersionD3::compute(int eflag, int vflag)
             double fp26 = tmp6 * alpha6 * t6 * damp6 * r / (r + rs6 * rs8 * r0 * r0);
             double fp28 = tmp8 * alpha8 * t8 * damp8 * r / (r + rs8 * r0 * r0);
 
-            fpair2 = fp26 + (3.0f / 4) * fp28;
+            fpair2 = fp26 + (3.0 / 4.0) * fp28;
 
             fpair = fpair1 + fpair2;
             fpair *= factor_lj;
           } break;
+
           case 3: {    // bj
 
             double r0 = sqrt(C8 / C6);
@@ -581,6 +598,7 @@ void PairDispersionD3::compute(int eflag, int vflag)
             fpair = -(tmp6 + tmp8);
             fpair *= factor_lj;
           } break;
+
           case 4: {    // bjm
 
             double r0 = sqrt(C8 / C6);
@@ -600,10 +618,15 @@ void PairDispersionD3::compute(int eflag, int vflag)
 
             fpair = -(tmp6 + tmp8);
             fpair *= factor_lj;
-          }
+          } break;
+
+          default: {
+            // this should not happen with the error check in the init_style function
+            error->all(FLERR, Error::NOLASTLINE, "Damping code {} unknown", dampingCode);
+          } break;
         }
 
-        if (eflag) { evdwl = -(s6 * e6 + s8 * e8) * factor_lj; }
+        if (eflag) evdwl = -(s6 * e6 + s8 * e8) * factor_lj;
 
         double rest = (s6 * e6 + s8 * e8) / C6;
 
@@ -690,12 +713,6 @@ void PairDispersionD3::compute(int eflag, int vflag)
 
 void PairDispersionD3::set_funcpar(std::string &functional_name)
 {
-
-  std::unordered_map<std::string, int> dampingMap = {
-      {"zero", 1}, {"zerom", 2}, {"bj", 3}, {"bjm", 4}};
-
-  int dampingCode = dampingMap[damping_type];
-
   switch (dampingCode) {
 
     case 1: {    // zero
@@ -959,14 +976,10 @@ void PairDispersionD3::set_funcpar(std::string &functional_name)
           s8 = 1.206;
           break;
         default:
-          error->all(FLERR, "Functional name unknown");
+          error->all(FLERR, Error::NOLASTLINE,
+                     "Functional {} not supported with original damping function", functional_name);
           break;
       }
-      //fprintf(stderr,"s6    : %f\n", s6);
-      //fprintf(stderr,"s8    : %f\n", s8);
-      //fprintf(stderr,"rs6   : %f\n", rs6);
-      //fprintf(stderr,"rs8   : %f\n", rs8);
-      //fprintf(stderr,"alpha : %f\n", alpha);
     } break;
 
     case 2: {    // zerom
@@ -1021,14 +1034,10 @@ void PairDispersionD3::set_funcpar(std::string &functional_name)
           rs8 = 0.003160;
           break;
         default:
-          error->all(FLERR, "Functional name unknown");
+          error->all(FLERR, Error::NOLASTLINE,
+                     "Functional {} not supported with zerom damping function", functional_name);
           break;
       }
-      //fprintf(stderr,"s6    : %f\n", s6);
-      //fprintf(stderr,"s8    : %f\n", s8);
-      //fprintf(stderr,"rs6   : %f\n", rs6);
-      //fprintf(stderr,"rs8   : %f\n", rs8);
-      //fprintf(stderr,"alpha : %f\n", alpha);
 
       rs8 = rs8 / autoang;
     } break;
@@ -1134,8 +1143,8 @@ void PairDispersionD3::set_funcpar(std::string &functional_name)
           a1 = 0.3065;
           s8 = 0.9147;
           a2 = 5.0570;
-          break;
           s6 = 0.64;
+          break;
         case 17:
           a1 = 0.0000;
           s8 = 0.2130;
@@ -1331,15 +1340,10 @@ void PairDispersionD3::set_funcpar(std::string &functional_name)
           a2 = 4.5000;
           break;
         default:
-          error->all(FLERR, "Functional name unknown");
+          error->all(FLERR, Error::NOLASTLINE,
+                     "Functional {} not supported with bj damping function", functional_name);
           break;
       }
-
-      //fprintf(stderr,"s6    : %f\n", s6);
-      //fprintf(stderr,"s8    : %f\n", s8);
-      //fprintf(stderr,"a1    : %f\n", a1);
-      //fprintf(stderr,"a2    : %f\n", a2);
-      //fprintf(stderr,"alpha : %f\n", alpha);
 
       a2 = a2 * autoang;
     } break;
@@ -1397,21 +1401,17 @@ void PairDispersionD3::set_funcpar(std::string &functional_name)
           a2 = 3.593680;
           break;
         default:
-          error->all(FLERR, "Functional name unknown");
+          error->all(FLERR, Error::NOLASTLINE,
+                     "Functional {} not supported with bjm damping function", functional_name);
           break;
       }
-
-      //fprintf(stderr,"s6    : %f\n", s6);
-      //fprintf(stderr,"s8    : %f\n", s8);
-      //fprintf(stderr,"a1    : %f\n", a1);
-      //fprintf(stderr,"a2    : %f\n", a2);
-      //fprintf(stderr,"alpha : %f\n", alpha);
 
       a2 = a2 * autoang;
 
     } break;
     default:
-      error->all(FLERR, "Damping type unknown");
+      // this should not happen with the error check in the init_style function
+      error->all(FLERR, Error::NOLASTLINE, "Damping code {} unknown", dampingCode);
       break;
   }
 }
@@ -1423,7 +1423,9 @@ void PairDispersionD3::set_funcpar(std::string &functional_name)
 double PairDispersionD3::init_one(int i, int j)
 {
 
-  if (setflag[i][j] == 0) error->all(FLERR, "All pair coeffs are not set");
+  if (setflag[i][j] == 0)
+    error->all(FLERR, Error::NOLASTLINE,
+               "All pair coeffs are not set. Status:\n" + Info::get_pair_coeff_status(lmp));
 
   r0ab[j][i] = r0ab[i][j];
 
@@ -1433,8 +1435,6 @@ double PairDispersionD3::init_one(int i, int j)
 void PairDispersionD3::init_style()
 {
   if (atom->tag_enable == 0) error->all(FLERR, "Pair style D3 requires atom IDs");
-  //if (force->newton_pair == 0)
-  //  error->all(FLERR,"Pair style D3 requires newton pair on");
 
   // need an half neighbor list
   neighbor->add_request(this);
