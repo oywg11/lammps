@@ -231,12 +231,13 @@ if(BUILD_LAMMPS_GUI)
   elseif((CMAKE_SYSTEM_NAME STREQUAL "Linux") AND NOT LAMMPS_GUI_USE_PLUGIN)
     file(STRINGS ${LAMMPS_DIR}/src/version.h line REGEX LAMMPS_VERSION)
     string(REGEX REPLACE "#define LAMMPS_VERSION \"([0-9]+) ([A-Za-z][A-Za-z][A-Za-z])[A-Za-z]* ([0-9]+)\""
-                          "\\1\\2\\3" LAMMPS_RELEASE "${line}")
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lammps-gui.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications/)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lammps-gui.appdata.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/appdata/)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lammps-input.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/mime/packages/)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lammps-input.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/mime/text/x-application-lammps.xml)
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/icons/hicolor DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/)
+      "\\1\\2\\3" LAMMPS_RELEASE "${line}")
+    set(LAMMPS_GUI_RESOURCE ${CMAKE_BINARY_DIR}/lammps-gui_build-prefix/src/lammps-gui_build/resources/)
+    install(FILES ${LAMMPS_GUI_RESOURCE}/lammps-gui.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications/)
+    install(FILES ${LAMMPS_GUI_RESOURCE}/lammps-gui.appdata.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/appdata/)
+    install(FILES ${LAMMPS_GUI_RESOURCE}/lammps-input.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/mime/packages/)
+    install(FILES ${LAMMPS_GUI_RESOURCE}/lammps-input.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/mime/text/x-application-lammps.xml)
+    install(DIRECTORY ${LAMMPS_GUI_RESOURCE}/icons/hicolor DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/)
     install(CODE [[
       file(GET_RUNTIME_DEPENDENCIES
         LIBRARIES $<TARGET_FILE:lammps>

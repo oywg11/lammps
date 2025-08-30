@@ -9,6 +9,7 @@ rm -rf ${DESTDIR} ../LAMMPS-GUI-Linux-amd64*.tar.gz
 
 echo "Create staging area for deployment and populate"
 DESTDIR=${DESTDIR} cmake --install .  --prefix "/"
+cp lammps-gui_build-prefix/bin/lammps-gui ${DESTDIR}/bin/
 
 echo "Remove debug info"
 for s in ${DESTDIR}/bin/* ${DESTDIR}/lib/liblammps*
