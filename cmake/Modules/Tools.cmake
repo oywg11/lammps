@@ -47,7 +47,7 @@ if(BUILD_LAMMPS_GUI)
   option(LAMMPS_GUI_BUILD_DOCS "Build LAMMPS-GUI HTML documentation" OFF)
   ExternalProject_Add(lammps-gui_build
     GIT_REPOSITORY https://github.com/akohlmey/lammps-gui.git
-    GIT_TAG main
+    GIT_TAG develop
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
     CMAKE_ARGS -D BUILD_DOC=${LAMMPS_GUI_BUILD_DOCS}
@@ -145,6 +145,9 @@ if(BUILD_LAMMPS_GUI)
       file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/lammps-gui_build-prefix/bin/lammps-gui.app)
       add_custom_target(complete-bundle
         ${CMAKE_COMMAND} -E make_directory ${APP_CONTENTS}/bin
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${APP_CONTENTS}/Frameworks
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:lammps> ${APP_CONTENTS}/Frameworks/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:lmp> ${APP_CONTENTS}/bin/
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/lmp ${APP_CONTENTS}/bin/
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/msi2lmp ${APP_CONTENTS}/bin/
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/binary2txt ${APP_CONTENTS}/bin/
@@ -191,7 +194,7 @@ if(BUILD_LAMMPS_GUI)
       COMMAND ${LAMMPS_DIR}/cmake/packaging/build_macos_dmg.sh ${LAMMPS_RELEASE} ${CMAKE_BINARY_DIR}/lammps-gui_build-prefix/bin/lammps-gui.app
       DEPENDS complete-bundle ${WHAM_TARGET} ${FFMPEG_TARGET}
       COMMENT "Create Drag-n-Drop installer disk image from app bundle"
-      BYPRODUCT LAMMPS-macOS-multiarch-${LAMMPS_VERSION}.dmg
+      BYPRODUCT LAMMPS-macOS-multiarch-${LAMMPS_RELEASE}.dmg
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
     # settings or building on Windows with Visual Studio

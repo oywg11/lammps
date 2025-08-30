@@ -3,12 +3,13 @@
 APP_NAME=lammps-gui
 VERSION="$1"
 LAMMPS_GUI_APP="$2"
+mv -v ${LAMMPS_GUI_APP} .
 
 echo "Delete old files, if they exist"
 rm -f ${APP_NAME}.dmg ${APP_NAME}-rw.dmg LAMMPS_GUI-macOS-multiarch*.dmg
 
 echo "Create initial dmg file with macdeployqt"
-macdeployqt  ${LAMMPS_GUI_APP} -dmg
+macdeployqt ${APP_NAME}.app -dmg
 echo "Create writable dmg file"
 hdiutil convert ${APP_NAME}.dmg -format UDRW -o ${APP_NAME}-rw.dmg
 
