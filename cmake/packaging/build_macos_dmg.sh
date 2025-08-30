@@ -39,6 +39,7 @@ echo "Attach icons to LAMMPS console and GUI executables"
 echo "read 'icns' (-16455) \"Resources/lammps.icns\";" > icon.rsrc
 Rez -a icon.rsrc -o bin/lmp
 SetFile -a C bin/lmp
+echo "read 'icns' (-16455) \"Resources/lammps-gui.icns\";" > icon.rsrc
 Rez -a icon.rsrc -o MacOS/lammps-gui
 SetFile -a C MacOS/lammps-gui
 rm icon.rsrc

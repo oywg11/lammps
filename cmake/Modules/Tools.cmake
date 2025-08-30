@@ -157,6 +157,7 @@ if(BUILD_LAMMPS_GUI)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${APP_CONTENTS}/Resources
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LAMMPS_DIR}/cmake/packaging/README.macos ${APP_CONTENTS}/Resources/README.txt
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LAMMPS_DIR}/cmake/packaging/lammps.icns ${APP_CONTENTS}/Resources
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LAMMPS_DIR}/cmake/packaging/lammps-gui.icns ${APP_CONTENTS}/Resources
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LAMMPS_DIR}/cmake/packaging/LAMMPS_DMG_Background.png ${APP_CONTENTS}/Resources
         COMMAND ${CMAKE_COMMAND} -E make_directory ${APP_CONTENTS}/share/lammps
         COMMAND ${CMAKE_COMMAND} -E make_directory ${APP_CONTENTS}/share/lammps/man/man1
