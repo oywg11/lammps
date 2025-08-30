@@ -85,7 +85,7 @@ Here are suggestions on how to perform these tasks:
   snapshot images on-the-fly via its :doc:`dump image <dump_image>`
   command and pass them to an external program, `FFmpeg
   <https://ffmpeg.org/>`_, to generate movies from them.  The
-  :ref:`LAMMPS-GUI tool <lammps_gui>` has an *Snapshot Image Viewer*
+  :ref:`LAMMPS-GUI tool <lammps_gui>` has a *Snapshot Image Viewer*
   which uses :doc:`dump image <dump_image>` and allows to modify the
   visualization settings interactively.  It also has a *Slide Show*
   feature where images created by :doc:`dump image <dump_image>` are
@@ -104,7 +104,7 @@ Here are suggestions on how to perform these tasks:
   it easier to analyze and plot.  See the :doc:`Tools <Tools>` doc page
   for more discussion of the various tools.
 
-  The :ref:`LAMMPS-GUI tool <lammps_gui>` has an *Chart Viewer* where
+  The :ref:`LAMMPS-GUI tool <lammps_gui>` has a *Chart Viewer* where
   :doc:`thermodynamic data <thermo_style>` computed by LAMMPS is
   collected during the simulation and plotted immediately.
 
