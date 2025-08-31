@@ -100,7 +100,7 @@ if(BUILD_LAMMPS_GUI)
       if(PATCH_FOUND)
         message(STATUS "Apply patch to customize WHAM using ${Patch_EXECUTABLE}")
         execute_process(
-          COMMAND ${Patch_EXECUTABLE} -p1 -i packaging/update-wham-2.1.0.patch
+          COMMAND ${Patch_EXECUTABLE} -p1 -i ${CMAKE_SOURCE_DIR}/cmake/packaging/update-wham-2.1.0.patch
           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/src/wham/
         )
       endif()
