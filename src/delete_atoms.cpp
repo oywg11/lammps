@@ -65,7 +65,8 @@ DeleteAtoms::DeleteAtoms(LAMMPS *lmp) :
 void DeleteAtoms::command(int narg, char **arg)
 {
   if (domain->box_exist == 0)
-    error->all(FLERR, "Delete_atoms command before simulation box is defined" + utils::errorurl(33));
+    error->all(FLERR, Error::NOLASTLINE,
+               "Delete_atoms command before simulation box is defined" + utils::errorurl(33));
   if (narg < 1) utils::missing_cmd_args(FLERR, "delete_atoms", error);
   if (atom->tag_enable == 0) error->all(FLERR, -1, "Cannot use delete_atoms unless atoms have IDs");
 
@@ -167,7 +168,7 @@ void DeleteAtoms::command(int narg, char **arg)
         if (comm->me == 0)
           error->warning(FLERR, "Ignoring 'compress yes' because of a fix storing atom IDs");
       }
-
+    }
   } else if (condense_flag) {
 
     if (atom->molecular == Atom::ATOMIC) {
