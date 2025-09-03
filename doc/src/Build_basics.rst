@@ -494,7 +494,7 @@ the debug information from the LAMMPS executable:
 .. _tools:
 
 Build LAMMPS tools
-------------------------------
+------------------
 
 Some tools described in :doc:`Auxiliary tools <Tools>` can be built directly
 using CMake or Make.
@@ -527,7 +527,7 @@ using CMake or Make.
 
       .. note::
 
-         Building the LAMMPS-GUI *requires* building LAMMPS with CMake.
+         Building LAMMPS-GUI *requires* building LAMMPS with CMake.
 
 ----------
 
