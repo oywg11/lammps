@@ -12,6 +12,15 @@ stop LAMMPS and print a suitable error message in most cases, when a
 style/command is used that has been removed or will replace the command
 with the direct alternative (if available) and print a warning.
 
+Neighbor style and comm mode multi/old
+--------------------------------------
+
+.. deprecated:: TBD
+
+The original implementation of neighbor style multi and comm mode multi,
+most recently available under "multi/old" has been removed.  The new
+implementation should be used instead.
+
 LAMMPS-GUI source code
 ----------------------
 
