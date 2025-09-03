@@ -217,7 +217,7 @@ void DeleteAtoms::command(int narg, char **arg)
       MPI_Bcast(tagproc, nprocs, MPI_LMP_TAGINT, 0, world);
 
       // determine where each tag has to start
-      tagint tagint, tagval = 0;
+      tagint tmp, tagval = 0;
       for (int i = 0; i < nprocs; ++i) {
         tmp = tagproc[i];
         tagproc[i] = tagval;
