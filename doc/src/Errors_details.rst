@@ -1002,7 +1002,7 @@ There are multiple ways to get into contact and report your issue. In
 order of preference there are:
 
 - Submit a bug report `issue in the LAMMPS GitHub
-  <https://github.com/lammps/lammps/issues>` repository
+  <https://github.com/lammps/lammps/issues>`_ repository
 - Post a message in the "LAMMPS Development" forum in the
   `MatSci Community Discourse <https://matsci.org/c/lammps/lammps-development/42>`_
 - Send an email to ``developers@lammps.org``
