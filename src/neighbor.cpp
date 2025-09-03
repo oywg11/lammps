@@ -2626,6 +2626,9 @@ void Neighbor::set(int narg, char **arg)
   else if (strcmp(arg[1],"multi") == 0) {
     style = Neighbor::MULTI;
     ncollections = atom->ntypes;
+  } else if (strcmp(arg[1],"multi/old") == 0) {
+    error->all(FLERR, 1, "Neighbor style multi/old has been removed. "
+               "Please use style 'multi' and see the documentation more information about it.");
   } else error->all(FLERR, 1, "Unknown neighbor {} argument: {}", arg[0], arg[1]);
 
   if (style == Neighbor::MULTI && lmp->citeme) lmp->citeme->add(cite_neigh_multi);

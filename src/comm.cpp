@@ -293,6 +293,10 @@ void Comm::modify_params(int narg, char **arg)
         // need to reset cutghostuser when switching comm mode
         if (mode == Comm::SINGLE) cutghostuser = 0.0;
         mode = Comm::MULTI;
+      } else if (strcmp(arg[iarg+1],"multi/old") == 0) {
+        error->all(FLERR, iarg+1,
+                   "Communication mode 'multi/old' has been removed. "
+                   "Please use mode 'multi' and see the documentation more information about it.");
       } else error->all(FLERR, iarg+1, "Unknown comm_modify mode argument: {}", arg[iarg+1]);
       iarg += 2;
     } else if (strcmp(arg[iarg],"group") == 0) {
