@@ -219,7 +219,7 @@ void DeleteAtoms::command(int narg, char **arg)
       // determine where each tag has to start
       tagint tmp, tagval = 0;
       for (int i = 0; i < nprocs; ++i) {
-        int tmp = tagproc[i];
+        tmp = tagproc[i];
         tagproc[i] = tagval;
         tagval += tmp;
       }
@@ -970,8 +970,8 @@ void DeleteAtoms::molring(int n, char *cbuf, void *ptr)
 
 void DeleteAtoms::addtags(int nbuf, char *cbuf, void *ptr)
 {
-  auto daptr = (DeleteAtoms *) ptr;
-  auto taglist = (tagint *) cbuf;
+  auto *daptr = (DeleteAtoms *) ptr;
+  auto *taglist = (tagint *) cbuf;
 
   int nlocal = daptr->atom->nlocal;
   tagint *tag = daptr->atom->tag;
@@ -997,11 +997,10 @@ void DeleteAtoms::addtags(int nbuf, char *cbuf, void *ptr)
 
 void DeleteAtoms::settags(int nbuf, char *cbuf, void *ptr)
 {
-  auto daptr = (DeleteAtoms *) ptr;
-  auto taglist = (tagint *) cbuf;
+  auto *daptr = (DeleteAtoms *) ptr;
+  auto *taglist = (tagint *) cbuf;
 
   int nlocal = daptr->atom->nlocal;
-  tagint *tag = daptr->atom->tag;
   int buf_rank = (daptr->ringrank + daptr->comm->nprocs) % daptr->comm->nprocs;
   tagint *newtags = daptr->newtags;
 
