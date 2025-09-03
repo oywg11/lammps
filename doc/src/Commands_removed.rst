@@ -21,15 +21,25 @@ The original implementation of neighbor style multi and comm mode multi,
 most recently available under "multi/old" has been removed.  The new
 implementation should be used instead.
 
+LAMMPS-GUI source code
+----------------------
+
+.. deprecated:: TBD
+
+The LAMMPS-GUI sources used to be included in LAMMPS but they are now
+hosted in their own git repository at
+https://github.com/akohlmey/lammps-gui/ and the corresponding online
+documentation is at https://lammps-gui.lammps.org/
+
+
 GJF formulation in fix langevin
 -------------------------------
 
-.. deprecated:: 12Jun2025
+.. deprecated:: 22Jul2025
 
-The *gjf* keyword in fix langevin is deprecated and will be removed
-soon.  The GJF functionality has been moved to its own fix style
-:doc:`fix gjf <fix_gjf>` and it is strongly recommended to use that
-fix instead.
+The *gjf* keyword in fix langevin has been removed.  The GJF
+functionality has been moved to its own fix style :doc:`fix gjf
+<fix_gjf>`.
 
 
 LAMMPS shell
