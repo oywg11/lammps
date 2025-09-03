@@ -970,8 +970,8 @@ void DeleteAtoms::molring(int n, char *cbuf, void *ptr)
 
 void DeleteAtoms::addtags(int nbuf, char *cbuf, void *ptr)
 {
-  auto daptr = (DeleteAtoms *) ptr;
-  auto taglist = (tagint *) cbuf;
+  auto *daptr = (DeleteAtoms *) ptr;
+  auto *taglist = (tagint *) cbuf;
 
   int nlocal = daptr->atom->nlocal;
   tagint *tag = daptr->atom->tag;
@@ -997,11 +997,10 @@ void DeleteAtoms::addtags(int nbuf, char *cbuf, void *ptr)
 
 void DeleteAtoms::settags(int nbuf, char *cbuf, void *ptr)
 {
-  auto daptr = (DeleteAtoms *) ptr;
-  auto taglist = (tagint *) cbuf;
+  auto *daptr = (DeleteAtoms *) ptr;
+  auto *taglist = (tagint *) cbuf;
 
   int nlocal = daptr->atom->nlocal;
-  tagint *tag = daptr->atom->tag;
   int buf_rank = (daptr->ringrank + daptr->comm->nprocs) % daptr->comm->nprocs;
   tagint *newtags = daptr->newtags;
 
