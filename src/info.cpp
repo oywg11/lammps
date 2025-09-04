@@ -394,16 +394,6 @@ void Info::command(int narg, char **arg)
           utils::print(out,"Communication cutoff for collection {} = {:.8}\n", i, cut);
         }
       }
-
-      if (comm->mode == 2) {
-        fputs("Communication mode = multi/old\n",out);
-        double cut;
-        for (int i=1; i <= atom->ntypes && neighbor->cuttype; ++i) {
-          cut = neighbor->cuttype[i];
-          if (comm->cutusermultiold) cut = MAX(cut,comm->cutusermultiold[i]);
-          utils::print(out,"Communication cutoff for type {} = {:.8}\n", i, cut);
-        }
-      }
     }
     utils::print(out,"Nprocs = {},   Nthreads = {}\n",comm->nprocs,comm->nthreads);
     if (domain->box_exist)

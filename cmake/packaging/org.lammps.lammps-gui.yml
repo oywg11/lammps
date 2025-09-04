@@ -5,7 +5,6 @@ sdk: org.kde.Sdk
 command: lammps-gui
 finish-args:
   - --share=ipc
-  - --device=dri
   - --socket=fallback-x11
   - --socket=wayland
   - --filesystem=host
@@ -13,7 +12,7 @@ finish-args:
 build-options:
   build-args:
     - --share=network
-rename-icon: lammps
+rename-icon: lammps-gui
 rename-desktop-file: lammps-gui.desktop
 rename-appdata-file: lammps-gui.appdata.xml
 rename-mime-file: lammps-input.xml
@@ -23,8 +22,16 @@ modules:
     builddir: true
     subdir: cmake
     config-opts:
+      - -D BUILD_LAMMPS_GUI=yes
+      - -D BUILD_WHAM=yes
+      - -D BUILD_SHARED_LIBS=yes
+      - -D BUILD_TOOLS=yes
+      - -D CMAKE_BUILD_TYPE=Release
+      - -D CMAKE_CXX_COMPILER=g++
+      - -D CMAKE_C_COMPILER=gcc
+      - -D CMAKE_Fortran_COMPILER=gfortran
+      - -D DOWNLOAD_POTENTIALS=no
       - -D PKG_AMOEBA=yes
-      - -D PKG_APIP=yes
       - -D PKG_ASPHERE=yes
       - -D PKG_AWPMD=yes
       - -D PKG_BOCS=yes
@@ -101,15 +108,6 @@ modules:
       - -D PKG_UEF=yes
       - -D PKG_VORONOI=yes
       - -D PKG_YAFF=yes
-      - -D BUILD_LAMMPS_GUI=yes
-      - -D BUILD_SHARED_LIBS=yes
-      - -D CMAKE_CXX_COMPILER=g++
-      - -D CMAKE_C_COMPILER=gcc
-      - -D CMAKE_Fortran_COMPILER=gfortran
-      - -D CMAKE_BUILD_TYPE=Release
-      - -D DOWNLOAD_POTENTIALS=no
-      - -D BUILD_TOOLS=yes
-      - -D BUILD_WHAM=yes
     sources:
       - type: git
         url: https://github.com/lammps/lammps.git
