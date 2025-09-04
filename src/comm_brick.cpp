@@ -749,6 +749,7 @@ void CommBrick::borders()
       // store sent atom indices in sendlist for use in future timesteps
 
       x = atom->x;
+      type = atom->type;
       if (mode == Comm::SINGLE) {
         lo = slablo[iswap];
         hi = slabhi[iswap];
