@@ -181,7 +181,6 @@ void CommBrick::setup()
   //   cutghostmulti = same as cutghost, only for each atom collection
 
   int i,j;
-  int ntypes = atom->ntypes;
   double *prd,*sublo,*subhi;
 
   double cut = get_comm_cutoff();
