@@ -925,7 +925,11 @@ std::string platform::path_basename(const std::string &path)
 std::string platform::path_dirname(const std::string &path)
 {
   auto dir = std::filesystem::path(path).parent_path().string();
+#if defined(WIN32)
+  if ((dir == "") || utils::strmatch("[a-zA-Z]:")) return {"."};
+#else
   if (dir == "") return {"."};
+#endif
   else return dir;
 }
 
