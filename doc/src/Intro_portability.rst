@@ -42,7 +42,7 @@ within a Bourne shell (``/bin/sh`` or ``/bin/bash``).
 
 The traditional GNU make based build system no longer supports all
 packages.  Details can be found in the :doc:`package specific build
-instructions <Build_extra>`.
+instructions <Build_extras>`.
 
 Operating systems
 ^^^^^^^^^^^^^^^^^
