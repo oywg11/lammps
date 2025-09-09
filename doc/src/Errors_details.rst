@@ -321,9 +321,10 @@ completely different format.
 Illegal variable command: expected X arguments but found Y
 ----------------------------------------------------------
 
-This error indicates that a variable command has the wrong number of
-arguments.  A common reason for this is that the variable expression has
-whitespace, but is not enclosed in single or double quotes.
+This error indicates that a variable command has either incorrectly
+formatted arguments or the wrong number of arguments.  A common reason
+for this is that a variable expression contains whitespace, but is not
+enclosed in single or double quotes.
 
 To explain, the LAMMPS input parser reads and processes lines.  The
 resulting line is broken down into "words".  Those are usually
@@ -331,11 +332,12 @@ individual commands, labels, names, and values separated by whitespace
 (a space or tab character).  For "words" that may contain whitespace,
 they have to be enclosed in single (') or double (") quotes.  The parser
 will then remove the outermost pair of quotes and pass that string as
-"word" to the variable command.
+single argument to the variable command.
 
 Thus missing quotes or accidental extra whitespace will trigger this
 error because the unquoted whitespace will result in the text being
-broken into more "words", i.e. the variable expression being split.
+broken into more "words" than expected, i.e. the variable expression
+being split.
 
 .. _err0004:
 
@@ -1002,7 +1004,7 @@ There are multiple ways to get into contact and report your issue. In
 order of preference there are:
 
 - Submit a bug report `issue in the LAMMPS GitHub
-  <https://github.com/lammps/lammps/issues>` repository
+  <https://github.com/lammps/lammps/issues>`_ repository
 - Post a message in the "LAMMPS Development" forum in the
   `MatSci Community Discourse <https://matsci.org/c/lammps/lammps-development/42>`_
 - Send an email to ``developers@lammps.org``

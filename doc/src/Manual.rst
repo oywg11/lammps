@@ -95,15 +95,14 @@ User Guide
    Intro
    Install
    Build
-   Run_head
-   Commands
    Packages
+   Tools
+   Run_head
+   Errors
+   Commands
    Speed
    Howto
    Examples
-   Tools
-   Errors
-
 
 .. _programmer_documentation:
 
