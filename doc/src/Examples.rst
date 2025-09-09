@@ -158,7 +158,7 @@ Lowercase directories
 +-------------+------------------------------------------------------------------+
 | srd         | stochastic rotation dynamics (SRD) particles as solvent          |
 +-------------+------------------------------------------------------------------+
-| steinhardt  | Steinhardt-Nelson Q_l and W_l parameters usng orientorder/atom   |
+| steinhardt  | Steinhardt-Nelson Q_l and W_l parameters using orientorder/atom  |
 +-------------+------------------------------------------------------------------+
 | streitz     | use of Streitz/Mintmire potential with charge equilibration      |
 +-------------+------------------------------------------------------------------+
@@ -172,9 +172,9 @@ Lowercase directories
 +-------------+------------------------------------------------------------------+
 | tracker     | track interactions in LJ melt                                    |
 +-------------+------------------------------------------------------------------+
-| triclinic   | eneral triclinic simulation boxes versus orthogonal boxes        |
+| triclinic   | general triclinic simulation boxes versus orthogonal boxes       |
 +-------------+------------------------------------------------------------------+
-| ttm         | two-temeperature model examples                                  |
+| ttm         | two-temperature model examples                                   |
 +-------------+------------------------------------------------------------------+
 | vashishta   | use of the Vashishta potential                                   |
 +-------------+------------------------------------------------------------------+
