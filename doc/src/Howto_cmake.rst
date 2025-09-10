@@ -27,14 +27,14 @@ selected examples.  Please see the chapter about :doc:`building LAMMPS
 <Build>` for descriptions of specific flags and options for LAMMPS in
 general and for specific packages.
 
-.. versionchanged:: TBD
+.. versionchanged:: 10Sep2025
 
 CMake can be used through either the command-line interface (CLI)
 program ``cmake`` (or ``cmake3``), a text mode interactive user
 interface (TUI) program ``ccmake`` (or ``ccmake3``), or a graphical user
 interface (GUI) program ``cmake-gui``.  All of them are portable
 software available on all supported platforms and can be used
-interchangeably.  After LAMMPS version TBD, the minimum
+interchangeably.  Since LAMMPS version 10Sep2025, the minimum
 required CMake version is 3.20.
 
 All details about features and settings for CMake are in the `CMake

@@ -11,7 +11,7 @@ or Python or MATLAB.
 Programming language standards
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. versionchanged:: TBD
+.. versionchanged:: 10Sep2025
 
 The C++ code in LAMMPS currently requires a compiler that is compatible
 with the C++17 standard. The Kokkos library used for the KOKKOS
@@ -38,7 +38,7 @@ system.  CMake must be at least version 3.20.  Alternatively, using a
 (grep, sed, cat, tr) and the GNU make program.  This requires running
 within a Bourne shell (``/bin/sh`` or ``/bin/bash``).
 
-.. versionchanged:: TBD
+.. versionchanged:: 10Sep2025
 
 The traditional GNU make based build system no longer supports all
 packages.  Details can be found in the :doc:`package specific build
@@ -77,7 +77,7 @@ and the Intel compilers have been successfully used on Linux, macOS, and
 Windows.  Also, the Nvidia HPC SDK (formerly PGI compilers) will compile
 LAMMPS (tested on Linux).
 
-.. versionchanged:: TBD
+.. versionchanged:: 10Sep2025
 
 The GNU compilers *before* version 9.3 have known problems with supporting
 C++17 and thus are **not** recommended to build LAMMPS.

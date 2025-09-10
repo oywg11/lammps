@@ -15,7 +15,7 @@ with the direct alternative (if available) and print a warning.
 ATC, AWPMD, and POEMS packages
 ------------------------------
 
-.. deprecated:: TBD
+.. deprecated:: 10Sep2025
 
 The ATC, AWPMD, and POEMS packages are removed.because there were
 unmaintained for a long time and their legacy C++ programming style
@@ -27,7 +27,7 @@ packages.
 Neighbor style and comm mode multi/old
 --------------------------------------
 
-.. deprecated:: TBD
+.. deprecated:: 10Sep2025
 
 The original implementation of neighbor style multi and comm mode multi,
 most recently available under "multi/old" has been removed.  The new
@@ -36,7 +36,7 @@ implementation should be used instead.
 LAMMPS-GUI source code
 ----------------------
 
-.. deprecated:: TBD
+.. deprecated:: 10Sep2025
 
 The LAMMPS-GUI sources used to be included in LAMMPS but they are now
 hosted in their own git repository at

@@ -25,7 +25,7 @@ as described on the :doc:`Build_package <Build_package>` page.
 For a CMake build there may be additional optional or required
 variables to set.
 
-.. versionchanged:: TBD
+.. versionchanged:: 10Sep2025
 
 The traditional build system with GNU make no longer supports packages
 that require extra steps in the ``lammps/lib`` directory.
@@ -103,7 +103,7 @@ versions use an incompatible API and thus LAMMPS will fail to compile.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The COMPRESS package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -360,7 +360,7 @@ minutes to hours) to build.  Of course you only need to do that once.)
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The KIM package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -901,7 +901,7 @@ included in the LAMMPS source distribution in the ``lib/lepton`` folder.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The LEPTON package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -934,7 +934,7 @@ Eigen3 is a template library, so you do not need to build it.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The MACHDYN package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1039,7 +1039,7 @@ for additional details.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The PYTHON package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1078,7 +1078,7 @@ binary package provided by your operating system.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The VORONOI package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1148,7 +1148,7 @@ at: `https://github.com/ICAMS/lammps-user-pace/ <https://github.com/ICAMS/lammps
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The APIP package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1180,7 +1180,7 @@ module included in the LAMMPS source distribution.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The COLVARS package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1253,7 +1253,7 @@ folder and then load this plugin at runtime with the :doc:`plugin command <plugi
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The ML-PACE package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1273,7 +1273,7 @@ ML-POD package
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The ML-POD package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1322,7 +1322,7 @@ within CMake will download the non-commercial use version.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The ML-QUIP package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1417,7 +1417,7 @@ folder and then load this plugin at runtime with the :doc:`plugin command <plugi
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The PLUMED package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1447,7 +1447,7 @@ the HDF5 library.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The H5MD package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1491,7 +1491,7 @@ details please see ``lib/hdnnp/README`` and the `n2p2 build documentation
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The ML-HDNNP package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1584,7 +1584,7 @@ MDI package
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The MDI package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1647,7 +1647,7 @@ MOLFILE package
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The MOLFILE package no longer supports the the traditional make
       build.  You need to build LAMMPS with CMake.
@@ -1677,7 +1677,7 @@ on your system.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The NETCDF package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1776,7 +1776,7 @@ verified to work in February 2020 with Quantum Espresso versions 6.3 to
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The QMMM package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1813,7 +1813,7 @@ This package depends on the BPM package.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The RHEO package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1848,7 +1848,7 @@ To build with this package, you must download and build the
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The SCAFACOS package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.
@@ -1877,7 +1877,7 @@ your system.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The VTK package no longer supports the the traditional make build.
       You need to build LAMMPS with CMake.

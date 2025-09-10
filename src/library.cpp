@@ -6679,6 +6679,15 @@ int lammps_config_has_mpi_support()
 /** This function is used to query whether LAMMPS was compiled with
  *  OpenMP enabled.
  *
+\verbatim embed:rst
+
+.. versionadded:: 10Sep2025
+
+*See also*
+   :cpp:func:`lammps_config_has_mpi_support`
+
+\endverbatim
+ *
  * \return 1 when compiled with OpenMP enabled, otherwise 0 */
 
 int lammps_config_has_omp_support()

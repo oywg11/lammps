@@ -2323,7 +2323,7 @@ Procedures Bound to the :f:type:`lammps` Derived Type
 
    This function is used to query whether LAMMPS was compiled with OpenMP enabled.
 
-   .. versionadded:: TBD
+   .. versionadded:: 10Sep2025
 
    :to: :cpp:func:`lammps_config_has_omp_support`
    :r has_omp: ``.TRUE.`` when compiled with OpenMP enabled, ``.FALSE.`` if not.

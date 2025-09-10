@@ -26,7 +26,7 @@ explains how to do this for building both with CMake and make.
 C++17 standard compliance
 -------------------------
 
-.. versionchanged:: TBD
+.. versionchanged:: 10Sep2025
 
 A C++17 standard compatible compiler is currently the minimum
 requirement for compiling LAMMPS.  LAMMPS version 22 July 2025 is the

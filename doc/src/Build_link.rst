@@ -93,7 +93,7 @@ executable, that are also required to link the LAMMPS executable.
 
    .. tab:: Traditional make
 
-      .. versionchanged:: TBD
+      .. versionchanged:: 10Sep2025
 
       The traditional make build process no longer supports building
       packages that require extra build steps in the ``lib`` folder.
