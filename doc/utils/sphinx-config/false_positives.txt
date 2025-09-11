@@ -2901,6 +2901,7 @@ parallelepiped
 parallelepipeds
 Parallelizable
 parallelization
+parallelize
 parallelized
 parallelizing
 param
