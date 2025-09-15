@@ -209,8 +209,8 @@ void BondHarmonicKokkos<DeviceType>::coeff(int narg, char **arg)
   d_r0 = k_r0.template view<DeviceType>();
 
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_r0.h_view[i] = r0[i];
+    k_k.view_host()[i] = k[i];
+    k_r0.view_host()[i] = r0[i];
   }
 
   k_k.modify_host();
@@ -236,8 +236,8 @@ void BondHarmonicKokkos<DeviceType>::read_restart(FILE *fp)
   d_r0 = k_r0.template view<DeviceType>();
 
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_r0.h_view[i] = r0[i];
+    k_k.view_host()[i] = k[i];
+    k_r0.view_host()[i] = r0[i];
   }
 
   k_k.modify_host();
