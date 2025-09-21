@@ -264,12 +264,12 @@ struct fft_plan_3d *fft_3d_create_plan(
   MPI_Comm_rank(comm,&me);
   MPI_Comm_size(comm,&nprocs);
 
+#if defined(FFT_MKL_THREADS) || defined(FFT_FFTW_THREADS)
 #if defined(_OPENMP)
   // query OpenMP info.
   // should have been initialized systemwide in Comm class constructor
   int nthreads = omp_get_max_threads();
 #else
-#if defined(FFT_MKL_THREADS) || defined(FFT_FFTW_THREADS)
   int nthreads = 1;
 #endif
 #endif
