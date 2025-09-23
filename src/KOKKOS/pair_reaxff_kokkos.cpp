@@ -948,7 +948,7 @@ void PairReaxFFKokkos<DeviceType>::compute(int eflag_in, int vflag_in)
   int count_angular = 0;
   int count_torsion = 0;
 
-  auto& h_count_angular_torsion = k_count_angular_torsion.view_host();
+  const auto& h_count_angular_torsion = k_count_angular_torsion.view_host();
   h_count_angular_torsion(0) = 0;
   h_count_angular_torsion(1) = 0;
   k_count_angular_torsion.modify_host();
