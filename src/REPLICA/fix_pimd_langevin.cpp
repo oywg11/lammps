@@ -815,7 +815,9 @@ void FixPIMDLangevin::collect_xc()
       }
     } else if (cmode == MULTI_PROC) {
       for (int i = 0; i < ntotal; i++) {
-        xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
+        if (mask[i] & groupbit) {
+          xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
+        }
       }
     }
 
@@ -995,10 +997,10 @@ void FixPIMDLangevin::baro_init()
 {
   vw[0] = vw[1] = vw[2] = vw[3] = vw[4] = vw[5] = 0.0;
   if (pstyle == ISO) {
-    W = 3 * (atom->natoms) * tau_p * tau_p * np * kt;
+    W = 3 * (group->count(igroup)) * tau_p * tau_p * np * kt;
   }    // consistent with the definition in i-Pi
   else if (pstyle == ANISO) {
-    W = atom->natoms * tau_p * tau_p * np * kt;
+    W = group->count(igroup) * tau_p * tau_p * np * kt;
   }
   Vcoeff = 1.0;
   std::string out = fmt::format("\nInitializing PIMD {:s} barostat...\n", Barostats[barostat]);
@@ -1035,7 +1037,7 @@ void FixPIMDLangevin::press_v_step()
       MPI_Barrier(universe->uworld);
       MPI_Bcast(&vw[0], 1, MPI_DOUBLE, 0, universe->uworld);
     } else if (barostat == MTTK) {
-      double mtk_term1 = 2.0 / atom->natoms * totke / 3.0;
+      double mtk_term1 = 2.0 / group->count(igroup) * totke / 3.0;
       vw[0] += 0.5 * dtv * (volume * np * (p_md - p_hydro) + mtk_term1) / W;
     }
   } else if (pstyle == ANISO) {
@@ -1257,17 +1259,23 @@ void FixPIMDLangevin::nmpimd_init()
 void FixPIMDLangevin::nmpimd_transform(double **src, double **des, double *vector)
 {
   if (cmode == SINGLE_PROC) {
+    int *mask = atom->mask;
+
     for (int i = 0; i < ntotal; i++) {
-      for (int d = 0; d < 3; d++) {
-        bufsorted[i][d] = 0.0;
-        for (int j = 0; j < nreplica; j++) {
-          bufsorted[i][d] += src[j * ntotal + i][d] * vector[j];
+      if (mask[i] & groupbit) {
+        for (int d = 0; d < 3; d++) {
+          bufsorted[i][d] = 0.0;
+          for (int j = 0; j < nreplica; j++) {
+            bufsorted[i][d] += src[j * ntotal + i][d] * vector[j];
+          }
         }
       }
     }
     for (int i = 0; i < ntotal; i++) {
-      tagint tagtmp = atom->tag[i];
-      for (int d = 0; d < 3; d++) { des[i][d] = bufsorted[tagtmp - 1][d]; }
+      if (mask[i] & groupbit) {
+        tagint tagtmp = atom->tag[i];
+        for (int d = 0; d < 3; d++) { des[i][d] = bufsorted[tagtmp - 1][d]; }
+      }
     }
   } else if (cmode == MULTI_PROC) {
     int nlocal = atom->nlocal;
@@ -1467,11 +1475,13 @@ void FixPIMDLangevin::inter_replica_comm(double **ptr)
       MPI_Bcast(tagrecvall, ntotal, MPI_LMP_TAGINT, 0, world);
       MPI_Bcast(bufrecvall[0], 3 * ntotal, MPI_DOUBLE, 0, world);
       for (i = 0; i < ntotal; i++) {
-        m = atom->map(tagrecvall[i]);
-        if (m < 0 || m >= nlocal) continue;
-        bufbeads[modeindex[iplan]][3 * m + 0] = bufrecvall[i][0];
-        bufbeads[modeindex[iplan]][3 * m + 1] = bufrecvall[i][1];
-        bufbeads[modeindex[iplan]][3 * m + 2] = bufrecvall[i][2];
+        if (mask[i] & groupbit) {
+          m = atom->map(tagrecvall[i]);
+          if (m < 0 || m >= nlocal) continue;
+          bufbeads[modeindex[iplan]][3 * m + 0] = bufrecvall[i][0];
+          bufbeads[modeindex[iplan]][3 * m + 1] = bufrecvall[i][1];
+          bufbeads[modeindex[iplan]][3 * m + 2] = bufrecvall[i][2];
+        }
       }
     }
   }
@@ -1690,7 +1700,7 @@ void FixPIMDLangevin::compute_tote()
 
 void FixPIMDLangevin::compute_t_prim()
 {
-  t_prim = 1.5 * atom->natoms * np * force->boltz * temp - total_spring_energy * inverse_np;
+  t_prim = 1.5 * group->count(igroup) * np * force->boltz * temp - total_spring_energy * inverse_np;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1698,7 +1708,7 @@ void FixPIMDLangevin::compute_t_prim()
 void FixPIMDLangevin::compute_t_vir()
 {
   t_vir = -0.5 * inverse_np * vir_;
-  t_cv = 1.5 * atom->natoms * force->boltz * temp - 0.5 * inverse_np * centroid_vir;
+  t_cv = 1.5 * group->count(igroup) * force->boltz * temp - 0.5 * inverse_np * centroid_vir;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1706,7 +1716,7 @@ void FixPIMDLangevin::compute_t_vir()
 void FixPIMDLangevin::compute_p_prim()
 {
   double inv_volume = 1.0 / (domain->xprd * domain->yprd * domain->zprd);
-  p_prim = atom->natoms * np * force->boltz * temp * inv_volume -
+  p_prim = group->count(igroup) * np * force->boltz * temp * inv_volume -
       1.0 / 1.5 * inv_volume * total_spring_energy;
   p_prim *= force->nktv2p;
 }
