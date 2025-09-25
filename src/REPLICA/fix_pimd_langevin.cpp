@@ -514,10 +514,15 @@ void FixPIMDLangevin::init()
 void FixPIMDLangevin::setup(int vflag)
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   imageint *image = atom->image;
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) domain->unmap(x[i], image[i]);
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        domain->unmap(x[i], image[i]);
+      }
+    }
   }
 
   if (method == NMPIMD) {
@@ -550,7 +555,11 @@ void FixPIMDLangevin::setup(int vflag)
       nmpimd_transform(bufbeads, x, M_xp2x[universe->iworld]);
   }
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) domain->unmap_inv(x[i], image[i]);
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        domain->unmap_inv(x[i], image[i]);
+      }
+    }
   }
 
   post_force(vflag);
@@ -565,10 +574,15 @@ void FixPIMDLangevin::setup(int vflag)
 void FixPIMDLangevin::initial_integrate(int /*vflag*/)
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   imageint *image = atom->image;
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) domain->unmap(x[i], image[i]);
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        domain->unmap(x[i], image[i]);
+      }
+    }
   }
   if (integrator == OBABO) {
     if (tstat_flag) {
@@ -663,7 +677,11 @@ void FixPIMDLangevin::initial_integrate(int /*vflag*/)
   }
 
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) { domain->unmap_inv(x[i], image[i]); }
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        domain->unmap_inv(x[i], image[i]); 
+      }
+    }
   }
 }
 
@@ -702,6 +720,7 @@ void FixPIMDLangevin::prepare_coordinates()
 void FixPIMDLangevin::post_force(int /*flag*/)
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   double **f = atom->f;
   imageint *image = atom->image;
@@ -710,17 +729,25 @@ void FixPIMDLangevin::post_force(int /*flag*/)
   if (atom->nmax > maxunwrap) reallocate_x_unwrap();
   if (atom->nmax > maxxc) reallocate_xc();
   for (int i = 0; i < nlocal; i++) {
-    x_unwrap[i][0] = x[i][0];
-    x_unwrap[i][1] = x[i][1];
-    x_unwrap[i][2] = x[i][2];
+    if (mask[i] & groupbit) {
+      x_unwrap[i][0] = x[i][0];
+      x_unwrap[i][1] = x[i][1];
+      x_unwrap[i][2] = x[i][2];
+    }
   }
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) { domain->unmap(x_unwrap[i], image[i]); }
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        domain->unmap(x_unwrap[i], image[i]); 
+      }
+    }
   }
   for (int i = 0; i < nlocal; i++) {
-    xc[i][0] = xcall[3 * (tag[i] - 1) + 0];
-    xc[i][1] = xcall[3 * (tag[i] - 1) + 1];
-    xc[i][2] = xcall[3 * (tag[i] - 1) + 2];
+    if (mask[i] & groupbit) {
+      xc[i][0] = xcall[3 * (tag[i] - 1) + 0];
+      xc[i][1] = xcall[3 * (tag[i] - 1) + 1];
+      xc[i][2] = xcall[3 * (tag[i] - 1) + 2];
+    }
   }
 
   compute_vir();
@@ -730,14 +757,22 @@ void FixPIMDLangevin::post_force(int /*flag*/)
 
   if (method == PIMD) {
     if (mapflag) {
-      for (int i = 0; i < nlocal; i++) { domain->unmap(x[i], image[i]); }
+      for (int i = 0; i < nlocal; i++) { 
+        if (mask[i] & groupbit) {
+          domain->unmap(x[i], image[i]); 
+        }
+      }
     }
     prepare_coordinates();
     spring_force();
     compute_spring_energy();
     compute_t_prim();
     if (mapflag) {
-      for (int i = 0; i < nlocal; i++) { domain->unmap_inv(x[i], image[i]); }
+      for (int i = 0; i < nlocal; i++) {
+        if (mask[i] & groupbit) {
+          domain->unmap_inv(x[i], image[i]); 
+        }
+      }
     }
   }
   compute_pote();
@@ -768,12 +803,15 @@ void FixPIMDLangevin::end_of_step()
 void FixPIMDLangevin::collect_xc()
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   tagint *tag = atom->tag;
   if (ireplica == 0) {
     if (cmode == SINGLE_PROC) {
       for (int i = 0; i < nlocal; i++) {
-        xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
+        if (mask[i] & groupbit) {
+          xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
+        }
       }
     } else if (cmode == MULTI_PROC) {
       for (int i = 0; i < ntotal; i++) {
@@ -783,9 +821,11 @@ void FixPIMDLangevin::collect_xc()
 
     const double sqrtnp = sqrt((double) np);
     for (int i = 0; i < nlocal; i++) {
-      xcall[3 * (tag[i] - 1) + 0] = x[i][0] / sqrtnp;
-      xcall[3 * (tag[i] - 1) + 1] = x[i][1] / sqrtnp;
-      xcall[3 * (tag[i] - 1) + 2] = x[i][2] / sqrtnp;
+      if (mask[i] & groupbit) {
+        xcall[3 * (tag[i] - 1) + 0] = x[i][0] / sqrtnp;
+        xcall[3 * (tag[i] - 1) + 1] = x[i][1] / sqrtnp;
+        xcall[3 * (tag[i] - 1) + 2] = x[i][2] / sqrtnp;
+      }
     }
 
     if (cmode == MULTI_PROC) {
@@ -802,16 +842,19 @@ void FixPIMDLangevin::b_step()
   // used for both NMPIMD and PIMD
   // For NMPIMD, force only includes the contribution of external potential.
   // For PIMD, force includes the contributions of external potential and spring force.
-  int n = atom->nlocal;
+  int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   int *type = atom->type;
   double **v = atom->v;
   double **f = atom->f;
 
-  for (int i = 0; i < n; i++) {
-    double dtfm = dtf / mass[type[i]];
-    v[i][0] += dtfm * f[i][0];
-    v[i][1] += dtfm * f[i][1];
-    v[i][2] += dtfm * f[i][2];
+  for (int i = 0; i < nlocal; i++) {
+    if (mask[i] & groupbit) {
+      double dtfm = dtf / mass[type[i]];
+      v[i][0] += dtfm * f[i][0];
+      v[i][1] += dtfm * f[i][1];
+      v[i][2] += dtfm * f[i][2];
+    }
   }
 }
 
@@ -822,6 +865,7 @@ void FixPIMDLangevin::qc_step()
   // used for NMPIMD
   // evolve the centroid mode
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   double **v = atom->v;
   double oldlo, oldhi;
@@ -829,9 +873,11 @@ void FixPIMDLangevin::qc_step()
   if (!pstat_flag) {
     if (universe->iworld == 0) {
       for (int i = 0; i < nlocal; i++) {
-        x[i][0] += dtv * v[i][0];
-        x[i][1] += dtv * v[i][1];
-        x[i][2] += dtv * v[i][2];
+        if (mask[i] & groupbit) {
+          x[i][0] += dtv * v[i][0];
+          x[i][1] += dtv * v[i][1];
+          x[i][2] += dtv * v[i][2];
+        }
       }
     }
   } else {
@@ -847,12 +893,14 @@ void FixPIMDLangevin::qc_step()
       }
       if (barostat == BZP) {
         for (int i = 0; i < nlocal; i++) {
-          for (int j = 0; j < 3; j++) {
-            if (p_flag[j]) {
-              x[i][j] = expq[j] * x[i][j] + (expq[j] - expp[j]) / 2. / vw[j] * v[i][j];
-              v[i][j] = expp[j] * v[i][j];
-            } else {
-              x[i][j] += dtv * v[i][j];
+          if (mask[i] & groupbit) {
+            for (int j = 0; j < 3; j++) {
+              if (p_flag[j]) {
+                x[i][j] = expq[j] * x[i][j] + (expq[j] - expp[j]) / 2. / vw[j] * v[i][j];
+                v[i][j] = expp[j] * v[i][j];
+              } else {
+                x[i][j] += dtv * v[i][j];
+              }
             }
           }
         }
@@ -887,31 +935,34 @@ void FixPIMDLangevin::a_step()
 {
   // used for NMPIMD
   // use analytical solution of harmonic oscillator to evolve the non-centroid modes
-  int n = atom->nlocal;
+  int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   double **v = atom->v;
   double x0, x1, x2, v0, v1, v2;    // three components of x[i] and v[i]
 
   if (universe->iworld != 0) {
-    for (int i = 0; i < n; i++) {
-      x0 = x[i][0];
-      x1 = x[i][1];
-      x2 = x[i][2];
-      v0 = v[i][0];
-      v1 = v[i][1];
-      v2 = v[i][2];
-      x[i][0] = Lan_c[universe->iworld] * x0 +
-          1.0 / _omega_k[universe->iworld] * Lan_s[universe->iworld] * v0;
-      x[i][1] = Lan_c[universe->iworld] * x1 +
-          1.0 / _omega_k[universe->iworld] * Lan_s[universe->iworld] * v1;
-      x[i][2] = Lan_c[universe->iworld] * x2 +
-          1.0 / _omega_k[universe->iworld] * Lan_s[universe->iworld] * v2;
-      v[i][0] = -1.0 * _omega_k[universe->iworld] * Lan_s[universe->iworld] * x0 +
-          Lan_c[universe->iworld] * v0;
-      v[i][1] = -1.0 * _omega_k[universe->iworld] * Lan_s[universe->iworld] * x1 +
-          Lan_c[universe->iworld] * v1;
-      v[i][2] = -1.0 * _omega_k[universe->iworld] * Lan_s[universe->iworld] * x2 +
-          Lan_c[universe->iworld] * v2;
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        x0 = x[i][0];
+        x1 = x[i][1];
+        x2 = x[i][2];
+        v0 = v[i][0];
+        v1 = v[i][1];
+        v2 = v[i][2];
+        x[i][0] = Lan_c[universe->iworld] * x0 +
+            1.0 / _omega_k[universe->iworld] * Lan_s[universe->iworld] * v0;
+        x[i][1] = Lan_c[universe->iworld] * x1 +
+            1.0 / _omega_k[universe->iworld] * Lan_s[universe->iworld] * v1;
+        x[i][2] = Lan_c[universe->iworld] * x2 +
+            1.0 / _omega_k[universe->iworld] * Lan_s[universe->iworld] * v2;
+        v[i][0] = -1.0 * _omega_k[universe->iworld] * Lan_s[universe->iworld] * x0 +
+            Lan_c[universe->iworld] * v0;
+        v[i][1] = -1.0 * _omega_k[universe->iworld] * Lan_s[universe->iworld] * x1 +
+            Lan_c[universe->iworld] * v1;
+        v[i][2] = -1.0 * _omega_k[universe->iworld] * Lan_s[universe->iworld] * x2 +
+            Lan_c[universe->iworld] * v2;
+      }
     }
   }
 }
@@ -923,14 +974,17 @@ void FixPIMDLangevin::q_step()
   // used for PIMD
   // evolve all beads
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **x = atom->x;
   double **v = atom->v;
 
   if (!pstat_flag) {
     for (int i = 0; i < nlocal; i++) {
-      x[i][0] += dtv * v[i][0];
-      x[i][1] += dtv * v[i][1];
-      x[i][2] += dtv * v[i][2];
+      if (mask[i] & groupbit) {
+        x[i][0] += dtv * v[i][0];
+        x[i][1] += dtv * v[i][1];
+        x[i][2] += dtv * v[i][2];
+      }
     }
   }
 }
@@ -957,6 +1011,7 @@ void FixPIMDLangevin::baro_init()
 void FixPIMDLangevin::press_v_step()
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double **f = atom->f;
   double **v = atom->v;
   int *type = atom->type;
@@ -968,8 +1023,10 @@ void FixPIMDLangevin::press_v_step()
       if (universe->iworld == 0) {
         double dvw_proc = 0.0, dvw = 0.0;
         for (int i = 0; i < nlocal; i++) {
-          for (int j = 0; j < 3; j++) {
-            dvw_proc += dtv2 * f[i][j] * v[i][j] / W + dtv3 * f[i][j] * f[i][j] / mass[type[i]] / W;
+          if (mask[i] & groupbit) {
+            for (int j = 0; j < 3; j++) {
+              dvw_proc += dtv2 * f[i][j] * v[i][j] / W + dtv3 * f[i][j] * f[i][j] / mass[type[i]] / W;
+            }
           }
         }
         MPI_Allreduce(&dvw_proc, &dvw, 1, MPI_DOUBLE, MPI_SUM, world);
@@ -990,8 +1047,10 @@ void FixPIMDLangevin::press_v_step()
         if (universe->iworld == 0) {
           double dvw_proc = 0.0, dvw = 0.0;
           for (int i = 0; i < nlocal; i++) {
-            dvw_proc +=
-                dtv2 * f[i][ii] * v[i][ii] / W + dtv3 * f[i][ii] * f[i][ii] / mass[type[i]] / W;
+            if (mask[i] & groupbit) {
+              dvw_proc +=
+                  dtv2 * f[i][ii] * v[i][ii] / W + dtv3 * f[i][ii] * f[i][ii] / mass[type[i]] / W;
+            }
           }
           MPI_Allreduce(&dvw_proc, &dvw, 1, MPI_DOUBLE, MPI_SUM, world);
           vw[ii] += dvw;
@@ -1110,26 +1169,31 @@ void FixPIMDLangevin::langevin_init()
 void FixPIMDLangevin::o_step()
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   int *type = atom->type;
   double beta_np = 1.0 / force->boltz / Lan_temp * inverse_np * force->mvv2e;
   if (thermostat == PILE_L) {
     if (method == NMPIMD) {
       for (int i = 0; i < nlocal; i++) {
-        atom->v[i][0] = c1_k[universe->iworld] * atom->v[i][0] +
-            c2_k[universe->iworld] * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
-        atom->v[i][1] = c1_k[universe->iworld] * atom->v[i][1] +
-            c2_k[universe->iworld] * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
-        atom->v[i][2] = c1_k[universe->iworld] * atom->v[i][2] +
-            c2_k[universe->iworld] * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+        if (mask[i] & groupbit) {
+          atom->v[i][0] = c1_k[universe->iworld] * atom->v[i][0] +
+              c2_k[universe->iworld] * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+          atom->v[i][1] = c1_k[universe->iworld] * atom->v[i][1] +
+              c2_k[universe->iworld] * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+          atom->v[i][2] = c1_k[universe->iworld] * atom->v[i][2] +
+              c2_k[universe->iworld] * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+        }
       }
     } else if (method == PIMD) {
       for (int i = 0; i < nlocal; i++) {
-        atom->v[i][0] =
-            c1 * atom->v[i][0] + c2 * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
-        atom->v[i][1] =
-            c1 * atom->v[i][1] + c2 * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
-        atom->v[i][2] =
-            c1 * atom->v[i][2] + c2 * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+        if (mask[i] & groupbit) {
+          atom->v[i][0] =
+              c1 * atom->v[i][0] + c2 * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+          atom->v[i][1] =
+              c1 * atom->v[i][1] + c2 * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+          atom->v[i][2] =
+              c1 * atom->v[i][2] + c2 * sqrt(1.0 / mass[type[i]] / beta_np) * random->gaussian();
+        }
       }
     }
   }
@@ -1206,15 +1270,19 @@ void FixPIMDLangevin::nmpimd_transform(double **src, double **des, double *vecto
       for (int d = 0; d < 3; d++) { des[i][d] = bufsorted[tagtmp - 1][d]; }
     }
   } else if (cmode == MULTI_PROC) {
-    int n = atom->nlocal;
+    int nlocal = atom->nlocal;
     int m = 0;
+    int *mask = atom->mask;
 
-    for (int i = 0; i < n; i++)
-      for (int d = 0; d < 3; d++) {
-        des[i][d] = 0.0;
-        for (int j = 0; j < np; j++) { des[i][d] += (src[j][m] * vector[j]); }
-        m++;
+    for (int i = 0; i < nlocal; i++) {
+      if (mask[i] & groupbit) {
+        for (int d = 0; d < 3; d++) {
+          des[i][d] = 0.0;
+          for (int j = 0; j < np; j++) { des[i][d] += (src[j][m] * vector[j]); }
+          m++;
+        }
       }
+    }
   }
 }
 
@@ -1335,25 +1403,30 @@ void FixPIMDLangevin::inter_replica_comm(double **ptr)
   MPI_Status statuses[2];
   if (atom->nmax > maxlocal) reallocate();
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   tagint *tag = atom->tag;
   int i, m;
 
   // copy local values
   for (i = 0; i < nlocal; i++) {
-    bufbeads[ireplica][3 * i + 0] = ptr[i][0];
-    bufbeads[ireplica][3 * i + 1] = ptr[i][1];
-    bufbeads[ireplica][3 * i + 2] = ptr[i][2];
+    if (mask[i] & groupbit) {
+      bufbeads[ireplica][3 * i + 0] = ptr[i][0];
+      bufbeads[ireplica][3 * i + 1] = ptr[i][1];
+      bufbeads[ireplica][3 * i + 2] = ptr[i][2];
+    }
   }
 
   // communicate values from the other beads
   if (cmode == SINGLE_PROC) {
     m = 0;
     for (i = 0; i < nlocal; i++) {
-      tagint tagtmp = atom->tag[i];
-      bufsorted[tagtmp - 1][0] = ptr[i][0];
-      bufsorted[tagtmp - 1][1] = ptr[i][1];
-      bufsorted[tagtmp - 1][2] = ptr[i][2];
-      m++;
+      if (mask[i] & groupbit) {
+        tagint tagtmp = atom->tag[i];
+        bufsorted[tagtmp - 1][0] = ptr[i][0];
+        bufsorted[tagtmp - 1][1] = ptr[i][1];
+        bufsorted[tagtmp - 1][2] = ptr[i][2];
+        m++;
+      }
     }
     MPI_Allgather(&m, 1, MPI_INT, counts, 1, MPI_INT, universe->uworld);
     for (i = 0; i < nreplica; i++) counts[i] *= 3;
@@ -1364,11 +1437,13 @@ void FixPIMDLangevin::inter_replica_comm(double **ptr)
   } else if (cmode == MULTI_PROC) {
     m = 0;
     for (i = 0; i < nlocal; i++) {
-      tagsend[m] = tag[i];
-      bufsend[m][0] = ptr[i][0];
-      bufsend[m][1] = ptr[i][1];
-      bufsend[m][2] = ptr[i][2];
-      m++;
+      if (mask[i] & groupbit) {
+        tagsend[m] = tag[i];
+        bufsend[m][0] = ptr[i][0];
+        bufsend[m][1] = ptr[i][1];
+        bufsend[m][2] = ptr[i][2];
+        m++;
+      }
     }
     MPI_Gather(&m, 1, MPI_INT, counts, 1, MPI_INT, 0, world);
     displacements[0] = 0;
@@ -1448,10 +1523,13 @@ void FixPIMDLangevin::remove_com_motion()
 void FixPIMDLangevin::compute_xf_vir()
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double xf = 0.0;
   vir_ = 0.0;
   for (int i = 0; i < nlocal; i++) {
-    for (int j = 0; j < 3; j++) { xf += x_unwrap[i][j] * atom->f[i][j]; }
+    if (mask[i] & groupbit) {
+      for (int j = 0; j < 3; j++) { xf += x_unwrap[i][j] * atom->f[i][j]; }
+    }
   }
   MPI_Allreduce(&xf, &vir_, 1, MPI_DOUBLE, MPI_SUM, universe->uworld);
 }
@@ -1461,21 +1539,26 @@ void FixPIMDLangevin::compute_xf_vir()
 void FixPIMDLangevin::compute_cvir()
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   double xcf = 0.0;
   centroid_vir = 0.0;
   for (int i = 0; i < nlocal; i++) {
-    for (int j = 0; j < 3; j++) { xcf += (x_unwrap[i][j] - xc[i][j]) * atom->f[i][j]; }
+    if (mask[i] & groupbit) {
+      for (int j = 0; j < 3; j++) { xcf += (x_unwrap[i][j] - xc[i][j]) * atom->f[i][j]; }
+    }
   }
   MPI_Allreduce(&xcf, &centroid_vir, 1, MPI_DOUBLE, MPI_SUM, universe->uworld);
   if (pstyle == ANISO) {
     for (int i = 0; i < 6; i++) c_vir_tensor[i] = 0.0;
     for (int i = 0; i < nlocal; i++) {
-      c_vir_tensor[0] += (x_unwrap[i][0] - xc[i][0]) * atom->f[i][0];
-      c_vir_tensor[1] += (x_unwrap[i][1] - xc[i][1]) * atom->f[i][1];
-      c_vir_tensor[2] += (x_unwrap[i][2] - xc[i][2]) * atom->f[i][2];
-      c_vir_tensor[3] += (x_unwrap[i][0] - xc[i][0]) * atom->f[i][1];
-      c_vir_tensor[4] += (x_unwrap[i][0] - xc[i][0]) * atom->f[i][2];
-      c_vir_tensor[5] += (x_unwrap[i][1] - xc[i][1]) * atom->f[i][2];
+      if (mask[i] & groupbit) {
+        c_vir_tensor[0] += (x_unwrap[i][0] - xc[i][0]) * atom->f[i][0];
+        c_vir_tensor[1] += (x_unwrap[i][1] - xc[i][1]) * atom->f[i][1];
+        c_vir_tensor[2] += (x_unwrap[i][2] - xc[i][2]) * atom->f[i][2];
+        c_vir_tensor[3] += (x_unwrap[i][0] - xc[i][0]) * atom->f[i][1];
+        c_vir_tensor[4] += (x_unwrap[i][0] - xc[i][0]) * atom->f[i][2];
+        c_vir_tensor[5] += (x_unwrap[i][1] - xc[i][1]) * atom->f[i][2];
+      }
     }
     MPI_Allreduce(MPI_IN_PLACE, &c_vir_tensor, 6, MPI_DOUBLE, MPI_SUM, universe->uworld);
   }
@@ -1504,17 +1587,20 @@ void FixPIMDLangevin::compute_vir()
 void FixPIMDLangevin::compute_stress_tensor()
 {
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   int *type = atom->type;
   if (universe->iworld == 0) {
     double inv_volume = 1.0 / (domain->xprd * domain->yprd * domain->zprd);
     for (int i = 0; i < 6; i++) ke_tensor[i] = 0.0;
     for (int i = 0; i < nlocal; i++) {
-      ke_tensor[0] += 0.5 * mass[type[i]] * atom->v[i][0] * atom->v[i][0] * force->mvv2e;
-      ke_tensor[1] += 0.5 * mass[type[i]] * atom->v[i][1] * atom->v[i][1] * force->mvv2e;
-      ke_tensor[2] += 0.5 * mass[type[i]] * atom->v[i][2] * atom->v[i][2] * force->mvv2e;
-      ke_tensor[3] += 0.5 * mass[type[i]] * atom->v[i][0] * atom->v[i][1] * force->mvv2e;
-      ke_tensor[4] += 0.5 * mass[type[i]] * atom->v[i][0] * atom->v[i][2] * force->mvv2e;
-      ke_tensor[5] += 0.5 * mass[type[i]] * atom->v[i][1] * atom->v[i][2] * force->mvv2e;
+      if (mask[i] & groupbit) {
+        ke_tensor[0] += 0.5 * mass[type[i]] * atom->v[i][0] * atom->v[i][0] * force->mvv2e;
+        ke_tensor[1] += 0.5 * mass[type[i]] * atom->v[i][1] * atom->v[i][1] * force->mvv2e;
+        ke_tensor[2] += 0.5 * mass[type[i]] * atom->v[i][2] * atom->v[i][2] * force->mvv2e;
+        ke_tensor[3] += 0.5 * mass[type[i]] * atom->v[i][0] * atom->v[i][1] * force->mvv2e;
+        ke_tensor[4] += 0.5 * mass[type[i]] * atom->v[i][0] * atom->v[i][2] * force->mvv2e;
+        ke_tensor[5] += 0.5 * mass[type[i]] * atom->v[i][1] * atom->v[i][2] * force->mvv2e;
+      }
     }
     MPI_Allreduce(MPI_IN_PLACE, &ke_tensor, 6, MPI_DOUBLE, MPI_SUM, world);
     for (int i = 0; i < 6; i++) {
@@ -1532,9 +1618,12 @@ void FixPIMDLangevin::compute_totke()
   double kine = 0.0;
   totke = ke_bead = 0.0;
   int nlocal = atom->nlocal;
+  int *mask = atom->mask;
   int *type = atom->type;
   for (int i = 0; i < nlocal; i++) {
-    for (int j = 0; j < 3; j++) { kine += 0.5 * mass[type[i]] * atom->v[i][j] * atom->v[i][j]; }
+    if (mask[i] & groupbit) {
+      for (int j = 0; j < 3; j++) { kine += 0.5 * mass[type[i]] * atom->v[i][j] * atom->v[i][j]; }
+    }
   }
   kine *= force->mvv2e;
   MPI_Allreduce(&kine, &ke_bead, 1, MPI_DOUBLE, MPI_SUM, world);
@@ -1554,10 +1643,13 @@ void FixPIMDLangevin::compute_spring_energy()
     double *_mass = atom->mass;
     int *type = atom->type;
     int nlocal = atom->nlocal;
+    int *mask = atom->mask;
 
     for (int i = 0; i < nlocal; i++) {
-      spring_energy += 0.5 * _mass[type[i]] * fbond * lam[universe->iworld] *
-          (x[i][0] * x[i][0] + x[i][1] * x[i][1] + x[i][2] * x[i][2]);
+      if (mask[i] & groupbit) {
+        spring_energy += 0.5 * _mass[type[i]] * fbond * lam[universe->iworld] *
+            (x[i][0] * x[i][0] + x[i][1] * x[i][1] + x[i][2] * x[i][2]);
+      }
     }
     MPI_Allreduce(&spring_energy, &se_bead, 1, MPI_DOUBLE, MPI_SUM, world);
     MPI_Allreduce(&se_bead, &total_spring_energy, 1, MPI_DOUBLE, MPI_SUM, universe->uworld);
