@@ -509,7 +509,7 @@ bigint Thermo::lost_check()
     warnbefore = 1;
     if (comm->me == 0)
       utils::logmesg(
-          lmp, "WARNING: Too many warnings: {} vs {}. All future warnings willbe suppressed\n",
+          lmp, "WARNING: Too many warnings: {} vs {}. All future warnings will be suppressed\n",
           ntotal[1], maxwarn);
   }
   error->set_allwarn(MIN(MAXSMALLINT, ntotal[1]));
