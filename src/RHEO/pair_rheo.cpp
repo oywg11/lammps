@@ -27,6 +27,7 @@
 #include "error.h"
 #include "fix_rheo.h"
 #include "fix_rheo_pressure.h"
+#include "fix_rheo_thermal.h"
 #include "force.h"
 #include "info.h"
 #include "math_extra.h"
@@ -80,8 +81,8 @@ void PairRHEO::compute(int eflag, int vflag)
   int pair_force_flag, pair_rho_flag, pair_avisc_flag;
   int fluidi, fluidj;
   double xtmp, ytmp, ztmp, wp, Ti, Tj, dT, cs_ave;
-  double rhoi, rhoj, rho0i, rho0j, voli, volj, Pi, Pj, etai, etaj, kappai, kappaj, csqi, csqj;
-  double eta_ave, kappa_ave, dT_prefactor;
+  double rhoi, rhoj, rho0i, rho0j, voli, volj, Pi, Pj, etai, etaj, kappai, kappaj, csqi, csqj, alphai, alphaj, cpi, cpj;
+  double eta_ave, alpha_ave, dT_prefactor;
   double mu, q, fp_prefactor, drho_damp, fmag, psi_ij, Fij;
   double *dWij, *dWji;
   double dx[3], du[3], dv[3], fv[3], dfp[3], fsolid[3], ft[3], vi[3], vj[3];
@@ -158,6 +159,7 @@ void PairRHEO::compute(int eflag, int vflag)
     if (thermal_flag) {
       kappai = conductivity[i];
       Ti = temperature[i];
+      cpi = fix_thermal->calc_cv(itype);
     }
 
     for (jj = 0; jj < jnum; jj++) {
@@ -261,13 +263,16 @@ void PairRHEO::compute(int eflag, int vflag)
 
         // Thermal Evolution
         if (thermal_flag) {
+          cpj = fix_thermal->calc_cv(jtype);
+          alphai = kappai / (rho0i * cpi);
+          alphaj = kappaj / (rho0j * cpj);
           if (harmonic_means_flag) {
-            kappa_ave = 2.0 * kappai * kappaj / (kappai + kappaj);
+            alpha_ave = 2.0 * alphai * alphaj / (alphai + alphaj);
           } else {
-            kappa_ave = 0.5 * (kappai + kappaj);
+            alpha_ave = 0.5 * (alphai + alphaj);
           }
           dT_prefactor =
-              2.0 * kappa_ave * (Ti - Tj) * rinv * rinv * voli * volj * 2.0 / (rhoi + rhoj);
+              2.0 * alpha_ave * (Ti - Tj) * rinv * rinv * voli * volj;
 
           dT = dot3(dx, dWij);
           heatflow[i] += dT * dT_prefactor;
@@ -493,6 +498,15 @@ void PairRHEO::setup()
   rho0 = fix_rheo->rho0;
 
   variable_csq = fix_pressure->variable_csq;
+
+  // Only if thermal flag
+  if (thermal_flag) {
+    fixes = modify->get_fix_by_style("^rheo/thermal$");
+    // FixRHEO should perform these checks
+    if (fixes.size() == 0 || fixes.size() > 1)
+      error->all(FLERR, "Must have one and only one instance of fix rheo/thermal defined");
+    fix_pressure = dynamic_cast<FixRHEOPressure *>(fixes[0]);
+  }
 
   if (cutk != fix_rheo->cut)
     error->all(FLERR, "Pair rheo cutoff {} does not agree with fix rheo cutoff {}", cutk,
