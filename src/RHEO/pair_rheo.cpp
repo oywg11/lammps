@@ -505,7 +505,7 @@ void PairRHEO::setup()
     // FixRHEO should perform these checks
     if (fixes.size() == 0 || fixes.size() > 1)
       error->all(FLERR, "Must have one and only one instance of fix rheo/thermal defined");
-    fix_pressure = dynamic_cast<FixRHEOPressure *>(fixes[0]);
+    fix_thermal = dynamic_cast<FixRHEOThermal *>(fixes[0]);
   }
 
   if (cutk != fix_rheo->cut)
