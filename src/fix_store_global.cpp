@@ -33,6 +33,7 @@ FixStoreGlobal::FixStoreGlobal(LAMMPS *lmp, int narg, char **arg) :
   //   N2 = 1 is vector, N2 > 1 is array, no tensor allowed (yet)
 
   vecflag = arrayflag = 0;
+  dynamic_group_allow = 1;
 
   restart_global = 1;
   n1 = utils::inumeric(FLERR, arg[3], false, lmp);

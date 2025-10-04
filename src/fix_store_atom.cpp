@@ -38,6 +38,7 @@ FixStoreAtom::FixStoreAtom(LAMMPS *lmp, int narg, char **arg) :
   if (narg != 7) error->all(FLERR, "Illegal fix STORE/ATOM command: number of args");
 
   disable = 0;
+  dynamic_group_allow = 1;
 
   n1 = utils::inumeric(FLERR, arg[3], false, lmp);
   n2 = utils::inumeric(FLERR, arg[4], false, lmp);
