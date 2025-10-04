@@ -570,13 +570,12 @@ void ComputeChunkAtom::init()
   // fixstore ID = compute-ID + COMPUTE_STORE, fix group = compute group
   // fixstore initializes all values to 0.0
 
-  if ((idsflag == ONCE || lockcount) && !fixstore) {
-    fixstore = dynamic_cast<FixStoreAtom *>(
-        modify->add_fix(fmt::format("{} {} STORE/ATOM 1 0 0 1", id_fix, group->names[igroup])));
+  if (((idsflag == ONCE) || ((idsflag == NFREQ) && lockcount)) && !fixstore) {
     id_fix = std::string(id) + "_COMPUTE_STORE";
+    fixstore = dynamic_cast<FixStoreAtom *>(modify->add_fix(id_fix + " all STORE/ATOM 1 0 0 1"));
   }
 
-  if ((idsflag != ONCE && !lockcount) && fixstore) {
+  if (((idsflag != ONCE) && !((idsflag == NFREQ) && lockcount)) && fixstore) {
     modify->delete_fix(id_fix);
     fixstore = nullptr;
   }
@@ -698,8 +697,8 @@ void ComputeChunkAtom::compute_ichunk()
 
   const int nlocal = atom->nlocal;
   int restore = 0;
-  if (idsflag == ONCE && invoked_ichunk >= 0) restore = 1;
-  if (idsflag == NFREQ && lockfix && update->ntimestep > lockstart) restore = 1;
+  if ((idsflag == ONCE) && (invoked_ichunk >= 0)) restore = 1;
+  if ((idsflag == NFREQ) && lockfix && (update->ntimestep > lockstart)) restore = 1;
 
   if (restore) {
     if (idsflag == NFREQ) invoked_ichunk = update->ntimestep;
@@ -773,7 +772,7 @@ void ComputeChunkAtom::compute_ichunk()
   // if newly calculated IDs need to persist, store them in fixstore
   // yes if idsflag = ONCE or idsflag = NFREQ and lock is in place
 
-  if (idsflag == ONCE || (idsflag == NFREQ && lockfix)) {
+  if ((idsflag == ONCE) || ((idsflag == NFREQ) && lockfix)) {
     double *vstore = fixstore->vstore;
     for (i = 0; i < nlocal; i++) vstore[i] = ichunk[i];
   }
@@ -992,8 +991,8 @@ void ComputeChunkAtom::assign_chunk_ids()
   } else if (which == ArgInfo::FIX) {
     if (update->ntimestep % fchunk->peratom_freq)
       error->all(FLERR, Error::NOLASTLINE,
-                 "Fix {} used in compute chunk/atom not computed at compatible time{}",
-                 fchunk->id, utils::errorurl(7));
+                 "Fix {} used in compute chunk/atom not computed at compatible time{}", fchunk->id,
+                 utils::errorurl(7));
 
     if (argindex == 0) {
       double *vec = fchunk->vector_atom;
