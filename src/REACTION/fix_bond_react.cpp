@@ -735,7 +735,7 @@ void FixBondReact::post_integrate()
   int nevery_check = 1;
   for (auto &rxn : rxns) {
     if (rxn.v_nevery > -1)
-      rxn.nevery = ceil(input->variable->compute_equal(rxn.v_nevery));
+      rxn.nevery = ceil(input->variable->compute_equal(rxn.v_nevery)); // NOLINT
     if (rxn.nevery <= 0)
       error->all(FLERR,"Illegal fix bond/react command: "
                  "'Nevery' must be a positive integer");
@@ -808,7 +808,7 @@ void FixBondReact::post_integrate()
       for (auto i : rlm.rxnIDs) rxn_count_sum += rxns[i].reaction_count_total;
       nrxns_delta = rxn_count_sum - myrxn_count;
       if (rlm.var_flag == 1) {
-        my_nrate = input->variable->compute_equal(rlm.var_id);
+        my_nrate = input->variable->compute_equal(rlm.var_id); // NOLINT
       } else my_nrate = rlm.Nlimit;
     }
     if (myrxn_count == -1 || nrxns_delta >= my_nrate)
@@ -1336,7 +1336,7 @@ void FixBondReact::superimpose_algorithm()
         int nrxn_delta = rxn_count_sum + delta_rxn_sum - myrxn_count;
         int my_nrate;
         if (rlm.var_flag == 1) {
-          my_nrate = input->variable->compute_equal(rlm.var_id);
+          my_nrate = input->variable->compute_equal(rlm.var_id); // NOLINT
         } else my_nrate = rlm.Nlimit;
         int rate_limit_overstep_sum = nrxn_delta - my_nrate;
         if (rate_limit_overstep_sum > 0) {
@@ -1983,7 +1983,7 @@ int FixBondReact::check_constraints(Reaction &rxn, std::vector<tagint> &glove)
       memory->destroy(xmobile);
       if (rmsd > constraint.rmsd.rmsdmax) constraint.satisfied = false;
     } else if (constraint.type == Reaction::Constraint::Type::CUSTOM) {
-      constraint.satisfied = custom_constraint(constraint.custom.str, rxn, glove);
+      constraint.satisfied = custom_constraint(constraint.custom.str, rxn, glove); // NOLINT
     }
   }
 
@@ -2276,11 +2276,10 @@ double FixBondReact::rxnfunction(const std::string& rxnfunc, const std::string& 
   // for 'rxnbond', varid corresponds to 'compute bond/local' name,
   //                and fragid is a pre-reaction fragment containing the two atoms in the bond
   if (rxnfunc == "rxnbond") {
-    int icompute,ibond,nsum;
+    int icompute,ibond;
     double perbondval;
     std::set<tagint> aset;
     std::string computeid = varid;
-    std::map<std::set<tagint>,int>::iterator it;
 
     if (computeid.substr(0,2) != "c_") error->one(FLERR,"Bond/react: Reaction special function compute "
                                          "name should begin with 'c_'");
@@ -2299,20 +2298,18 @@ double FixBondReact::rxnfunction(const std::string& rxnfunc, const std::string& 
       get_atoms2bond(cperbond->groupbit);
     }
 
-    nsum = 0;
     for (int i = 0; i < mol->natoms; i++) {
       if (mol->fragmentmask[ifrag][i]) {
         aset.insert(glove[i]);
-        nsum++;
       }
     }
-    if (nsum != 2) error->one(FLERR,"Bond/react: Molecule fragment of reaction special function 'rxnbond' "
+    if (aset.size() != 2) error->one(FLERR,"Bond/react: Molecule fragment of reaction special function 'rxnbond' "
                      "must contain exactly two atoms");
 
     if (cperbond->invoked_local != lmp->update->ntimestep)
       cperbond->compute_local();
 
-    it = atoms2bond.find(aset);
+    auto it = atoms2bond.find(aset);
     if (it == atoms2bond.end()) error->one(FLERR,"Bond/react: Unable to locate bond referenced by "
                                             "reaction special function 'rxnbond'");
     ibond = it->second;
@@ -2608,10 +2605,10 @@ void FixBondReact::dedup_mega_gloves(Dedup_Modes dedup_mode)
   // let's randomly mix up our reaction instances first
   // then we can feel okay about ignoring ones we've already deleted (or accepted)
   // based off std::shuffle
-  double *temp_rxn = new double[max_natoms+cuff];
+  auto *temp_rxn = new double[max_natoms+cuff];
   for (int i = dedup_size-1; i > 0; --i) { //dedup_size
     // choose random entry to swap current one with
-    int k = floor(random[0]->uniform()*(i+1));
+    int k = floor(random[0]->uniform()*(i+1)); // NOLINT
 
     // swap entries
     for (int j = 0; j < max_natoms+cuff; j++)
@@ -2626,14 +2623,14 @@ void FixBondReact::dedup_mega_gloves(Dedup_Modes dedup_mode)
 
   for (int i = 0; i < dedup_size; i++) {
     if (dedup_mask[i] == 0) {
-      int myrxnid1 = dedup_glove[0][i];
+      int myrxnid1 = dedup_glove[0][i]; // NOLINT
       for (int j = 0; j < rxns[myrxnid1].reactant->natoms; j++) {
-        int check1 = dedup_glove[j+cuff][i];
+        int check1 = dedup_glove[j+cuff][i]; // NOLINT
         for (int ii = i + 1; ii < dedup_size; ii++) {
           if (dedup_mask[ii] == 0) {
-            int myrxnid2 = dedup_glove[0][ii];
+            int myrxnid2 = dedup_glove[0][ii]; // NOLINT
             for (int jj = 0; jj < rxns[myrxnid2].reactant->natoms; jj++) {
-              int check2 = dedup_glove[jj+cuff][ii];
+              int check2 = dedup_glove[jj+cuff][ii]; // NOLINT
               if (check2 == check1) {
                 dedup_mask[ii] = 1;
                 break;
@@ -4070,6 +4067,8 @@ void FixBondReact::CreateAtoms(char *line, Reaction &rxn, int ncreate)
   }
   if (rxn.product->xflag == 0)
     error->one(FLERR,"Fix bond/react: 'Coords' section required in post-reaction template when creating new atoms");
+  if (atom->rmass_flag && !twomol->rmassflag)
+    error->one(FLERR, "Fix bond/react: 'Masses' section required in post-reaction template when creating new atoms if per-atom masses are defined.");
 }
 
 void FixBondReact::CustomCharges(int ifragment, Reaction &rxn)
@@ -4121,7 +4120,7 @@ void FixBondReact::ReadConstraints(char *line, Reaction &rxn)
   double tmp[MAXCONARGS];
   char **strargs,*ptr,*lptr;
   memory->create(strargs,MAXCONARGS,MAXLINE,"bond/react:strargs");
-  auto constraint_type = new char[MAXLINE];
+  auto *constraint_type = new char[MAXLINE];
   rxn.constraintstr = "("; // string for boolean constraint logic
   for (auto &constraint : rxn.constraints) {
     readline(line);
