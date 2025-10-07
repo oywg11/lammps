@@ -32,16 +32,18 @@ Syntax
          *yes* = update molecule IDs based on new global topology (default)
          *no* = do not update molecule IDs
          *molmap* = customize how molecule IDs are updated
-       *rate_limit* = Nrxns react-ID_1 ... react-ID_N Nlimit Nsteps
+       *rate_limit* values = Nrxns react-ID_1 ... react-ID_N Nlimit Nsteps
          Nrxns = number of reactions to include in rate limit
          react-IDs = names of the reactions to include in rate limit
          Nlimit = maximum number of reactions allowed to occur within interval
          Nsteps = the interval (number of timesteps) over which to count reactions
-       *max_rxn* value = Nrxns react-ID_1 ... react-ID_N Nlimit Nsteps
+       *max_rxn* values = Nrxns react-ID_1 ... react-ID_N Nlimit Nsteps
          Nrxns = number of reactions to include in rate limit
          react-IDs = names of the reactions to include in rate limit
          Nlimit = maximum number of reactions allowed to occur within interval
          N = maximum number of reactions allowed to occur
+       *shuffle_seed* value = seed
+         seed = random # seed (positive integer) for choosing between reactions
 
 * react = mandatory argument indicating new reaction specification
 * react-ID = user-assigned name for the reaction
@@ -228,18 +230,23 @@ the reactions are listed by reaction name (react-ID). The number of
 reaction occurrences is calculated by summing over the listed reactions.
 This sum is limited to Nlimit, which can be specified with an equal-style
 :doc:`variable <variable>`. Reaction occurrences are chosen randomly from
-all eligible reaction sites of all listed reactions. Multiple *rate_limit*
-keywords can be specified. This keyword is useful when multiple *react*
-arguments define similar types of reactions, and the relative rates between
-two or more types of reactions must be enforced.
+all eligible reaction sites of all listed reactions. By default, a
+hardware-based random number source is used if available; reactions are
+chosen deterministically if a positive integer is specified for the
+'shuffle_seed' keyword. Multiple *rate_limit* keywords can be specified.
+This keyword is useful when multiple *react* arguments define similar types
+of reactions, and the relative rates between two or more types of reactions
+must be enforced.
 
 The *max_rxn* keyword can enforce an upper limit on the overall number of
 one or more reactions. The number of reactions to sum over is specified by
 Nrxns, and the reactions are listed by reaction name (react-ID). The number
 of reaction occurrences is calculated by summing over the listed reactions.
 This sum is limited to N. Reaction occurrences are chosen randomly from all
-eligible reaction sites of all listed reactions. Multiple *max_rxn* keywords
-can be specified.
+eligible reaction sites of all listed reactions. By default, a
+hardware-based random number source is used if available; reactions are
+chosen deterministically if a positive integer is specified for the
+'shuffle_seed' keyword. Multiple *max_rxn* keywords can be specified.
 
 The following comments pertain to each *react* argument (in other
 words, they can be customized for each reaction, or reaction step):
