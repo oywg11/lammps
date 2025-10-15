@@ -2301,6 +2301,9 @@ void Molecule::read(int flag)
       nspecial_read(flag, line);
     } else if (keyword == "Special Bonds") {
       specialflag = tag_require = 1;
+      if (!nspecialflag)
+        error->all(FLERR, fileiarg,
+                   "Special Bond Counts section must come before Special Bonds section");
       if (flag)
         special_read(line);
       else
