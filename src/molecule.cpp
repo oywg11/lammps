@@ -1406,9 +1406,9 @@ void Molecule::from_json(const std::string &molid, const json &moldata)
                        "Molecule template {}: invalid improper type in improper {}: {}", id, i + 1,
                        to_string(item));
           if (flag == 0) {
-            count[atom1 - 1]++;
+            count[atom2 - 1]++;
             if (newton_bond == 0) {
-              count[atom2 - 1]++;
+              count[atom1 - 1]++;
               count[atom3 - 1]++;
               count[atom4 - 1]++;
             }
