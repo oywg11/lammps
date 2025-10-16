@@ -25,6 +25,8 @@ Examples
 Description
 """""""""""
 
+.. versionadded:: TBD
+
 Write the data from a :doc:`molecule template<molecule>` to a file.
 
 The file format is determined by the file name: if the file name ends
