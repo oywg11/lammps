@@ -3859,10 +3859,12 @@ void Molecule::body(int flag, int pflag, char *line)
       ValueTokenizer values(utils::trim_comment(line));
       int ncount = values.count();
 
+      std::string sec = "Body ";
+      sec += pflag ? "Doubles" : "Integers";
       if (ncount == 0)
-        error->all(FLERR, fileiarg, "Too few values in body section of molecule file");
+        error->all(FLERR, fileiarg, "Too few values in {} section of molecule file", sec);
       if (nword + ncount > nparam)
-        error->all(FLERR, fileiarg, "Too many values in body section of molecule file");
+        error->all(FLERR, fileiarg, "Too many values in {} sectopm of molecule file", sec);
 
       if (flag) {
         if (pflag == 0) {
@@ -4250,12 +4252,12 @@ void Molecule::stats()
 void Molecule::print(FILE *fp)
 {
   utils::print(fp, "  {} atoms\n", natoms);
-  if (nfragments) utils::print(fp, "  {} fragments\n", nfragments);
   if (nbonds) utils::print(fp, "  {} bonds\n", nbonds);
   if (nangles) utils::print(fp, "  {} angles\n", nangles);
   if (ndihedrals) utils::print(fp, "  {} dihedrals\n", ndihedrals);
   if (nimpropers) utils::print(fp, "  {} impropers\n", nimpropers);
-  if (massflag_user) utils::print(fp, "  {} mass\n", masstotal);
+  if (nfragments) utils::print(fp, "  {} fragments\n", nfragments);
+  if (nfragments) utils::print(fp, "  {} fragments\n", nfragments);
   if (bodyflag) utils::print(fp, "  {} {} body\n", nibody, ndbody);
   if (comflag_user) utils::print(fp, "  {} {} {} com\n", com[0], com[1], com[2]);
   if (inertiaflag_user)
@@ -4263,13 +4265,13 @@ void Molecule::print(FILE *fp)
                  itensor[3], itensor[4], itensor[5]);
 
   if (xflag) {
-    utils::print(fp, "\nCoords\n\n");
+    fputs("\nCoords\n\n", fp);
     for (int i = 0; i < natoms; i++)
       utils::print(fp, " {}  {} {} {}\n", i + 1, x[i][0], x[i][1], x[i][2]);
   }
 
   if (typeflag) {
-    utils::print(fp, "\nTypes\n\n");
+    fputs("\nTypes\n\n", fp);
     if (atom->labelmapflag && atom->lmap->is_complete(Atom::ATOM)) {
       for (int i = 0; i < natoms; i++)
         utils::print(fp, " {} {}\n", i + 1, atom->lmap->find(type[i], Atom::ATOM));
@@ -4279,12 +4281,12 @@ void Molecule::print(FILE *fp)
   }
 
   if (moleculeflag) {
-    utils::print(fp, "\nMolecules\n\n");
+    fputs("\nMolecules\n\n", fp);
     for (int i = 0; i < natoms; i++) utils::print(fp, " {}  {}\n", i + 1, molecule[i]);
   }
 
   if (fragmentflag) {
-    utils::print(fp, "\nFragments\n\n");
+    fputs("\nFragments\n\n", fp);
     for (int i = 0; i < nfragments; i++) {
       utils::print(fp, " {} ", fragmentnames[i]);
       for (int j = 0; j < natoms; j++) {
@@ -4295,30 +4297,30 @@ void Molecule::print(FILE *fp)
   }
 
   if (qflag) {
-    utils::print(fp, "\nCharges\n\n");
+    fputs("\nCharges\n\n", fp);
     for (int i = 0; i < natoms; i++) utils::print(fp, " {}  {}\n", i + 1, q[i]);
   }
 
   if (radiusflag && !bodyflag) {
-    utils::print(fp, "\nDiameters\n\n");
+    fputs("\nDiameters\n\n", fp);
     for (int i = 0; i < natoms; i++) utils::print(fp, " {}  {}\n", i + 1, 2.0 * radius[i]);
   }
 
   if (muflag) {
-    utils::print(fp, "\nDipoles\n\n");
+    fputs("\nDipoles\n\n", fp);
     for (int i = 0; i < natoms; i++)
       utils::print(fp, " {}  {} {} {}\n", i + 1, mu[i][0], mu[i][1], mu[i][2]);
   }
 
   if (rmassflag) {
-    utils::print(fp, "\nMasses\n\n");
+    fputs("\nMasses\n\n", fp);
     for (int i = 0; i < natoms; i++) utils::print(fp, " {}  {}\n", i + 1, rmass[i]);
   }
 
   bool has_newton_bond = force->newton_bond > 0;
 
   if (bondflag) {
-    utils::print(fp, "\nBonds\n\n");
+    fputs("\nBonds\n\n", fp);
     int idx = 0;
     bool has_typelabels = (atom->labelmapflag != 0) && atom->lmap->is_complete(Atom::BOND);
 
@@ -4338,7 +4340,7 @@ void Molecule::print(FILE *fp)
   }
 
   if (angleflag) {
-    utils::print(fp, "\nAngles\n\n");
+    fputs("\nAngles\n\n", fp);
     int idx = 0;
     bool has_typelabels = (atom->labelmapflag != 0) && atom->lmap->is_complete(Atom::ANGLE);
     for (int i = 0; i < natoms; i++) {
@@ -4357,7 +4359,7 @@ void Molecule::print(FILE *fp)
   }
 
   if (dihedralflag) {
-    utils::print(fp, "\nDihedrals\n\n");
+    fputs("\nDihedrals\n\n", fp);
     int idx = 0;
     bool has_typelabels = (atom->labelmapflag != 0) && atom->lmap->is_complete(Atom::DIHEDRAL);
     for (int i = 0; i < natoms; i++) {
@@ -4377,7 +4379,7 @@ void Molecule::print(FILE *fp)
   }
 
   if (improperflag) {
-    utils::print(fp, "\nImpropers\n\n");
+    fputs("\nImpropers\n\n", fp);
     int idx = 0;
     bool has_typelabels = (atom->labelmapflag != 0) && atom->lmap->is_complete(Atom::IMPROPER);
     for (int i = 0; i < natoms; i++) {
@@ -4397,13 +4399,13 @@ void Molecule::print(FILE *fp)
   }
 
   if (specialflag_user) {
-    utils::print(fp, "\nSpecial Bond Counts\n\n");
+    fputs("\nSpecial Bond Counts\n\n", fp);
     for (int i = 0; i < natoms; i++) {
       utils::print(fp, " {}  {} {} {}\n", i + 1, nspecial[i][0], nspecial[i][1] - nspecial[i][0],
                    nspecial[i][2] - nspecial[i][1]);
     }
 
-    utils::print(fp, "\nSpecial Bonds\n\n");
+    fputs("\nSpecial Bonds\n\n", fp);
     for (int i = 0; i < natoms; i++) {
       utils::print(fp, " {} ", i + 1);
       for (int j = 0; j < nspecial[i][2]; j++) utils::print(fp, " {}", special[i][j]);
@@ -4412,10 +4414,10 @@ void Molecule::print(FILE *fp)
   }
 
   if (shakeflag) {
-    utils::print(fp, "\nShake Flags\n\n");
+    fputs("\nShake Flags\n\n", fp);
     for (int i = 0; i < natoms; i++) { utils::print(fp, " {}  {}\n", i + 1, shake_flag[i]); }
 
-    utils::print(fp, "\nShake Atoms\n\n");
+    fputs("\nShake Atoms\n\n", fp);
     for (int i = 0; i < natoms; i++) {
       utils::print(fp, " {} ", i + 1);
       switch (shake_flag[i]) {
@@ -4442,7 +4444,7 @@ void Molecule::print(FILE *fp)
       }
     }
 
-    utils::print(fp, "\nShake Bond Types\n\n");
+    fputs("\nShake Bond Types\n\n", fp);
     for (int i = 0; i < natoms; i++) {
       bool has_typelabels = (atom->labelmapflag != 0) && atom->lmap->is_complete(Atom::BOND);
       utils::print(fp, " {} ", i + 1);
