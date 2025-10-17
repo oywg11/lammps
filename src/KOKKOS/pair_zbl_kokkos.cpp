@@ -263,18 +263,18 @@ double PairZBLKokkos<DeviceType>::init_one(int i, int j)
 {
   double cutone = PairZBL::init_one(i,j);
 
-  k_z.h_view(i) = z[i];
-  k_z.h_view(j) = z[j];
-  k_d1a.h_view(i,j) = k_d1a.h_view(j,i) = d1a[i][j];
-  k_d2a.h_view(i,j) = k_d2a.h_view(j,i) = d2a[i][j];
-  k_d3a.h_view(i,j) = k_d3a.h_view(j,i) = d3a[i][j];
-  k_d4a.h_view(i,j) = k_d4a.h_view(j,i) = d4a[i][j];
-  k_zze.h_view(i,j) = k_zze.h_view(j,i) = zze[i][j];
-  k_sw1.h_view(i,j) = k_sw1.h_view(j,i) = sw1[i][j];
-  k_sw2.h_view(i,j) = k_sw2.h_view(j,i) = sw2[i][j];
-  k_sw3.h_view(i,j) = k_sw3.h_view(j,i) = sw3[i][j];
-  k_sw4.h_view(i,j) = k_sw4.h_view(j,i) = sw4[i][j];
-  k_sw5.h_view(i,j) = k_sw5.h_view(j,i) = sw5[i][j];
+  k_z.view_host()(i) = z[i];
+  k_z.view_host()(j) = z[j];
+  k_d1a.view_host()(i,j) = k_d1a.view_host()(j,i) = d1a[i][j];
+  k_d2a.view_host()(i,j) = k_d2a.view_host()(j,i) = d2a[i][j];
+  k_d3a.view_host()(i,j) = k_d3a.view_host()(j,i) = d3a[i][j];
+  k_d4a.view_host()(i,j) = k_d4a.view_host()(j,i) = d4a[i][j];
+  k_zze.view_host()(i,j) = k_zze.view_host()(j,i) = zze[i][j];
+  k_sw1.view_host()(i,j) = k_sw1.view_host()(j,i) = sw1[i][j];
+  k_sw2.view_host()(i,j) = k_sw2.view_host()(j,i) = sw2[i][j];
+  k_sw3.view_host()(i,j) = k_sw3.view_host()(j,i) = sw3[i][j];
+  k_sw4.view_host()(i,j) = k_sw4.view_host()(j,i) = sw4[i][j];
+  k_sw5.view_host()(i,j) = k_sw5.view_host()(j,i) = sw5[i][j];
 
   k_z.modify_host();
   k_d1a.modify_host();

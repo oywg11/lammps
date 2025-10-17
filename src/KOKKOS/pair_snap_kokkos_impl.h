@@ -451,7 +451,7 @@ template<class DeviceType, typename real_type, int vector_length>
 double PairSNAPKokkos<DeviceType, real_type, vector_length>::init_one(int i, int j)
 {
   double cutone = PairSNAP::init_one(i,j);
-  k_cutsq.h_view(i,j) = k_cutsq.h_view(j,i) = cutone*cutone;
+  k_cutsq.view_host()(i,j) = k_cutsq.view_host()(j,i) = cutone*cutone;
   k_cutsq.modify_host();
 
   return cutone;

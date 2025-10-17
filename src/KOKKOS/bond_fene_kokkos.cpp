@@ -274,10 +274,10 @@ void BondFENEKokkos<DeviceType>::coeff(int narg, char **arg)
 
   int n = atom->nbondtypes;
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_r0.h_view[i] = r0[i];
-    k_epsilon.h_view[i] = epsilon[i];
-    k_sigma.h_view[i] = sigma[i];
+    k_k.view_host()[i] = k[i];
+    k_r0.view_host()[i] = r0[i];
+    k_epsilon.view_host()[i] = epsilon[i];
+    k_sigma.view_host()[i] = sigma[i];
   }
 
   k_k.modify_host();
@@ -298,10 +298,10 @@ void BondFENEKokkos<DeviceType>::read_restart(FILE *fp)
 
   int n = atom->nbondtypes;
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_r0.h_view[i] = r0[i];
-    k_epsilon.h_view[i] = epsilon[i];
-    k_sigma.h_view[i] = sigma[i];
+    k_k.view_host()[i] = k[i];
+    k_r0.view_host()[i] = r0[i];
+    k_epsilon.view_host()[i] = epsilon[i];
+    k_sigma.view_host()[i] = sigma[i];
   }
 
   k_k.modify_host();
