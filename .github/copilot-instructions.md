@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-**LAMMPS** (Large-scale Atomic/Molecular Massively Parallel Simulator) is a classical molecular dynamics simulation code designed for parallel computers. This is a large, mature C++ codebase (~585MB, 3,777 C++ files in src/) maintained by Sandia National Laboratories as open-source software under GPL v2.
+**LAMMPS** (Large-scale Atomic/Molecular Massively Parallel Simulator) is a classical molecular dynamics simulation code designed for parallel computers. This is a large, mature C++ codebase (~600MB, ~4,000 C++ files in src/) maintained by an international team of developers lead by staff at Sandia National Laboratories as open-source software under GPL v2.
 
 **Primary Languages:** C++17 (core), C, Fortran, Python (interfaces)
 **Build Systems:** CMake (primary, modern), Make (traditional, still supported)
@@ -12,7 +12,7 @@
 
 ### CMake Build (Recommended)
 
-**ALWAYS use CMake for new builds.** The traditional Make system is maintained but CMake is the primary build system.
+**ALWAYS use CMake for new builds.** The traditional Make system is maintained and only supports a subset of packages. Thus CMake is the primary build system.
 
 **Basic build sequence:**
 ```bash
@@ -32,7 +32,7 @@ cmake --build build -j 4
 - CMake configuration files are in `cmake/` directory (NOT at repo root)
 - Use `-S cmake` to specify the source directory (this is NOT standard - most projects use `-S .`)
 - Presets are in `cmake/presets/` - use `-C` to load them
-- Common presets: `basic.cmake`, `gcc.cmake`, `most.cmake`, `all_on.cmake`
+- Common presets: `basic.cmake`, `gcc.cmake`, `most.cmake`
 - Combine presets: `-C cmake/presets/gcc.cmake -C cmake/presets/most.cmake`
 - Standard CMake options work: `-D BUILD_SHARED_LIBS=on`, `-D ENABLE_TESTING=on`
 
@@ -74,15 +74,18 @@ LAMMPS has 80+ optional packages. Packages are in `src/[PACKAGE-NAME]/` director
 
 **With CMake:** Use `-D PKG_[NAME]=on` (e.g., `-D PKG_MOLECULE=on`, `-D PKG_PYTHON=on`)
 
-**With Make:** Use `make yes-[package]` or `make no-[package]` before building
+**With Make:** Use `make yes-[package]` or `make no-[package]` before building; also
+some presets exist: `make yes-basic` or `make-yes-most`; packages requiring extra libraries
+or downloads are only supported by CMake.
 ```bash
 cd src
-make yes-molecule   # Enable MOLECULE package
-make yes-python     # Enable PYTHON package
+make yes-basic      # Enable MANYBODY, MOLECULE, KSPACE, and RIGID packages
+make yes-openmp     # Enable OPENMP package
+make yes-misc       # Enable MISC
 make serial         # Then build
 ```
 
-**View package status:** `cd src && make ps` (shows which packages are installed)
+**View package status:** `cd src && make pi` (shows which packages are installed)
 
 ## Testing & Validation
 
@@ -90,7 +93,7 @@ make serial         # Then build
 
 ```bash
 # Configure with testing enabled
-cmake -S cmake -B build -C cmake/presets/gcc.cmake -C cmake/presets/most.cmake -D ENABLE_TESTING=on
+cmake -S cmake -B build -C cmake/presets/gcc.cmake -C cmake/presets/most.cmake -D ENABLE_TESTING=on -G Ninja
 
 # Build
 cmake --build build
@@ -103,7 +106,7 @@ cd build && ctest -V
 
 **Test organization** (in `unittest/`):
 - `c-library/` - C library interface tests
-- `commands/` - Input command tests  
+- `commands/` - Input command tests
 - `force-styles/` - Pair, bond, angle, kspace style tests
 - `formats/` - File format tests
 - `fortran/` - Fortran module tests
@@ -239,6 +242,10 @@ lammps/
 
 4. **No VLAs:** Variable-length arrays are not allowed (checked by CI).
 
+5. **Documentation:** All new commands or features must be documented. Put `.. versionadded:: TBD` or
+   `.. versionchanged:: TBD` in front of paragraphs documenting the new or changed functionality.
+   The `TBD` will be manually replaced with the release version string during the release preparation.
+
 ### Testing
 
 1. **Build before test:** CTest requires the executable to be built first. If tests fail to find executable, run `cmake --build build` first.
@@ -288,7 +295,7 @@ cmake --build build -j 4
 # Traditional make (if needed)
 cd src
 make serial  # or 'make mpi'
-./lmp_serial < input_file
+./lmp_serial -in input_file
 
 # Clean everything
 rm -rf build
@@ -303,7 +310,7 @@ cd .. && mkdir build && cmake -S cmake -B build -C cmake/presets/basic.cmake
 
 These instructions are tested and validated. Only search for additional information if:
 - A specific command fails with an error
-- You need details about a specific package's requirements  
+- You need details about a specific package's requirements
 - Instructions appear outdated based on error messages
 - Working with advanced features not covered here (GPU, Kokkos backends, etc.)
 
