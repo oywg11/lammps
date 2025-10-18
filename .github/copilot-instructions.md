@@ -306,6 +306,17 @@ cd src && make purge
 cd .. && mkdir build && cmake -S cmake -B build -C cmake/presets/basic.cmake
 ```
 
+## Code Review
+
+When performing a code review, apply the general instructions for contributions
+to LAMMPS in https://docs.lammps.org/Modify_requirements.html
+
+When performing a code review, apply the programming style instructions
+for LAMMPS in https://docs.lammps.org/Modify_style.html
+
+When performing a code review, check any changes to the documentation (in the
+`doc/src/` folder) to be written in American English and with plain ASCII characters.
+
 ## Trust These Instructions
 
 These instructions are tested and validated. Only search for additional information if:
