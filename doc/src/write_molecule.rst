@@ -33,9 +33,11 @@ The file format is determined by the file name: if the file name ends
 in ``.json`` the file will be written `JSON format <https://www.json.org/>`_,
 otherwise the file is written in the native LAMMPS file format.
 
-When the molecule template contains multiple data sets, the filename
-must contain a '%' character which will be replaced by the data set number
-so that each data set can be written to a separate file.
+When the molecule template contains multiple molecules as defined by a
+:doc:`molecule command <molecule>` with multiple molecule files as
+arguments, the filename must contain a '%' character which will be
+replaced by the molecule number (starting from 1) so that each molecule
+is written to a separate file.
 
 ----------
 
