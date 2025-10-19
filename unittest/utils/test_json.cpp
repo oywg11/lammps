@@ -29,11 +29,11 @@ using ::testing::Eq;
 TEST(JSON, namespace)
 {
     std::string expected = "nlohmann_lmp::json_abi";
-    expected += "_v" STRINGIFY(NLOHMANN_JSON_VERSION_MAJOR);
-    expected += "_" STRINGIFY(NLOHMANN_JSON_VERSION_MINOR);
-    expected += "_" STRINGIFY(NLOHMANN_JSON_VERSION_PATCH);
+    expected += "_v" STRINGIFY(LMP_NLOHMANN_JSON_VERSION_MAJOR);
+    expected += "_" STRINGIFY(LMP_NLOHMANN_JSON_VERSION_MINOR);
+    expected += "_" STRINGIFY(LMP_NLOHMANN_JSON_VERSION_PATCH);
 
-    const std::string ns{STRINGIFY(NLOHMANN_JSON_NAMESPACE)};
+    const std::string ns{STRINGIFY(LMP_NLOHMANN_JSON_NAMESPACE)};
     ASSERT_THAT(expected, Eq(ns));
 }
 

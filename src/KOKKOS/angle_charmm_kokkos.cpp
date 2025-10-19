@@ -279,10 +279,10 @@ void AngleCharmmKokkos<DeviceType>::coeff(int narg, char **arg)
   d_r_ub = k_r_ub.template view<DeviceType>();
 
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_theta0.h_view[i] = theta0[i];
-    k_k_ub.h_view[i] = k_ub[i];
-    k_r_ub.h_view[i] = r_ub[i];
+    k_k.view_host()[i] = k[i];
+    k_theta0.view_host()[i] = theta0[i];
+    k_k_ub.view_host()[i] = k_ub[i];
+    k_r_ub.view_host()[i] = r_ub[i];
   }
 
   k_k.modify_host();
@@ -317,10 +317,10 @@ void AngleCharmmKokkos<DeviceType>::read_restart(FILE *fp)
   d_r_ub = k_r_ub.template view<DeviceType>();
 
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_theta0.h_view[i] = theta0[i];
-    k_k_ub.h_view[i] = k_ub[i];
-    k_r_ub.h_view[i] = r_ub[i];
+    k_k.view_host()[i] = k[i];
+    k_theta0.view_host()[i] = theta0[i];
+    k_k_ub.view_host()[i] = k_ub[i];
+    k_r_ub.view_host()[i] = r_ub[i];
   }
 
   k_k.modify_host();
