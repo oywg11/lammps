@@ -71,7 +71,7 @@ This followed by a header section with the following keywords in the listed orde
 - `atoms` (required keyword)
 - `bonds` (if non-zero)
 - `angles` (if non-zero)
-- `dihdeals` (if non-zero)
+- `dihedrals` (if non-zero)
 - `impropers` (if non-zero)
 - `fragments` (if non-zero)
 - `mass` (if present in original input)
@@ -127,7 +127,6 @@ ordered as follows:
 - `masstotal` (if present in original input)
 - `com` (if present in original input)
 - `inertia` (if present in original input)
-- `masstotal` (if present in original input)
 - `coords` (if present in molecule data)
 - `types`
 - `molecules` (if present in molecule data)

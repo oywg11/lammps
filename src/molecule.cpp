@@ -4257,7 +4257,7 @@ void Molecule::print(FILE *fp)
   if (ndihedrals) utils::print(fp, "  {} dihedrals\n", ndihedrals);
   if (nimpropers) utils::print(fp, "  {} impropers\n", nimpropers);
   if (nfragments) utils::print(fp, "  {} fragments\n", nfragments);
-  if (massflag_user) utils::print(fp, "  {} mass\n", totalmass);
+  if (massflag_user) utils::print(fp, "  {} mass\n", masstotal);
   if (bodyflag) utils::print(fp, "  {} {} body\n", nibody, ndbody);
   if (comflag_user) utils::print(fp, "  {} {} {} com\n", com[0], com[1], com[2]);
   if (inertiaflag_user)
