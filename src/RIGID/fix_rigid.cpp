@@ -1,4 +1,3 @@
-
 /* ----------------------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    https://www.lammps.org/, Sandia National Laboratories
@@ -57,7 +56,7 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
     dorient(nullptr), id_dilate(nullptr), id_gravity(nullptr), random(nullptr),
     avec_ellipsoid(nullptr), avec_line(nullptr), avec_tri(nullptr)
 {
-  int i, ibody;
+  int i, j, ibody;
 
   scalar_flag = 1;
   extscalar = 0;
@@ -280,7 +279,6 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
   memory->create(imagebody, nbody, "rigid:imagebody");
   memory->create(fflag, nbody, 3, "rigid:fflag");
   memory->create(tflag, nbody, 3, "rigid:tflag");
-  memory->create(langextra, nbody, 6, "rigid:langextra");
 
   memory->create(sum, nbody, 6, "rigid:sum");
   memory->create(all, nbody, 6, "rigid:all");
@@ -578,9 +576,15 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
   else pstyle = ANISO;
 
   // initialize Marsaglia RNG with processor-unique seed
+  // and allocate and initialize langextra array for langevin thermostat
 
-  if (langflag) random = new RanMars(lmp, seed + comm->me);
-  else random = nullptr;
+  if (langflag) {
+    random = new RanMars(lmp, seed + comm->me);
+    memory->create(langextra, nbody, 6, "rigid:langextra");
+    for (i = 0; i < nbody; i++) {
+      for (j = 0; i < 6; j++) langextra[i][j] = 0.0;
+    }
+  }
 
   // initialize vector output quantities in case accessed before run
 
@@ -808,12 +812,6 @@ void FixRigid::setup(int vflag)
   const int nlocal = atom->nlocal;
 
   if (langflag) apply_langevin_thermostat();
-  else {
-    // zero langextra in case there is no thermostat to avoid uninitialized access
-
-    for (ibody = 0; ibody < nbody; ibody++)
-      for (i = 0; i < 6; i++) langextra[ibody][i] = 0.0;
-  }
   compute_forces_and_torques();
 
   // enforce 2d body forces and torques
@@ -1131,12 +1129,20 @@ void FixRigid::compute_forces_and_torques()
   // include Langevin thermostat forces
 
   for (ibody = 0; ibody < nbody; ibody++) {
-    fcm[ibody][0] = all[ibody][0] + fflag[ibody][0]*langextra[ibody][0];
-    fcm[ibody][1] = all[ibody][1] + fflag[ibody][1]*langextra[ibody][1];
-    fcm[ibody][2] = all[ibody][2] + fflag[ibody][2]*langextra[ibody][2];
-    torque[ibody][0] = all[ibody][3] + tflag[ibody][0]*langextra[ibody][3];
-    torque[ibody][1] = all[ibody][4] + tflag[ibody][1]*langextra[ibody][4];
-    torque[ibody][2] = all[ibody][5] + tflag[ibody][2]*langextra[ibody][5];
+    fcm[ibody][0] = all[ibody][0];
+    fcm[ibody][1] = all[ibody][1];
+    fcm[ibody][2] = all[ibody][2];
+    torque[ibody][0] = all[ibody][3];
+    torque[ibody][1] = all[ibody][4];
+    torque[ibody][2] = all[ibody][5];
+    if (langflag) {
+      fcm[ibody][0] += fflag[ibody][0]*langextra[ibody][0];
+      fcm[ibody][1] += fflag[ibody][1]*langextra[ibody][1];
+      fcm[ibody][2] += fflag[ibody][2]*langextra[ibody][2];
+      torque[ibody][0] += tflag[ibody][0]*langextra[ibody][3];
+      torque[ibody][1] += tflag[ibody][1]*langextra[ibody][4];
+      torque[ibody][2] += tflag[ibody][2]*langextra[ibody][5];
+    }
   }
 
   // add gravity force to COM of each body
