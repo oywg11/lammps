@@ -457,8 +457,6 @@ FixRigidSmall::FixRigidSmall(LAMMPS *lmp, int narg, char **arg) :
   // initialize Marsaglia RNG with processor-unique seed
 
   maxlang = 0;
-  langextra = nullptr;
-  random = nullptr;
   if (langflag) random = new RanMars(lmp,seed + comm->me);
 
   // mass vector for granular pair styles
@@ -628,7 +626,6 @@ void FixRigidSmall::setup(int vflag)
   if (maxextent > cutghost)
     error->all(FLERR,"Rigid body extent {} > ghost atom cutoff - use comm_modify cutoff", maxextent);
 
-  //check(1);
 
   // sum fcm, torque across all rigid bodies
   // fcm = force on COM
@@ -732,8 +729,6 @@ void FixRigidSmall::initial_integrate(int vflag)
 {
   double dtfm;
 
-  //check(2);
-
   for (int ibody = 0; ibody < nlocal_body; ibody++) {
     Body *b = &body[ibody];
 
@@ -815,7 +810,6 @@ void FixRigidSmall::pre_neighbor()
   commflag = FULL_BODY;
   comm->forward_comm(this);
   reset_atom2body();
-  //check(4);
 
   image_shift();
 }
@@ -833,8 +827,6 @@ void FixRigidSmall::post_force(int /*vflag*/)
 void FixRigidSmall::final_integrate()
 {
   double dtfm;
-
-  //check(3);
 
   // compute forces and torques (after all post_force contributions)
   // if 2d model, enforce2d() on body forces/torques
@@ -999,8 +991,6 @@ void FixRigidSmall::apply_langevin_thermostat()
 void FixRigidSmall::compute_forces_and_torques()
 {
   int i,ibody;
-
-  //check(3);
 
   // sum over atoms to get force and torque on rigid body
 
@@ -3732,85 +3722,3 @@ double FixRigidSmall::memory_usage()
   return bytes;
 }
 
-/* ----------------------------------------------------------------------
-   debug method for sanity checking of atom/body data pointers
-------------------------------------------------------------------------- */
-
-/*
-void FixRigidSmall::check(int flag)
-{
-  for (int i = 0; i < atom->nlocal; i++) {
-    if (bodyown[i] >= 0) {
-      if (bodytag[i] != atom->tag[i]) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD AAA");
-      }
-      if (bodyown[i] < 0 || bodyown[i] >= nlocal_body) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD BBB");
-      }
-      if (atom2body[i] != bodyown[i]) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD CCC");
-      }
-      if (body[bodyown[i]].ilocal != i) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD DDD");
-      }
-    }
-  }
-
-  for (int i = 0; i < atom->nlocal; i++) {
-    if (bodyown[i] < 0 && bodytag[i] > 0) {
-      if (atom2body[i] < 0 || atom2body[i] >= nlocal_body+nghost_body) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD EEE");
-      }
-      if (bodytag[i] != atom->tag[body[atom2body[i]].ilocal]) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD FFF");
-      }
-    }
-  }
-
-  for (int i = atom->nlocal; i < atom->nlocal + atom->nghost; i++) {
-    if (bodyown[i] >= 0) {
-      if (bodyown[i] < nlocal_body ||
-          bodyown[i] >= nlocal_body+nghost_body) {
-        printf("Values %d %d: %d %d %d\n",
-               i,atom->tag[i],bodyown[i],nlocal_body,nghost_body);
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD GGG");
-      }
-      if (body[bodyown[i]].ilocal != i) {
-        printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-        errorx->one(FLERR,"BAD HHH");
-      }
-    }
-  }
-
-  for (int i = 0; i < nlocal_body; i++) {
-    if (body[i].ilocal < 0 || body[i].ilocal >= atom->nlocal) {
-      printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-      errorx->one(FLERR,"BAD III");
-    }
-    if (bodytag[body[i].ilocal] != atom->tag[body[i].ilocal] ||
-        bodyown[body[i].ilocal] != i) {
-      printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-      errorx->one(FLERR,"BAD JJJ");
-    }
-  }
-
-  for (int i = nlocal_body; i < nlocal_body + nghost_body; i++) {
-    if (body[i].ilocal < atom->nlocal ||
-        body[i].ilocal >= atom->nlocal + atom->nghost) {
-      printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-      errorx->one(FLERR,"BAD KKK");
-    }
-    if (bodyown[body[i].ilocal] != i) {
-      printf("Proc %d, step %ld, flag %d\n",comm->me,update->ntimestep,flag);
-      errorx->one(FLERR,"BAD LLL");
-    }
-  }
-}
-*/
