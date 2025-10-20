@@ -70,7 +70,7 @@ if(PKG_KSPACE)
   target_link_libraries(test_fft3d PRIVATE lammps GTest::GMockMain)
   target_include_directories(test_fft3d PRIVATE ${LAMMPS_SOURCE_DIR})
 
-  # Add Kokkos if enabled (needed for fft_introspection.h)
+  # Add Kokkos if enabled
   if(PKG_KOKKOS)
     target_link_libraries(test_fft3d PRIVATE Kokkos::kokkos)
   endif()
