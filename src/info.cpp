@@ -1335,6 +1335,31 @@ std::string Info::get_fft_info()
 
 /* ---------------------------------------------------------------------- */
 
+std::string Info::get_kokkos_backend()
+{
+#ifdef LMP_KOKKOS
+#if defined(KOKKOS_ENABLE_CUDA)
+  return "CUDA";
+#elif defined(KOKKOS_ENABLE_HIP)
+  return "HIP";
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return "SYCL";
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return "OpenMPTarget";
+#elif defined(KOKKOS_ENABLE_OPENMP)
+  return "OpenMP";
+#elif defined(KOKKOS_ENABLE_THREADS)
+  return "Threads";
+#else
+  return "Serial";
+#endif
+#else
+  return "N/A";
+#endif
+}
+
+/* ---------------------------------------------------------------------- */
+
 static constexpr int fmt_ver_major = FMT_VERSION / 10000;
 static constexpr int fmt_ver_minor = (FMT_VERSION % 10000) / 100;
 static constexpr int fmt_ver_patch = FMT_VERSION % 100;
