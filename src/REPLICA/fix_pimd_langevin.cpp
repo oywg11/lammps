@@ -878,6 +878,7 @@ void FixPIMDLangevin::qc_step()
     MPI_Bcast(&domain->boxhi[0], 3, MPI_DOUBLE, 0, universe->uworld);
     domain->set_global_box();
     domain->set_local_box();
+    if (kspace_flag) force->kspace->setup();
   }
 }
 
