@@ -11,15 +11,26 @@
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#ifndef LMP_JSON_FWD_H
-#define LMP_JSON_FWD_H
+#ifdef COMMAND_CLASS
+// clang-format off
+CommandStyle(write_molecule,WriteMolecule);
+// clang-format on
+#else
 
-// Forward declarations for header-only JSON class
-// For use in headers
+#ifndef LMP_WRITE_MOLECULE_H
+#define LMP_WRITE_MOLECULE_H
 
-#include "nlohmann/json_fwd.hpp" // IWYU pragma: export
+#include "command.h"
 
 namespace LAMMPS_NS {
-using json = ::nlohmann_lmp::basic_json<nlohmann_lmp::ordered_map>;
-}
+
+class WriteMolecule : public Command {
+ public:
+  WriteMolecule(class LAMMPS *lmp) : Command(lmp) {};
+  void command(int, char **) override;
+};
+
+}    // namespace LAMMPS_NS
+
+#endif
 #endif
