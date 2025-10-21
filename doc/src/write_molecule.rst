@@ -29,15 +29,16 @@ Description
 
 Write the data from a :doc:`molecule template<molecule>` to a molecule file.
 
-The molecule file format is determined by the file name: if the file name ends
-in ``.json`` the file will be written in `JSON format <https://www.json.org/>`_,
-otherwise the file is written in the native LAMMPS molecule file format.
+The molecule file format is determined by the file name: if the file
+name ends in ``.json`` the file will be written in `JSON format
+<https://www.json.org/>`_, otherwise the file is written in the native
+LAMMPS molecule file format.
 
 When the molecule template contains multiple molecules, as defined by a
-:doc:`molecule command <molecule>`, and multiple molecule files need to
-generated, the filename must contain a '%' character that will be
-replaced by the molecule number (starting from 1) so that each molecule
-is written to a separate file.
+:doc:`molecule command <molecule>` with multiple molecule files, the
+filename *must* contain a '%' character.  That '%' character will be
+replaced by the molecule number (starting from 1) and each molecule is
+written to a separate file.
 
 ----------
 
@@ -53,8 +54,8 @@ following the lists given below.  All sections with per-atom data are
 sorted by the atom-ID value starting from 1.  The list of bonds is
 ordered by the atom-ID of the first atom in the bond.  The lists of
 angles, dihedrals, and impropers are ordered by the atom-ID of the
-second atom in the definition.  For entries with the same atom-ID, 
-the order in which they were defined in the original input data is 
+second atom in the definition.  For entries with the same atom-ID, the
+order in which they were defined in the original input data is
 maintained.
 
 Native Format
@@ -67,7 +68,8 @@ the angular brackets are replaced with the actual data:
 
    # MOLECULE <molecule-ID>, unit = <units setting>, set <set-ID> of <nsets>, <original title>
 
-This followed by a header section with the following keywords in the listed order:
+This followed by a header section with the following keywords in the
+listed order:
 
 - `atoms` (required keyword)
 - `bonds` (if non-zero)
@@ -113,7 +115,7 @@ the layout given in the `JSON schema file <https://json-schema.org/>`_
 available for download at
 https://download.lammps.org/json/molecule-schema.json
 
-Unlike for the native format output, there is no need to providing any
+Unlike for the native format output, there is no need to provide any
 counts for the number of entries for keys containing lists of settings
 with a specified format, since those can be directly inferred from the
 data structures after parsing a JSON file. The top level keys are
