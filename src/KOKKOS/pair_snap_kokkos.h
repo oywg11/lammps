@@ -121,7 +121,7 @@ class PairSNAPKokkos : public PairSNAP {
   static constexpr int team_size_compute_fused_deidrj_all = 1;
 
   static constexpr int padding_factor = host_flag ? 1 : 2; // extra padding factor
-  static constexpr int ui_batch = 1;
+  static constexpr int ui_batch = host_flag ? 1 : 2;
   static constexpr int yi_batch = host_flag ? 1 : 2;
   static constexpr bool use_deidrj_all = false; // whether or not to use the directionally fused deidrj
 #else
