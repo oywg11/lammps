@@ -79,7 +79,7 @@ protected:
         // Skip GPU backends (no safe way to detect GPU hardware)
         std::string backend = Info::get_kokkos_backend();
         if (backend != "OpenMP" && backend != "Serial" && backend != "Threads") {
-            GTEST_SKIP() << "KOKKOS backend '" << backend 
+            GTEST_SKIP() << "KOKKOS backend '" << backend
                          << "' not testable (no safe GPU detection)\n"
                          << Info::get_fft_info();
         }
@@ -298,10 +298,10 @@ TEST_F(FFT3DKokkosTest, BackendDetection)
     std::string backend = Info::get_kokkos_backend();
     EXPECT_FALSE(backend.empty()) << "KOKKOS backend should not be empty";
     EXPECT_NE(backend, "N/A") << "KOKKOS should be enabled";
-    
+
     std::string fft_info = Info::get_fft_info();
     EXPECT_FALSE(fft_info.empty()) << "FFT info should not be empty";
-    
+
     SUCCEED() << "KOKKOS backend: " << backend;
 }
 

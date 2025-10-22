@@ -147,7 +147,7 @@ TEST_F(FFT3DTest, BackendDetection)
     // Verify FFT configuration is accessible
     std::string fft_info = Info::get_fft_info();
     EXPECT_FALSE(fft_info.empty()) << "FFT info should not be empty";
-    
+
     // Check FFT library macro is defined
 #if defined(FFT_KISS) || defined(FFT_FFTW3) || defined(FFT_MKL) || defined(FFT_NVPL) || defined(FFT_HEFFTE)
     SUCCEED() << "FFT library: " << LMP_FFT_LIB;
