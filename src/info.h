@@ -49,7 +49,6 @@ class Info : public Command {
   static bool has_accelerator_feature(const std::string &, const std::string &,
                                       const std::string &);
   static std::string get_fft_info();
-  static std::string get_kokkos_backend();
   static std::string get_fmt_info();
   static std::string get_json_info();
   static bool has_gpu_device();
