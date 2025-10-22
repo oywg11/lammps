@@ -67,7 +67,6 @@ class FixPIMDLangevin : public Fix {
   int integrator;          // obabo or baoab
   int ensemble;            // nve or nvt or nph or npt
   int mapflag;             // should be 1 if number of beads > 1
-  int kspace_flag;         // 1 if KSpace invoked, 0 if not
   int removecomflag;
   double masstotal;
 

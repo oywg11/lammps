@@ -476,9 +476,6 @@ void FixPIMDLangevin::init()
     error->universe_all(FLERR, fmt::format("Unknown integrator parameter for fix {}", style));
   }
 
-  if (force->kspace) kspace_flag = 1;
-  else kspace_flag = 0;
-
   comm_init();
 
   mass = new double[atom->ntypes + 1];
@@ -882,7 +879,7 @@ void FixPIMDLangevin::qc_step()
     MPI_Bcast(&domain->boxhi[0], 3, MPI_DOUBLE, 0, universe->uworld);
     domain->set_global_box();
     domain->set_local_box();
-    if (kspace_flag) force->kspace->setup();
+    if (force->kspace) force->kspace->setup();
   }
 }
 
