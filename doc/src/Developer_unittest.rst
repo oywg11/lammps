@@ -188,32 +188,12 @@ not available in the current build (e.g., FFTW3, MPI, CUDA).
 
 **Helper Headers:**
 
-Two header-only utility files provide the testing infrastructure:
+The testing infrastructure uses one header-only utility file:
 
-- ``fft_introspection.h`` - Runtime FFT configuration detection
 - ``fft_test_helpers.h`` - Test data generators, validators, and utilities
 
-**FFT Introspection API:**
-
-The ``fft_introspection.h`` header provides compile-time detection of FFT
-configuration through the ``FFTIntrospection`` namespace:
-
-.. code-block:: c++
-
-   #include "fft_introspection.h"
-
-   TEST_F(FFT3DTest, ConfigurationDetection) {
-       using namespace FFTIntrospection;
-
-       // Conditionally skip tests
-       if (!is_fft_fftw3()) {
-           GTEST_SKIP() << "Test requires FFTW3";
-       }
-   }
-
-Key functions: ``get_fft_library()``, ``get_fft_precision()``,
-``has_fft_threading()``, ``get_kokkos_backend()``, ``is_kokkos_gpu_backend()``,
-and boolean queries like ``is_fft_fftw3()``, ``is_kokkos_cuda()``, etc.
+For runtime configuration detection, tests use the existing ``Info`` class API
+(``Info::has_package()``, ``Info::has_accelerator_feature()``, etc.).
 
 **FFT Test Helpers:**
 

@@ -299,7 +299,7 @@ TEST_F(FFT3DKokkosTest, BackendDetection)
 {
     // Verify KOKKOS configuration is accessible via has_accelerator_feature
     EXPECT_TRUE(Info::has_package("KOKKOS")) << "KOKKOS package should be available";
-    
+
     // Verify at least one backend is enabled
     bool has_backend = Info::has_accelerator_feature("KOKKOS", "api", "cuda") ||
                        Info::has_accelerator_feature("KOKKOS", "api", "hip") ||
@@ -307,9 +307,9 @@ TEST_F(FFT3DKokkosTest, BackendDetection)
                        Info::has_accelerator_feature("KOKKOS", "api", "openmp") ||
                        Info::has_accelerator_feature("KOKKOS", "api", "serial") ||
                        Info::has_accelerator_feature("KOKKOS", "api", "pthreads");
-    
+
     EXPECT_TRUE(has_backend) << "At least one KOKKOS backend should be enabled";
-    
+
     // Verify FFT info is accessible
     std::string fft_info = Info::get_fft_info();
     EXPECT_FALSE(fft_info.empty()) << "FFT info should not be empty";
