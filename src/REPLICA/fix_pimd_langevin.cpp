@@ -514,15 +514,10 @@ void FixPIMDLangevin::init()
 void FixPIMDLangevin::setup(int vflag)
 {
   int nlocal = atom->nlocal;
-  int *mask = atom->mask;
   double **x = atom->x;
   imageint *image = atom->image;
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        domain->unmap(x[i], image[i]);
-      // }
-    }
+    for (int i = 0; i < nlocal; i++) domain->unmap(x[i], image[i]);
   }
 
   if (method == NMPIMD) {
@@ -555,11 +550,7 @@ void FixPIMDLangevin::setup(int vflag)
       nmpimd_transform(bufbeads, x, M_xp2x[universe->iworld]);
   }
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        domain->unmap_inv(x[i], image[i]);
-      // }
-    }
+    for (int i = 0; i < nlocal; i++) domain->unmap_inv(x[i], image[i]);
   }
 
   post_force(vflag);
@@ -574,15 +565,10 @@ void FixPIMDLangevin::setup(int vflag)
 void FixPIMDLangevin::initial_integrate(int /*vflag*/)
 {
   int nlocal = atom->nlocal;
-  int *mask = atom->mask;
   double **x = atom->x;
   imageint *image = atom->image;
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        domain->unmap(x[i], image[i]);
-      // }
-    }
+    for (int i = 0; i < nlocal; i++) domain->unmap(x[i], image[i]);
   }
   if (integrator == OBABO) {
     if (tstat_flag) {
@@ -677,11 +663,7 @@ void FixPIMDLangevin::initial_integrate(int /*vflag*/)
   }
 
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        domain->unmap_inv(x[i], image[i]); 
-      // }
-    }
+    for (int i = 0; i < nlocal; i++) { domain->unmap_inv(x[i], image[i]); }
   }
 }
 
@@ -720,7 +702,6 @@ void FixPIMDLangevin::prepare_coordinates()
 void FixPIMDLangevin::post_force(int /*flag*/)
 {
   int nlocal = atom->nlocal;
-  int *mask = atom->mask;
   double **x = atom->x;
   double **f = atom->f;
   imageint *image = atom->image;
@@ -729,25 +710,17 @@ void FixPIMDLangevin::post_force(int /*flag*/)
   if (atom->nmax > maxunwrap) reallocate_x_unwrap();
   if (atom->nmax > maxxc) reallocate_xc();
   for (int i = 0; i < nlocal; i++) {
-    // if (mask[i] & groupbit) {
-      x_unwrap[i][0] = x[i][0];
-      x_unwrap[i][1] = x[i][1];
-      x_unwrap[i][2] = x[i][2];
-    // }
+    x_unwrap[i][0] = x[i][0];
+    x_unwrap[i][1] = x[i][1];
+    x_unwrap[i][2] = x[i][2];
   }
   if (mapflag) {
-    for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        domain->unmap(x_unwrap[i], image[i]); 
-      // }
-    }
+    for (int i = 0; i < nlocal; i++) { domain->unmap(x_unwrap[i], image[i]); }
   }
   for (int i = 0; i < nlocal; i++) {
-    // if (mask[i] & groupbit) {
-      xc[i][0] = xcall[3 * (tag[i] - 1) + 0];
-      xc[i][1] = xcall[3 * (tag[i] - 1) + 1];
-      xc[i][2] = xcall[3 * (tag[i] - 1) + 2];
-    // }
+    xc[i][0] = xcall[3 * (tag[i] - 1) + 0];
+    xc[i][1] = xcall[3 * (tag[i] - 1) + 1];
+    xc[i][2] = xcall[3 * (tag[i] - 1) + 2];
   }
 
   compute_vir();
@@ -757,22 +730,14 @@ void FixPIMDLangevin::post_force(int /*flag*/)
 
   if (method == PIMD) {
     if (mapflag) {
-      for (int i = 0; i < nlocal; i++) { 
-        // if (mask[i] & groupbit) {
-          domain->unmap(x[i], image[i]); 
-        // }
-      }
+      for (int i = 0; i < nlocal; i++) { domain->unmap(x[i], image[i]); }
     }
     prepare_coordinates();
     spring_force();
     compute_spring_energy();
     compute_t_prim();
     if (mapflag) {
-      for (int i = 0; i < nlocal; i++) {
-        // if (mask[i] & groupbit) {
-          domain->unmap_inv(x[i], image[i]); 
-        // }
-      }
+      for (int i = 0; i < nlocal; i++) { domain->unmap_inv(x[i], image[i]); }
     }
   }
   compute_pote();
@@ -803,31 +768,24 @@ void FixPIMDLangevin::end_of_step()
 void FixPIMDLangevin::collect_xc()
 {
   int nlocal = atom->nlocal;
-  int *mask = atom->mask;
   double **x = atom->x;
   tagint *tag = atom->tag;
   if (ireplica == 0) {
     if (cmode == SINGLE_PROC) {
       for (int i = 0; i < nlocal; i++) {
-        // if (mask[i] & groupbit) {
-          xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
-        // }
+        xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
       }
     } else if (cmode == MULTI_PROC) {
       for (int i = 0; i < ntotal; i++) {
-        // if (mask[i] & groupbit) {
-          xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
-        // }
+        xcall[3 * i + 0] = xcall[3 * i + 1] = xcall[3 * i + 2] = 0.0;
       }
     }
 
     const double sqrtnp = sqrt((double) np);
     for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        xcall[3 * (tag[i] - 1) + 0] = x[i][0] / sqrtnp;
-        xcall[3 * (tag[i] - 1) + 1] = x[i][1] / sqrtnp;
-        xcall[3 * (tag[i] - 1) + 2] = x[i][2] / sqrtnp;
-      // }
+      xcall[3 * (tag[i] - 1) + 0] = x[i][0] / sqrtnp;
+      xcall[3 * (tag[i] - 1) + 1] = x[i][1] / sqrtnp;
+      xcall[3 * (tag[i] - 1) + 2] = x[i][2] / sqrtnp;
     }
 
     if (cmode == MULTI_PROC) {
@@ -1259,37 +1217,28 @@ void FixPIMDLangevin::nmpimd_init()
 void FixPIMDLangevin::nmpimd_transform(double **src, double **des, double *vector)
 {
   if (cmode == SINGLE_PROC) {
-    int *mask = atom->mask;
-
     for (int i = 0; i < ntotal; i++) {
-      // if (mask[i] & groupbit) {
-        for (int d = 0; d < 3; d++) {
-          bufsorted[i][d] = 0.0;
-          for (int j = 0; j < nreplica; j++) {
-            bufsorted[i][d] += src[j * ntotal + i][d] * vector[j];
-          }
+      for (int d = 0; d < 3; d++) {
+        bufsorted[i][d] = 0.0;
+        for (int j = 0; j < nreplica; j++) {
+          bufsorted[i][d] += src[j * ntotal + i][d] * vector[j];
         }
-      // }
+      }
     }
     for (int i = 0; i < ntotal; i++) {
-      // if (mask[i] & groupbit) {
-        tagint tagtmp = atom->tag[i];
-        for (int d = 0; d < 3; d++) { des[i][d] = bufsorted[tagtmp - 1][d]; }
-      // }
+      tagint tagtmp = atom->tag[i];
+      for (int d = 0; d < 3; d++) { des[i][d] = bufsorted[tagtmp - 1][d]; }
     }
   } else if (cmode == MULTI_PROC) {
-    int nlocal = atom->nlocal;
+    int n = atom->nlocal;
     int m = 0;
-    int *mask = atom->mask;
 
-    for (int i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        for (int d = 0; d < 3; d++) {
-          des[i][d] = 0.0;
-          for (int j = 0; j < np; j++) { des[i][d] += (src[j][m] * vector[j]); }
-          m++;
-        }
-      // }
+    for (int i = 0; i < n; i++) {
+      for (int d = 0; d < 3; d++) {
+        des[i][d] = 0.0;
+        for (int j = 0; j < np; j++) { des[i][d] += (src[j][m] * vector[j]); }
+        m++;
+      }
     }
   }
 }
@@ -1411,30 +1360,25 @@ void FixPIMDLangevin::inter_replica_comm(double **ptr)
   MPI_Status statuses[2];
   if (atom->nmax > maxlocal) reallocate();
   int nlocal = atom->nlocal;
-  int *mask = atom->mask;
   tagint *tag = atom->tag;
   int i, m;
 
   // copy local values
   for (i = 0; i < nlocal; i++) {
-    // if (mask[i] & groupbit) {
-      bufbeads[ireplica][3 * i + 0] = ptr[i][0];
-      bufbeads[ireplica][3 * i + 1] = ptr[i][1];
-      bufbeads[ireplica][3 * i + 2] = ptr[i][2];
-    // }
+    bufbeads[ireplica][3 * i + 0] = ptr[i][0];
+    bufbeads[ireplica][3 * i + 1] = ptr[i][1];
+    bufbeads[ireplica][3 * i + 2] = ptr[i][2];
   }
 
   // communicate values from the other beads
   if (cmode == SINGLE_PROC) {
     m = 0;
     for (i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        tagint tagtmp = atom->tag[i];
-        bufsorted[tagtmp - 1][0] = ptr[i][0];
-        bufsorted[tagtmp - 1][1] = ptr[i][1];
-        bufsorted[tagtmp - 1][2] = ptr[i][2];
-        m++;
-      // }
+      tagint tagtmp = atom->tag[i];
+      bufsorted[tagtmp - 1][0] = ptr[i][0];
+      bufsorted[tagtmp - 1][1] = ptr[i][1];
+      bufsorted[tagtmp - 1][2] = ptr[i][2];
+      m++;
     }
     MPI_Allgather(&m, 1, MPI_INT, counts, 1, MPI_INT, universe->uworld);
     for (i = 0; i < nreplica; i++) counts[i] *= 3;
@@ -1445,13 +1389,11 @@ void FixPIMDLangevin::inter_replica_comm(double **ptr)
   } else if (cmode == MULTI_PROC) {
     m = 0;
     for (i = 0; i < nlocal; i++) {
-      // if (mask[i] & groupbit) {
-        tagsend[m] = tag[i];
-        bufsend[m][0] = ptr[i][0];
-        bufsend[m][1] = ptr[i][1];
-        bufsend[m][2] = ptr[i][2];
-        m++;
-      // }
+      tagsend[m] = tag[i];
+      bufsend[m][0] = ptr[i][0];
+      bufsend[m][1] = ptr[i][1];
+      bufsend[m][2] = ptr[i][2];
+      m++;
     }
     MPI_Gather(&m, 1, MPI_INT, counts, 1, MPI_INT, 0, world);
     displacements[0] = 0;
@@ -1475,13 +1417,11 @@ void FixPIMDLangevin::inter_replica_comm(double **ptr)
       MPI_Bcast(tagrecvall, ntotal, MPI_LMP_TAGINT, 0, world);
       MPI_Bcast(bufrecvall[0], 3 * ntotal, MPI_DOUBLE, 0, world);
       for (i = 0; i < ntotal; i++) {
-        // if (mask[i] & groupbit) {
-          m = atom->map(tagrecvall[i]);
-          if (m < 0 || m >= nlocal) continue;
-          bufbeads[modeindex[iplan]][3 * m + 0] = bufrecvall[i][0];
-          bufbeads[modeindex[iplan]][3 * m + 1] = bufrecvall[i][1];
-          bufbeads[modeindex[iplan]][3 * m + 2] = bufrecvall[i][2];
-        // }
+        m = atom->map(tagrecvall[i]);
+        if (m < 0 || m >= nlocal) continue;
+        bufbeads[modeindex[iplan]][3 * m + 0] = bufrecvall[i][0];
+        bufbeads[modeindex[iplan]][3 * m + 1] = bufrecvall[i][1];
+        bufbeads[modeindex[iplan]][3 * m + 2] = bufrecvall[i][2];
       }
     }
   }
