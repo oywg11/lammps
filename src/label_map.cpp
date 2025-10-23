@@ -37,7 +37,8 @@ static const char cite_type_label_framework[] =
     " pages =   {3282--3297}\n"
     "}\n\n";
 
-static const std::string empty = "";
+static const std::string empty;
+
 /* ---------------------------------------------------------------------- */
 
 LabelMap::LabelMap(LAMMPS *_lmp, int _natomtypes, int _nbondtypes, int _nangletypes,
