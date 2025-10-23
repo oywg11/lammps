@@ -317,6 +317,14 @@ for LAMMPS in https://docs.lammps.org/Modify_style.html
 When performing a code review, check any changes to the documentation (in the
 `doc/src/` folder) to be written in American English and with plain ASCII characters.
 
+When performing a code review, ensure that the documentation for any new
+commands or added keywords to existing commands contains a `.. versionadded:: TBD`
+directive.  For any modified commands or keywords a `.. versionchanged:: TBD`
+directive should be included in the documentation. Check if any examples use
+the new or modified commands and check if they need updating. Ensure that
+building the documentation with "make html", "make pdf", and "make spelling"
+can complete and does *NOT* produce any *NEW* warnings or errors.
+
 ## Trust These Instructions
 
 These instructions are tested and validated. Only search for additional information if:
