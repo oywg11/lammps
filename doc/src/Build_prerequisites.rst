@@ -40,10 +40,10 @@ running MD simulations.  Please see the :doc:`section on portablility
 .. admonition:: Warning: LLVM based Intel Compilers
    :class: warning
 
-   In recent years, Intel switched their compilers from a propriatary
+   In recent years, Intel switched their compilers from a proprietary
    code base to compilers based on LLVM (which is also the foundation of
    the Clang compilers).  It has since stopped updating their legacy
-   compilers.  Some versions of those LLVM compilers creats incorrect
+   compilers.  Some versions of those LLVM compilers creates incorrect
    binary code that results in incorrect behavior of LAMMPS; this is
    particularly common when using high optimization levels and
    vectorization.  There have been several cases where people reported
