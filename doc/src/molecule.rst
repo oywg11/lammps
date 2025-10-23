@@ -1027,8 +1027,9 @@ None
 Related commands
 """"""""""""""""
 
-:doc:`fix deposit <fix_deposit>`, :doc:`fix pour <fix_pour>`,
-:doc:`fix gcmc <fix_gcmc>`
+:doc:`write_molecule <write_molecule>`, :doc:`fix deposit <fix_deposit>`,
+:doc:`fix pour <fix_pour>`, :doc:`fix gcmc <fix_gcmc>`,
+:doc:`fix bond/react <fix_bond_react>`, :doc:`create_atoms <create_atoms>`
 
 Default
 """""""
