@@ -2080,7 +2080,7 @@ int Neighbor::choose_stencil(NeighRequest *rq)
       if (!(mask & NS_3D)) continue;
     }
 
-    // domain triclinic is on or off and must match
+    // domain triclinic flag is on or off and must match
     // if Kokkos FP32 and newton on, also use triclinic due to
     //  roundoff issue
 
@@ -2228,7 +2228,7 @@ int Neighbor::choose_pair(NeighRequest *rq)
       if (!(mask & NP_MULTI)) continue;
     }
 
-    // domain triclinic is on or off and must match
+    // domain triclinic flag is on or off and must match
     // if Kokkos FP32 and newton on, also use triclinic due to
     //  roundoff issue
 
