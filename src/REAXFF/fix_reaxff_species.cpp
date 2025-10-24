@@ -245,10 +245,11 @@ FixReaxFFSpecies::FixReaxFFSpecies(LAMMPS *lmp, int narg, char **arg) :
           // header for 'delete' keyword JSON output
           fprintf(fdel, "{\n");
           fprintf(fdel, "    \"application\": \"LAMMPS\",\n");
-          fprintf(fdel, "    \"format\": \"output\",\n");
-          fprintf(fdel, "    \"subformat\": \"fix reaxff/species: delete keyword\",\n");
+          fprintf(fdel, "    \"format\": \"dump\",\n");
+          fprintf(fdel, "    \"style\": \"molecules\",\n");
+          fprintf(fdel, "    \"title\": \"fix reaxff/species: delete keyword\",\n");
           fprintf(fdel, "    \"revision\": 1,\n");
-          fprintf(fdel, "    \"run_output\": [\n");
+          fprintf(fdel, "    \"timesteps\": [\n");
           fflush(fdel);
         }
       }
