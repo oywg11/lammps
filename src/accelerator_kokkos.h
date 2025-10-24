@@ -54,8 +54,12 @@ class KokkosLMP {
   int kokkos_exists;
   int nthreads;
   int ngpus;
+  int kk_fp32;
 
-  KokkosLMP(class LAMMPS *, int, char **) { kokkos_exists = 0; }
+  KokkosLMP(class LAMMPS *, int, char **) {
+    kokkos_exists = 0;
+    kk_fp32 = 0;
+  }
   ~KokkosLMP() = default;
   static void finalize() {}
   void accelerator(int, char **) {}
