@@ -262,7 +262,7 @@ void CreateBox::command(int narg, char **arg)
   // set per-atom communication buffersize for contributions like bonds, angles, etc.
 
   atom->avec->maxexchange = maxexchange;
-  
+
   // setup the simulation box and initial system
   // deallocate/grow ensures any extra settings are used for topology arrays
   // necessary in case no create_atoms is performed
