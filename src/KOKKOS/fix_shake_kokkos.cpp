@@ -62,14 +62,14 @@ FixShakeKokkos<DeviceType>::FixShakeKokkos(LAMMPS *lmp, int narg, char **arg) :
   grow_arrays(nmax);
 
   for (int i = 0; i < atom->nlocal; i++) {
-    k_shake_flag.h_view[i] = shake_flag_tmp[i];
-    k_shake_atom.h_view(i,0) = shake_atom_tmp[i][0];
-    k_shake_atom.h_view(i,1) = shake_atom_tmp[i][1];
-    k_shake_atom.h_view(i,2) = shake_atom_tmp[i][2];
-    k_shake_atom.h_view(i,3) = shake_atom_tmp[i][3];
-    k_shake_type.h_view(i,0) = shake_type_tmp[i][0];
-    k_shake_type.h_view(i,1) = shake_type_tmp[i][1];
-    k_shake_type.h_view(i,2) = shake_type_tmp[i][2];
+    k_shake_flag.view_host()[i] = shake_flag_tmp[i];
+    k_shake_atom.view_host()(i,0) = shake_atom_tmp[i][0];
+    k_shake_atom.view_host()(i,1) = shake_atom_tmp[i][1];
+    k_shake_atom.view_host()(i,2) = shake_atom_tmp[i][2];
+    k_shake_atom.view_host()(i,3) = shake_atom_tmp[i][3];
+    k_shake_type.view_host()(i,0) = shake_type_tmp[i][0];
+    k_shake_type.view_host()(i,1) = shake_type_tmp[i][1];
+    k_shake_type.view_host()(i,2) = shake_type_tmp[i][2];
   }
 
   k_shake_flag.modify_host();
@@ -158,12 +158,12 @@ void FixShakeKokkos<DeviceType>::init()
   // set equilibrium bond distances
 
   for (int i = 1; i <= atom->nbondtypes; i++)
-    k_bond_distance.h_view[i] = bond_distance[i];
+    k_bond_distance.view_host()[i] = bond_distance[i];
 
   // set equilibrium angle distances
 
   for (int i = 1; i <= atom->nangletypes; i++)
-    k_angle_distance.h_view[i] = angle_distance[i];
+    k_angle_distance.view_host()[i] = angle_distance[i];
 
   k_bond_distance.modify_host();
   k_angle_distance.modify_host();
@@ -1489,9 +1489,9 @@ void FixShakeKokkos<DeviceType>::sort_kokkos(Kokkos::BinSort<KeyViewType, BinOp>
   k_shake_atom.sync_device();
   k_shake_type.sync_device();
 
-  Sorter.sort(LMPDeviceType(), k_shake_flag.d_view);
-  Sorter.sort(LMPDeviceType(), k_shake_atom.d_view);
-  Sorter.sort(LMPDeviceType(), k_shake_type.d_view);
+  Sorter.sort(LMPDeviceType(), k_shake_flag.view_device());
+  Sorter.sort(LMPDeviceType(), k_shake_atom.view_device());
+  Sorter.sort(LMPDeviceType(), k_shake_type.view_device());
 
   k_shake_flag.modify_device();
   k_shake_atom.modify_device();

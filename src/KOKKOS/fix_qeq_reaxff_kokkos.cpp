@@ -113,9 +113,9 @@ void FixQEqReaxFFKokkos<DeviceType>::init()
   params = k_params.template view<DeviceType>();
 
   for (int n = 1; n <= ntypes; n++) {
-    k_params.h_view(n).chi = chi[n];
-    k_params.h_view(n).eta = eta[n];
-    k_params.h_view(n).gamma = gamma[n];
+    k_params.view_host()(n).chi = chi[n];
+    k_params.view_host()(n).eta = eta[n];
+    k_params.view_host()(n).gamma = gamma[n];
   }
   k_params.modify_host();
 
@@ -140,7 +140,7 @@ void FixQEqReaxFFKokkos<DeviceType>::init_shielding_k()
 
   for (i = 1; i <= ntypes; ++i)
     for (j = 1; j <= ntypes; ++j)
-      k_shield.h_view(i,j) = pow(gamma[i] * gamma[j], -1.5);
+      k_shield.view_host()(i,j) = pow(gamma[i] * gamma[j], -1.5);
 
   k_shield.modify_host();
   k_shield.template sync<DeviceType>();
@@ -149,7 +149,7 @@ void FixQEqReaxFFKokkos<DeviceType>::init_shielding_k()
   d_tap = k_tap.template view<DeviceType>();
 
   for (i = 0; i < 8; i ++)
-    k_tap.h_view(i) = Tap[i];
+    k_tap.view_host()(i) = Tap[i];
 
   k_tap.modify_host();
   k_tap.template sync<DeviceType>();
@@ -348,13 +348,13 @@ void FixQEqReaxFFKokkos<DeviceType>::allocate_array()
 
     k_o = DAT::tdual_kkfloat_1d_2("qeq/kk:o",nmax);
     d_o = k_o.template view<DeviceType>();
-    h_o = k_o.h_view;
+    h_o = k_o.view_host();
 
     d_p = typename AT::t_kkfloat_1d_2("qeq/kk:p",nmax);
     d_r = typename AT::t_kkfloat_1d_2("qeq/kk:r",nmax);
     k_d = DAT::tdual_kkfloat_1d_2("qeq/kk:d",nmax);
     d_d = k_d.template view<DeviceType>();
-    h_d = k_d.h_view;
+    h_d = k_d.view_host();
 
     d_Hdia_inv = typename AT::t_kkfloat_1d("qeq/kk:Hdia_inv",nmax);
 
@@ -362,7 +362,7 @@ void FixQEqReaxFFKokkos<DeviceType>::allocate_array()
 
     k_st = DAT::tdual_kkfloat_1d_2("qeq/kk:st",nmax);
     d_st = k_st.template view<DeviceType>();
-    h_st = k_st.h_view;
+    h_st = k_st.view_host();
 
     memoryKK->create_kokkos(k_chi_field,chi_field,nmax,"qeq/kk:chi_field");
     d_chi_field = k_chi_field.template view<DeviceType>();
@@ -1344,8 +1344,8 @@ void FixQEqReaxFFKokkos<DeviceType>::sort_kokkos(Kokkos::BinSort<KeyViewType, Bi
   k_s_hist.sync_device();
   k_t_hist.sync_device();
 
-  Sorter.sort(LMPDeviceType(), k_s_hist.d_view);
-  Sorter.sort(LMPDeviceType(), k_t_hist.d_view);
+  Sorter.sort(LMPDeviceType(), k_s_hist.view_device());
+  Sorter.sort(LMPDeviceType(), k_t_hist.view_device());
 
   k_s_hist.modify_device();
   k_t_hist.modify_device();

@@ -585,18 +585,6 @@ void PairBrownianKokkos<DeviceType>::allocate()
 }
 
 /* ----------------------------------------------------------------------
-   global settings
-------------------------------------------------------------------------- */
-
-template<class DeviceType>
-void PairBrownianKokkos<DeviceType>::settings(int narg, char **arg)
-{
-  if (narg != 7 && narg != 9) error->all(FLERR, "Illegal pair_style command");
-
-  PairBrownian::settings(narg,arg);
-}
-
-/* ----------------------------------------------------------------------
    init for one type pair i,j and corresponding j,i
 ------------------------------------------------------------------------- */
 
@@ -606,10 +594,10 @@ double PairBrownianKokkos<DeviceType>::init_one(int i, int j)
   double cutone = PairBrownian::init_one(i,j);
   double cutinnerm = cut_inner[i][j];
 
-  k_cutsq.h_view(i,j) = k_cutsq.h_view(j,i) = cutone*cutone;
+  k_cutsq.view_host()(i,j) = k_cutsq.view_host()(j,i) = cutone*cutone;
   k_cutsq.modify_host();
 
-  k_cut_inner.h_view(i,j) = k_cut_inner.h_view(j,i) = cutinnerm;
+  k_cut_inner.view_host()(i,j) = k_cut_inner.view_host()(j,i) = cutinnerm;
   k_cut_inner.modify_host();
 
   return cutone;

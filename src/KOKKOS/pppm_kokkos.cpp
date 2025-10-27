@@ -784,7 +784,7 @@ void PPPMKokkos<DeviceType>::allocate()
   d_rho1d = typename FFT_AT::t_FFT_SCALAR_2d_3("pppm:rho1d",nmax,order/2+order/2+1);
   k_rho_coeff = FFT_DAT::tdual_FFT_SCALAR_2d("pppm:rho_coeff",order,order/2-(1-order)/2+1);
   d_rho_coeff = k_rho_coeff.view<DeviceType>();
-  h_rho_coeff = k_rho_coeff.h_view;
+  h_rho_coeff = k_rho_coeff.view_host();
 
   // create 2 FFTs and a Remap
   // 1st FFT keeps data in FFT decomposition
@@ -914,19 +914,19 @@ void PPPMKokkos<DeviceType>::compute_gf_denom()
 {
   int k,l,m;
 
-  for (l = 1; l < order; l++) k_gf_b.h_view[l] = 0.0;
-  k_gf_b.h_view[0] = 1.0;
+  for (l = 1; l < order; l++) k_gf_b.view_host()[l] = 0.0;
+  k_gf_b.view_host()[0] = 1.0;
 
   for (m = 1; m < order; m++) {
     for (l = m; l > 0; l--)
-      k_gf_b.h_view[l] = 4.0 * (k_gf_b.h_view[l]*(l-m)*(l-m-0.5)-k_gf_b.h_view[l-1]*(l-m-1)*(l-m-1));
-    k_gf_b.h_view[0] = 4.0 * (k_gf_b.h_view[0]*(l-m)*(l-m-0.5));
+      k_gf_b.view_host()[l] = 4.0 * (k_gf_b.view_host()[l]*(l-m)*(l-m-0.5)-k_gf_b.view_host()[l-1]*(l-m-1)*(l-m-1));
+    k_gf_b.view_host()[0] = 4.0 * (k_gf_b.view_host()[0]*(l-m)*(l-m-0.5));
   }
 
   bigint ifact = 1;
   for (k = 1; k < 2*order; k++) ifact *= k;
   double gaminv = 1.0/ifact;
-  for (l = 0; l < order; l++) k_gf_b.h_view[l] *= gaminv;
+  for (l = 0; l < order; l++) k_gf_b.view_host()[l] *= gaminv;
 
   k_gf_b.modify_host();
   k_gf_b.template sync<DeviceType>();
@@ -1132,7 +1132,7 @@ void PPPMKokkos<DeviceType>::particle_map()
 {
   int nlocal = atomKK->nlocal;
 
-  k_flag.h_view() = 0;
+  k_flag.view_host()() = 0;
   k_flag.modify_host();
   k_flag.template sync<DeviceType>();
 
@@ -1145,7 +1145,7 @@ void PPPMKokkos<DeviceType>::particle_map()
 
   k_flag.template modify<DeviceType>();
   k_flag.sync_host();
-  if (k_flag.h_view())
+  if (k_flag.view_host()())
     error->one(FLERR, Error::NOLASTLINE, "Out of range atoms - cannot compute PPPM" + utils::errorurl(4));
 }
 

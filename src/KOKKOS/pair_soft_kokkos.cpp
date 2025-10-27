@@ -178,18 +178,6 @@ void PairSoftKokkos<DeviceType>::allocate()
 }
 
 /* ----------------------------------------------------------------------
-   global settings
-------------------------------------------------------------------------- */
-
-template<class DeviceType>
-void PairSoftKokkos<DeviceType>::settings(int narg, char **arg)
-{
-  if (narg > 2) error->all(FLERR,"Illegal pair_style command");
-
-  PairSoft::settings(1,arg);
-}
-
-/* ----------------------------------------------------------------------
    init specific to this pair style
 ------------------------------------------------------------------------- */
 
@@ -227,16 +215,16 @@ double PairSoftKokkos<DeviceType>::init_one(int i, int j)
 {
   double cutone = PairSoft::init_one(i,j);
 
-  k_params.h_view(i,j).prefactor = prefactor[i][j];
-  k_params.h_view(i,j).cut = cutone;
-  k_params.h_view(i,j).cutsq = cutone*cutone;
-  k_params.h_view(j,i) = k_params.h_view(i,j);
+  k_params.view_host()(i,j).prefactor = prefactor[i][j];
+  k_params.view_host()(i,j).cut = cutone;
+  k_params.view_host()(i,j).cutsq = cutone*cutone;
+  k_params.view_host()(j,i) = k_params.view_host()(i,j);
   if (i<MAX_TYPES_STACKPARAMS+1 && j<MAX_TYPES_STACKPARAMS+1) {
-    m_params[i][j] = m_params[j][i] = k_params.h_view(i,j);
+    m_params[i][j] = m_params[j][i] = k_params.view_host()(i,j);
     m_cutsq[j][i] = m_cutsq[i][j] = cutone*cutone;
   }
 
-  k_cutsq.h_view(i,j) = k_cutsq.h_view(j,i) = cutone*cutone;
+  k_cutsq.view_host()(i,j) = k_cutsq.view_host()(j,i) = cutone*cutone;
   k_cutsq.modify_host();
   k_params.modify_host();
 
