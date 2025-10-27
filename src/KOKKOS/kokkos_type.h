@@ -478,6 +478,22 @@ struct alignas(2*sizeof(double)) s_KK_double2 {
 };
 typedef struct s_KK_double2 KK_double2;
 
+struct alignas(2*sizeof(KK_FLOAT)) s_KK_FLOAT2 {
+  KK_FLOAT v[2];
+
+  KOKKOS_INLINE_FUNCTION
+  s_KK_FLOAT2() {
+    v[0] = v[1] = 0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator+=(const s_KK_FLOAT2 &rhs) {
+    v[0] += rhs.v[0];
+    v[1] += rhs.v[1];
+  }
+};
+typedef struct s_KK_FLOAT2 KK_FLOAT2;
+
 template <class KeyViewType>
 struct BinOp3DLAMMPS {
   int max_bins_[3] = {};
@@ -1324,7 +1340,7 @@ struct params_lj_coul {
   params_lj_coul() {cut_ljsq=0;cut_coulsq=0;lj1=0;lj2=0;lj3=0;lj4=0;offset=0;};
   KOKKOS_INLINE_FUNCTION
   params_lj_coul(int /*i*/) {cut_ljsq=0;cut_coulsq=0;lj1=0;lj2=0;lj3=0;lj4=0;offset=0;};
-  double cut_ljsq,cut_coulsq,lj1,lj2,lj3,lj4,offset;
+  KK_FLOAT cut_ljsq,cut_coulsq,lj1,lj2,lj3,lj4,offset;
 };
 
 // ReaxFF
@@ -1335,7 +1351,8 @@ struct alignas(4 * sizeof(int)) reax_int4 {
 
 // Pair SNAP
 
-#define SNAP_KOKKOS_REAL double
+#define SNAP_KOKKOS_REAL KK_FLOAT
+#define SNAP_KOKKOS_ACCUM KK_ACC_FLOAT
 #define SNAP_KOKKOS_HOST_VECLEN 1
 
 #ifdef LMP_KOKKOS_GPU
