@@ -171,7 +171,7 @@ template <class DeviceType> double PairUF3Kokkos<DeviceType>::init_one(int i, in
 
   if (!coefficients_created) create_coefficients();
 
-  k_cutsq.h_view(i,j) = k_cutsq.h_view(j,i) = cutone*cutone; //Update the k_cutsq's
+  k_cutsq.view_host()(i,j) = k_cutsq.view_host()(j,i) = cutone*cutone; //Update the k_cutsq's
   //host memory
   k_cutsq.modify_host(); //Record that k_cutsq's host memory has
   //been modified
@@ -188,7 +188,7 @@ template <class DeviceType> void PairUF3Kokkos<DeviceType>::create_coefficients(
     for (int i = 1; i < num_of_elements + 1; i++) {
       for (int j = 1; j < num_of_elements + 1; j++) {
         for (int k = 1; k < num_of_elements + 1; k++) {
-          k_cut_3b.h_view(i,j,k) = cut_3b[i][j][k];
+          k_cut_3b.view_host()(i,j,k) = cut_3b[i][j][k];
 
           // Notice the order of min_cut_3b[i][j][k]
           //In min_cut_3b[i][j][k],
@@ -196,9 +196,9 @@ template <class DeviceType> void PairUF3Kokkos<DeviceType>::create_coefficients(
           //min_cut_3b[i][j][k][1] is the knot_vector along ik,
           //min_cut_3b[i][j][k][2] is the knot_vector along ij,
           //see pair_uf3.cpp for more details
-          k_min_cut_3b.h_view(i,j,k,0) = min_cut_3b[i][j][k][0];
-          k_min_cut_3b.h_view(i,j,k,1) = min_cut_3b[i][j][k][1];
-          k_min_cut_3b.h_view(i,j,k,2) = min_cut_3b[i][j][k][2];
+          k_min_cut_3b.view_host()(i,j,k,0) = min_cut_3b[i][j][k][0];
+          k_min_cut_3b.view_host()(i,j,k,1) = min_cut_3b[i][j][k][1];
+          k_min_cut_3b.view_host()(i,j,k,2) = min_cut_3b[i][j][k][2];
         }
       }
     }

@@ -45,7 +45,7 @@ ImproperHarmonicKokkos<DeviceType>::ImproperHarmonicKokkos(LAMMPS *lmp) : Improp
 
   k_warning_flag = DAT::tdual_int_scalar("Dihedral:warning_flag");
   d_warning_flag = k_warning_flag.template view<DeviceType>();
-  h_warning_flag = k_warning_flag.h_view;
+  h_warning_flag = k_warning_flag.view_host();
 
   centroidstressflag = CENTROID_NOTAVAIL;
 }
@@ -321,8 +321,8 @@ void ImproperHarmonicKokkos<DeviceType>::coeff(int narg, char **arg)
 
   int n = atom->nimpropertypes;
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_chi.h_view[i] = chi[i];
+    k_k.view_host()[i] = k[i];
+    k_chi.view_host()[i] = chi[i];
   }
 
   k_k.modify_host();
@@ -340,8 +340,8 @@ void ImproperHarmonicKokkos<DeviceType>::read_restart(FILE *fp)
 
   int n = atom->nimpropertypes;
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_chi.h_view[i] = chi[i];
+    k_k.view_host()[i] = k[i];
+    k_chi.view_host()[i] = chi[i];
   }
 
   k_k.modify_host();

@@ -66,7 +66,7 @@ ComputeSNAGridLocalKokkos<DeviceType, real_type, vector_length>::ComputeSNAGridL
 
   for (int i = 1; i <= atom->ntypes; i++) {
     for (int j = 1; j <= atom->ntypes; j++){
-      k_cutsq.h_view(i,j) = k_cutsq.h_view(j,i) = cutsq_tmp;
+      k_cutsq.view_host()(i,j) = k_cutsq.view_host()(j,i) = cutsq_tmp;
       k_cutsq.modify_host();
     }
   }

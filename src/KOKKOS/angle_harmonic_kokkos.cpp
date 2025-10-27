@@ -265,8 +265,8 @@ void AngleHarmonicKokkos<DeviceType>::coeff(int narg, char **arg)
 
   int n = atom->nangletypes;
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_theta0.h_view[i] = theta0[i];
+    k_k.view_host()[i] = k[i];
+    k_theta0.view_host()[i] = theta0[i];
   }
 
   k_k.modify_host();
@@ -284,8 +284,8 @@ void AngleHarmonicKokkos<DeviceType>::read_restart(FILE *fp)
 
   int n = atom->nangletypes;
   for (int i = 1; i <= n; i++) {
-    k_k.h_view[i] = k[i];
-    k_theta0.h_view[i] = theta0[i];
+    k_k.view_host()[i] = k[i];
+    k_theta0.view_host()[i] = theta0[i];
   }
 
   k_k.modify_host();

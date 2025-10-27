@@ -118,10 +118,10 @@ void PairReaxFFKokkos<DeviceType>::deallocate_views_of_views()
 
   for (int i = 0; i < (int)k_LR.extent(0); i++) {
     for (int j = 0; j < (int)k_LR.extent(1); j++) {
-      k_LR.h_view(i,j).d_vdW    = {};
-      k_LR.h_view(i,j).d_CEvd   = {};
-      k_LR.h_view(i,j).d_ele    = {};
-      k_LR.h_view(i,j).d_CEclmb = {};
+      k_LR.view_host()(i,j).d_vdW    = {};
+      k_LR.view_host()(i,j).d_CEvd   = {};
+      k_LR.view_host()(i,j).d_ele    = {};
+      k_LR.view_host()(i,j).d_CEclmb = {};
     }
   }
 }
@@ -238,36 +238,36 @@ void PairReaxFFKokkos<DeviceType>::setup()
     if (map[i] == -1) continue;
 
     // general
-    k_params_sing.h_view(i).mass = api->system->reax_param.sbp[map[i]].mass;
+    k_params_sing.view_host()(i).mass = api->system->reax_param.sbp[map[i]].mass;
 
     // polarization
-    k_params_sing.h_view(i).chi = api->system->reax_param.sbp[map[i]].chi;
-    k_params_sing.h_view(i).eta = api->system->reax_param.sbp[map[i]].eta;
+    k_params_sing.view_host()(i).chi = api->system->reax_param.sbp[map[i]].chi;
+    k_params_sing.view_host()(i).eta = api->system->reax_param.sbp[map[i]].eta;
 
     // bond order
-    k_params_sing.h_view(i).r_s = api->system->reax_param.sbp[map[i]].r_s;
-    k_params_sing.h_view(i).r_pi = api->system->reax_param.sbp[map[i]].r_pi;
-    k_params_sing.h_view(i).r_pi2 = api->system->reax_param.sbp[map[i]].r_pi_pi;
-    k_params_sing.h_view(i).valency = api->system->reax_param.sbp[map[i]].valency;
-    k_params_sing.h_view(i).valency_val = api->system->reax_param.sbp[map[i]].valency_val;
-    k_params_sing.h_view(i).valency_boc = api->system->reax_param.sbp[map[i]].valency_boc;
-    k_params_sing.h_view(i).valency_e = api->system->reax_param.sbp[map[i]].valency_e;
-    k_params_sing.h_view(i).nlp_opt = api->system->reax_param.sbp[map[i]].nlp_opt;
+    k_params_sing.view_host()(i).r_s = api->system->reax_param.sbp[map[i]].r_s;
+    k_params_sing.view_host()(i).r_pi = api->system->reax_param.sbp[map[i]].r_pi;
+    k_params_sing.view_host()(i).r_pi2 = api->system->reax_param.sbp[map[i]].r_pi_pi;
+    k_params_sing.view_host()(i).valency = api->system->reax_param.sbp[map[i]].valency;
+    k_params_sing.view_host()(i).valency_val = api->system->reax_param.sbp[map[i]].valency_val;
+    k_params_sing.view_host()(i).valency_boc = api->system->reax_param.sbp[map[i]].valency_boc;
+    k_params_sing.view_host()(i).valency_e = api->system->reax_param.sbp[map[i]].valency_e;
+    k_params_sing.view_host()(i).nlp_opt = api->system->reax_param.sbp[map[i]].nlp_opt;
 
     // multibody
-    k_params_sing.h_view(i).p_lp2 = api->system->reax_param.sbp[map[i]].p_lp2;
-    k_params_sing.h_view(i).p_ovun2 = api->system->reax_param.sbp[map[i]].p_ovun2;
-    k_params_sing.h_view(i).p_ovun5 = api->system->reax_param.sbp[map[i]].p_ovun5;
+    k_params_sing.view_host()(i).p_lp2 = api->system->reax_param.sbp[map[i]].p_lp2;
+    k_params_sing.view_host()(i).p_ovun2 = api->system->reax_param.sbp[map[i]].p_ovun2;
+    k_params_sing.view_host()(i).p_ovun5 = api->system->reax_param.sbp[map[i]].p_ovun5;
 
     // angular
-    k_params_sing.h_view(i).p_val3 = api->system->reax_param.sbp[map[i]].p_val3;
-    k_params_sing.h_view(i).p_val5 = api->system->reax_param.sbp[map[i]].p_val5;
+    k_params_sing.view_host()(i).p_val3 = api->system->reax_param.sbp[map[i]].p_val3;
+    k_params_sing.view_host()(i).p_val5 = api->system->reax_param.sbp[map[i]].p_val5;
 
     // hydrogen bond
-    k_params_sing.h_view(i).p_hbond = api->system->reax_param.sbp[map[i]].p_hbond;
+    k_params_sing.view_host()(i).p_hbond = api->system->reax_param.sbp[map[i]].p_hbond;
 
     // acks2
-    k_params_sing.h_view(i).bcut_acks2 = api->system->reax_param.sbp[map[i]].bcut_acks2;
+    k_params_sing.view_host()(i).bcut_acks2 = api->system->reax_param.sbp[map[i]].bcut_acks2;
 
     for (j = 1; j <= n; j++) {
       if (map[j] == -1) continue;
@@ -275,42 +275,42 @@ void PairReaxFFKokkos<DeviceType>::setup()
       twbp = &(api->system->reax_param.tbp[map[i]][map[j]]);
 
       // vdW
-      k_params_twbp.h_view(i,j).gamma = twbp->gamma;
-      k_params_twbp.h_view(i,j).gamma_w = twbp->gamma_w;
-      k_params_twbp.h_view(i,j).alpha = twbp->alpha;
-      k_params_twbp.h_view(i,j).r_vdw = twbp->r_vdW;
-      k_params_twbp.h_view(i,j).epsilon = twbp->D;
-      k_params_twbp.h_view(i,j).acore = twbp->acore;
-      k_params_twbp.h_view(i,j).ecore = twbp->ecore;
-      k_params_twbp.h_view(i,j).rcore = twbp->rcore;
-      k_params_twbp.h_view(i,j).lgre = twbp->lgre;
-      k_params_twbp.h_view(i,j).lgcij = twbp->lgcij;
+      k_params_twbp.view_host()(i,j).gamma = twbp->gamma;
+      k_params_twbp.view_host()(i,j).gamma_w = twbp->gamma_w;
+      k_params_twbp.view_host()(i,j).alpha = twbp->alpha;
+      k_params_twbp.view_host()(i,j).r_vdw = twbp->r_vdW;
+      k_params_twbp.view_host()(i,j).epsilon = twbp->D;
+      k_params_twbp.view_host()(i,j).acore = twbp->acore;
+      k_params_twbp.view_host()(i,j).ecore = twbp->ecore;
+      k_params_twbp.view_host()(i,j).rcore = twbp->rcore;
+      k_params_twbp.view_host()(i,j).lgre = twbp->lgre;
+      k_params_twbp.view_host()(i,j).lgcij = twbp->lgcij;
 
       // bond order
-      k_params_twbp.h_view(i,j).r_s = twbp->r_s;
-      k_params_twbp.h_view(i,j).r_pi = twbp->r_p;
-      k_params_twbp.h_view(i,j).r_pi2 = twbp->r_pp;
-      k_params_twbp.h_view(i,j).p_bo1 = twbp->p_bo1;
-      k_params_twbp.h_view(i,j).p_bo2 = twbp->p_bo2;
-      k_params_twbp.h_view(i,j).p_bo3 = twbp->p_bo3;
-      k_params_twbp.h_view(i,j).p_bo4 = twbp->p_bo4;
-      k_params_twbp.h_view(i,j).p_bo5 = twbp->p_bo5;
-      k_params_twbp.h_view(i,j).p_bo6 = twbp->p_bo6;
-      k_params_twbp.h_view(i,j).p_boc3 = twbp->p_boc3;
-      k_params_twbp.h_view(i,j).p_boc4 = twbp->p_boc4;
-      k_params_twbp.h_view(i,j).p_boc5 = twbp->p_boc5;
-      k_params_twbp.h_view(i,j).ovc = twbp->ovc;
-      k_params_twbp.h_view(i,j).v13cor = twbp->v13cor;
+      k_params_twbp.view_host()(i,j).r_s = twbp->r_s;
+      k_params_twbp.view_host()(i,j).r_pi = twbp->r_p;
+      k_params_twbp.view_host()(i,j).r_pi2 = twbp->r_pp;
+      k_params_twbp.view_host()(i,j).p_bo1 = twbp->p_bo1;
+      k_params_twbp.view_host()(i,j).p_bo2 = twbp->p_bo2;
+      k_params_twbp.view_host()(i,j).p_bo3 = twbp->p_bo3;
+      k_params_twbp.view_host()(i,j).p_bo4 = twbp->p_bo4;
+      k_params_twbp.view_host()(i,j).p_bo5 = twbp->p_bo5;
+      k_params_twbp.view_host()(i,j).p_bo6 = twbp->p_bo6;
+      k_params_twbp.view_host()(i,j).p_boc3 = twbp->p_boc3;
+      k_params_twbp.view_host()(i,j).p_boc4 = twbp->p_boc4;
+      k_params_twbp.view_host()(i,j).p_boc5 = twbp->p_boc5;
+      k_params_twbp.view_host()(i,j).ovc = twbp->ovc;
+      k_params_twbp.view_host()(i,j).v13cor = twbp->v13cor;
 
       // bond energy
-      k_params_twbp.h_view(i,j).p_be1 = twbp->p_be1;
-      k_params_twbp.h_view(i,j).p_be2 = twbp->p_be2;
-      k_params_twbp.h_view(i,j).De_s = twbp->De_s;
-      k_params_twbp.h_view(i,j).De_p = twbp->De_p;
-      k_params_twbp.h_view(i,j).De_pp = twbp->De_pp;
+      k_params_twbp.view_host()(i,j).p_be1 = twbp->p_be1;
+      k_params_twbp.view_host()(i,j).p_be2 = twbp->p_be2;
+      k_params_twbp.view_host()(i,j).De_s = twbp->De_s;
+      k_params_twbp.view_host()(i,j).De_p = twbp->De_p;
+      k_params_twbp.view_host()(i,j).De_pp = twbp->De_pp;
 
       // multibody
-      k_params_twbp.h_view(i,j).p_ovun1 = twbp->p_ovun1;
+      k_params_twbp.view_host()(i,j).p_ovun1 = twbp->p_ovun1;
 
       for (k = 1; k <= n; k++) {
         if (map[k] == -1) continue;
@@ -318,21 +318,21 @@ void PairReaxFFKokkos<DeviceType>::setup()
         // Angular
         thbh = &(api->system->reax_param.thbp[map[i]][map[j]][map[k]]);
         thbp = &(thbh->prm[0]);
-        k_params_thbp.h_view(i,j,k).cnt = thbh->cnt;
-        k_params_thbp.h_view(i,j,k).theta_00 = thbp->theta_00;
-        k_params_thbp.h_view(i,j,k).p_val1 = thbp->p_val1;
-        k_params_thbp.h_view(i,j,k).p_val2 = thbp->p_val2;
-        k_params_thbp.h_view(i,j,k).p_val4 = thbp->p_val4;
-        k_params_thbp.h_view(i,j,k).p_val7 = thbp->p_val7;
-        k_params_thbp.h_view(i,j,k).p_pen1 = thbp->p_pen1;
-        k_params_thbp.h_view(i,j,k).p_coa1 = thbp->p_coa1;
+        k_params_thbp.view_host()(i,j,k).cnt = thbh->cnt;
+        k_params_thbp.view_host()(i,j,k).theta_00 = thbp->theta_00;
+        k_params_thbp.view_host()(i,j,k).p_val1 = thbp->p_val1;
+        k_params_thbp.view_host()(i,j,k).p_val2 = thbp->p_val2;
+        k_params_thbp.view_host()(i,j,k).p_val4 = thbp->p_val4;
+        k_params_thbp.view_host()(i,j,k).p_val7 = thbp->p_val7;
+        k_params_thbp.view_host()(i,j,k).p_pen1 = thbp->p_pen1;
+        k_params_thbp.view_host()(i,j,k).p_coa1 = thbp->p_coa1;
 
         // Hydrogen Bond
         hbp = &(api->system->reax_param.hbp[map[i]][map[j]][map[k]]);
-        k_params_hbp.h_view(i,j,k).p_hb1 = hbp->p_hb1;
-        k_params_hbp.h_view(i,j,k).p_hb2 = hbp->p_hb2;
-        k_params_hbp.h_view(i,j,k).p_hb3 = hbp->p_hb3;
-        k_params_hbp.h_view(i,j,k).r0_hb = hbp->r0_hb;
+        k_params_hbp.view_host()(i,j,k).p_hb1 = hbp->p_hb1;
+        k_params_hbp.view_host()(i,j,k).p_hb2 = hbp->p_hb2;
+        k_params_hbp.view_host()(i,j,k).p_hb3 = hbp->p_hb3;
+        k_params_hbp.view_host()(i,j,k).r0_hb = hbp->r0_hb;
 
         for (m = 1; m <= n; m++) {
           if (map[m] == -1) continue;
@@ -340,11 +340,11 @@ void PairReaxFFKokkos<DeviceType>::setup()
           // Torsion
           fbh = &(api->system->reax_param.fbp[map[i]][map[j]][map[k]][map[m]]);
           fbp = &(fbh->prm[0]);
-          k_params_fbp.h_view(i,j,k,m).p_tor1 = fbp->p_tor1;
-          k_params_fbp.h_view(i,j,k,m).p_cot1 = fbp->p_cot1;
-          k_params_fbp.h_view(i,j,k,m).V1 = fbp->V1;
-          k_params_fbp.h_view(i,j,k,m).V2 = fbp->V2;
-          k_params_fbp.h_view(i,j,k,m).V3 = fbp->V3;
+          k_params_fbp.view_host()(i,j,k,m).p_tor1 = fbp->p_tor1;
+          k_params_fbp.view_host()(i,j,k,m).p_cot1 = fbp->p_cot1;
+          k_params_fbp.view_host()(i,j,k,m).V1 = fbp->V1;
+          k_params_fbp.view_host()(i,j,k,m).V2 = fbp->V2;
+          k_params_fbp.view_host()(i,j,k,m).V3 = fbp->V3;
         }
       }
     }
@@ -399,14 +399,14 @@ void PairReaxFFKokkos<DeviceType>::init_md()
   swb2 = swb * swb;
   swb3 = swb * swb2;
 
-  k_tap.h_view(7) = 20.0/d7;
-  k_tap.h_view(6) = -70.0 * (swa + swb) / d7;
-  k_tap.h_view(5) =  84.0 * (swa2 + 3.0*swa*swb + swb2) / d7;
-  k_tap.h_view(4) = -35.0 * (swa3 + 9.0*swa2*swb + 9.0*swa*swb2 + swb3) / d7;
-  k_tap.h_view(3) = 140.0 * (swa3*swb + 3.0*swa2*swb2 + swa*swb3) / d7;
-  k_tap.h_view(2) =-210.0 * (swa3*swb2 + swa2*swb3) / d7;
-  k_tap.h_view(1) = 140.0 * swa3 * swb3 / d7;
-  k_tap.h_view(0) = (-35.0*swa3*swb2*swb2 + 21.0*swa2*swb3*swb2 -
+  k_tap.view_host()(7) = 20.0/d7;
+  k_tap.view_host()(6) = -70.0 * (swa + swb) / d7;
+  k_tap.view_host()(5) =  84.0 * (swa2 + 3.0*swa*swb + swb2) / d7;
+  k_tap.view_host()(4) = -35.0 * (swa3 + 9.0*swa2*swb + 9.0*swa*swb2 + swb3) / d7;
+  k_tap.view_host()(3) = 140.0 * (swa3*swb + 3.0*swa2*swb2 + swa*swb3) / d7;
+  k_tap.view_host()(2) =-210.0 * (swa3*swb2 + swa2*swb3) / d7;
+  k_tap.view_host()(1) = 140.0 * swa3 * swb3 / d7;
+  k_tap.view_host()(0) = (-35.0*swa3*swb2*swb2 + 21.0*swa2*swb3*swb2 -
                      7.0*swa*swb3*swb3 + swb3*swb3*swb) / d7;
 
   k_tap.modify_host();
@@ -426,24 +426,24 @@ void PairReaxFFKokkos<DeviceType>::init_md()
         if (map[j] == -1) continue;
         int n = LR[i][j].n;
         if (n == 0) continue;
-        k_LR.h_view(i,j).dx     = LR[i][j].dx;
-        k_LR.h_view(i,j).inv_dx = LR[i][j].inv_dx;
+        k_LR.view_host()(i,j).dx     = LR[i][j].dx;
+        k_LR.view_host()(i,j).inv_dx = LR[i][j].inv_dx;
 
         typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d k_vdW    = typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d("lookup:LR[i,j].vdW",n);
         typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d k_CEvd   = typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d("lookup:LR[i,j].CEvd",n);
         typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d k_ele    = typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d("lookup:LR[i,j].ele",n);
         typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d k_CEclmb = typename LR_lookup_table_kk<DeviceType>::tdual_cubic_spline_coef_1d("lookup:LR[i,j].CEclmb",n);
 
-        k_LR.h_view(i,j).d_vdW    = k_vdW.template view<DeviceType>();
-        k_LR.h_view(i,j).d_CEvd   = k_CEvd.template view<DeviceType>();
-        k_LR.h_view(i,j).d_ele    = k_ele.template view<DeviceType>();
-        k_LR.h_view(i,j).d_CEclmb = k_CEclmb.template view<DeviceType>();
+        k_LR.view_host()(i,j).d_vdW    = k_vdW.template view<DeviceType>();
+        k_LR.view_host()(i,j).d_CEvd   = k_CEvd.template view<DeviceType>();
+        k_LR.view_host()(i,j).d_ele    = k_ele.template view<DeviceType>();
+        k_LR.view_host()(i,j).d_CEclmb = k_CEclmb.template view<DeviceType>();
 
         for (int k = 0; k < n; k++) {
-          k_vdW.h_view(k)    = LR[i][j].vdW[k];
-          k_CEvd.h_view(k)   = LR[i][j].CEvd[k];
-          k_ele.h_view(k)    = LR[i][j].ele[k];
-          k_CEclmb.h_view(k) = LR[i][j].CEclmb[k];
+          k_vdW.view_host()(k)    = LR[i][j].vdW[k];
+          k_CEvd.view_host()(k)   = LR[i][j].CEvd[k];
+          k_ele.view_host()(k)    = LR[i][j].ele[k];
+          k_CEclmb.view_host()(k) = LR[i][j].CEclmb[k];
         }
 
         k_vdW.modify_host();
@@ -622,20 +622,20 @@ void PairReaxFFKokkos<DeviceType>::LR_vdW_Coulomb(int i, int j, double r_ij, LR_
   e_lg = de_lg = 0.0;
 
   /* calculate taper and its derivative */
-  Tap = k_tap.h_view[7] * r_ij + k_tap.h_view[6];
-  Tap = Tap * r_ij + k_tap.h_view[5];
-  Tap = Tap * r_ij + k_tap.h_view[4];
-  Tap = Tap * r_ij + k_tap.h_view[3];
-  Tap = Tap * r_ij + k_tap.h_view[2];
-  Tap = Tap * r_ij + k_tap.h_view[1];
-  Tap = Tap * r_ij + k_tap.h_view[0];
+  Tap = k_tap.view_host()[7] * r_ij + k_tap.view_host()[6];
+  Tap = Tap * r_ij + k_tap.view_host()[5];
+  Tap = Tap * r_ij + k_tap.view_host()[4];
+  Tap = Tap * r_ij + k_tap.view_host()[3];
+  Tap = Tap * r_ij + k_tap.view_host()[2];
+  Tap = Tap * r_ij + k_tap.view_host()[1];
+  Tap = Tap * r_ij + k_tap.view_host()[0];
 
-  dTap = 7*k_tap.h_view[7] * r_ij + 6*k_tap.h_view[6];
-  dTap = dTap * r_ij + 5*k_tap.h_view[5];
-  dTap = dTap * r_ij + 4*k_tap.h_view[4];
-  dTap = dTap * r_ij + 3*k_tap.h_view[3];
-  dTap = dTap * r_ij + 2*k_tap.h_view[2];
-  dTap += k_tap.h_view[1]/r_ij;
+  dTap = 7*k_tap.view_host()[7] * r_ij + 6*k_tap.view_host()[6];
+  dTap = dTap * r_ij + 5*k_tap.view_host()[5];
+  dTap = dTap * r_ij + 4*k_tap.view_host()[4];
+  dTap = dTap * r_ij + 3*k_tap.view_host()[3];
+  dTap = dTap * r_ij + 2*k_tap.view_host()[2];
+  dTap += k_tap.view_host()[1]/r_ij;
 
   /*vdWaals Calculations*/
   if (api->system->reax_param.gp.vdw_type==1 || api->system->reax_param.gp.vdw_type==3)
@@ -836,11 +836,11 @@ void PairReaxFFKokkos<DeviceType>::compute(int eflag_in, int vflag_in)
   while (resize) {
     resize = 0;
 
-    k_resize_bo.h_view() = 0;
+    k_resize_bo.view_host()() = 0;
     k_resize_bo.modify_host();
     k_resize_bo.sync<DeviceType>();
 
-    k_resize_hb.h_view() = 0;
+    k_resize_hb.view_host()() = 0;
     k_resize_hb.modify_host();
     k_resize_hb.sync<DeviceType>();
 
@@ -868,12 +868,12 @@ void PairReaxFFKokkos<DeviceType>::compute(int eflag_in, int vflag_in)
 
     k_resize_bo.modify<DeviceType>();
     k_resize_bo.sync_host();
-    int resize_bo = k_resize_bo.h_view();
+    int resize_bo = k_resize_bo.view_host()();
     if (resize_bo) maxbo = MAX(maxbo+MAX(1,maxbo*0.1),resize_bo);
 
     k_resize_hb.modify<DeviceType>();
     k_resize_hb.sync_host();
-    int resize_hb = k_resize_hb.h_view();
+    int resize_hb = k_resize_hb.view_host()();
     if (resize_hb) maxhb = MAX(maxhb+MAX(1,maxhb*0.1),resize_hb);
 
     resize = resize_bo || resize_hb;
@@ -948,7 +948,7 @@ void PairReaxFFKokkos<DeviceType>::compute(int eflag_in, int vflag_in)
   int count_angular = 0;
   int count_torsion = 0;
 
-  auto& h_count_angular_torsion = k_count_angular_torsion.h_view;
+  const auto& h_count_angular_torsion = k_count_angular_torsion.view_host();
   h_count_angular_torsion(0) = 0;
   h_count_angular_torsion(1) = 0;
   k_count_angular_torsion.modify_host();
@@ -4170,7 +4170,7 @@ void PairReaxFFKokkos<DeviceType>::PackBondBuffer(DAT::tdual_double_1d k_buf, in
 
   k_buf.sync_host();
   k_nbuf_local.sync_host();
-  nbuf_local = k_nbuf_local.h_view();
+  nbuf_local = k_nbuf_local.view_host()();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -4198,7 +4198,7 @@ void PairReaxFFKokkos<DeviceType>::PackReducedBondBuffer(DAT::tdual_double_1d k_
 
   k_buf.sync_host();
   k_nbuf_local.sync_host();
-  nbuf_local = k_nbuf_local.h_view();
+  nbuf_local = k_nbuf_local.view_host()();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -4313,7 +4313,7 @@ void PairReaxFFKokkos<DeviceType>::FindBondSpecies()
   k_tmpid.sync_host();
   k_error_flag.sync_host();
 
-  if (k_error_flag.h_view())
+  if (k_error_flag.view_host()())
     error->all(FLERR,"Increase MAXSPECBOND in reaxff_defs.h");
 }
 
