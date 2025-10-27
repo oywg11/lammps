@@ -710,8 +710,6 @@ void ReadData::command(int narg, char **arg)
     if (firstpass) {
       delete lmap;
       lmap = new LabelMap(lmp, ntypes, nbondtypes, nangletypes, ndihedraltypes, nimpropertypes);
-      // reset maxexchange if this not an added data file
-      if (addflag == NONE) atom->avec->maxexchange = 0;
     }
 
     // -------------------------------------------------------------------------------------

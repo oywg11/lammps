@@ -193,7 +193,7 @@ void CreateBox::command(int narg, char **arg)
 
   // process optional args that can overwrite default settings
 
-  int maxexchange = 0;
+  int maxexchange = atom->avec->maxexchange;
   while (iarg < narg) {
     if (strcmp(arg[iarg], "bond/types") == 0) {
       if (iarg + 2 > narg) utils::missing_cmd_args(FLERR, "create_box bond/type", error);
