@@ -272,21 +272,21 @@ void PairRHEO::compute(int eflag, int vflag)
             alpha_ave = 0.5 * (alphai + alphaj);
           }
           dT_prefactor =
-              2.0 * alpha_ave * (Ti - Tj) * rinv * rinv * voli * volj;
+              2.0 * alpha_ave * (Ti - Tj) * rinv * rinv;
 
           dT = dot3(dx, dWij);
-          heatflow[i] += dT * dT_prefactor;
+          heatflow[i] += dT * dT_prefactor * volj;
 
           if (newton_pair || j < nlocal) {
             dT = dot3(dx, dWji);
-            heatflow[j] += dT * dT_prefactor;
+            heatflow[j] += dT * dT_prefactor * voli;
           }
         }
 
         if (pair_force_flag) {
 
           //Hydrostatic pressure forces
-          fp_prefactor = voli * volj * (Pj + Pi);
+          fp_prefactor = Pj + Pi;
           sub3(vi, vj, dv);
 
           if (harmonic_means_flag) {
@@ -307,17 +307,17 @@ void PairRHEO::compute(int eflag, int vflag)
             mu /= (rsq * cutkinv3 * cutkinv3 + EPSILON);
             mu = MIN(0.0, mu);
             q = av * (-2.0 * cs_ave * mu + mu * mu);
-            fp_prefactor += voli * volj * q * (rhoj + rhoi);
+            fp_prefactor += q * (rhoj + rhoi);
           }
 
           // -Grad[P + Q]
-          scale3(-fp_prefactor, dWij, dfp);
+          scale3(-fp_prefactor * volj, dWij, dfp);
 
           // Now compute viscous eta*Lap[v] terms
           for (a = 0; a < dim; a++) {
             fv[a] = 0.0;
             for (b = 0; b < dim; b++) fv[a] += dv[a] * dx[b] * dWij[b];
-            fv[a] *= 2.0 * eta_ave * voli * volj * rinv * rinv;
+            fv[a] *= 2.0 * eta_ave * volj * rinv * rinv;
           }
 
           add3(fv, dfp, ft);
@@ -326,6 +326,11 @@ void PairRHEO::compute(int eflag, int vflag)
           f[i][0] += ft[0];
           f[i][1] += ft[1];
           f[i][2] += ft[2];
+          if (compute_interface) {
+            fp_store[i][0] += dfp[0];
+            fp_store[i][1] += dfp[1];
+            fp_store[i][2] += dfp[2];
+          }
 
           // Note the virial's definition is hazy, e.g. viscous contributions will depend on rotation
           if (evflag)
@@ -336,33 +341,26 @@ void PairRHEO::compute(int eflag, int vflag)
             for (a = 0; a < dim; a++) {
               fv[a] = 0.0;
               for (b = 0; b < dim; b++) fv[a] += (vi[a] - vj[a]) * dx[b] * dWji[b];
-              fv[a] *= -2.0 * eta_ave * voli * volj * rinv * rinv;
+              fv[a] *= -2.0 * eta_ave * voli * rinv * rinv;
               // flip sign here b/c -= at accummulator
             }
 
-            scale3(fp_prefactor, dWji, dfp);
+            scale3(fp_prefactor * voli, dWji, dfp);
             add3(fv, dfp, ft);
             add3(fsolid, ft, ft);
 
             f[j][0] -= ft[0];
             f[j][1] -= ft[1];
             f[j][2] -= ft[2];
-
-            if (evflag)
-              ev_tally_xyz(i, j, nlocal, newton_pair, 0.0, 0.0, ft[0], ft[1], ft[2], -dx[0], -dx[1],
-                           -dx[2]);
-          }
-
-          if (compute_interface) {
-            fp_store[i][0] += dfp[0];
-            fp_store[i][1] += dfp[1];
-            fp_store[i][2] += dfp[2];
-
-            if (newton_pair || j < nlocal) {
+            if (compute_interface) {
               fp_store[j][0] -= dfp[0];
               fp_store[j][1] -= dfp[1];
               fp_store[j][2] -= dfp[2];
             }
+
+            if (evflag)
+              ev_tally_xyz(i, j, nlocal, newton_pair, 0.0, 0.0, ft[0], ft[1], ft[2], -dx[0], -dx[1],
+                           -dx[2]);
           }
         }
 
