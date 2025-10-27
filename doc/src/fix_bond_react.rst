@@ -32,16 +32,15 @@ Syntax
          *yes* = update molecule IDs based on new global topology (default)
          *no* = do not update molecule IDs
          *molmap* = customize how molecule IDs are updated
-       *rate_limit* values = react-ID_1 ... react-ID_N Nlimit Nsteps
+       *rate_limit* values = react-ID_1 react-ID_2 ... react-ID_N Nlimit Nsteps
          react-IDs = one or more names of the reactions to include in rate limit
          Nlimit = maximum number of reactions allowed to occur within interval
          Nsteps = the interval (number of timesteps) over which to count reactions
-       *max_rxn* values = react-ID_1 ... react-ID_N Nlimit Nsteps
+       *max_rxn* values = react-ID_1 react-ID_2 ... react-ID_N Nlimit
          react-IDs = one or more names of the reactions to include in rate limit
-         Nlimit = maximum number of reactions allowed to occur within interval
-         N = maximum number of reactions allowed to occur
+         Nlimit = maximum total number of reactions allowed to occur
        *shuffle_seed* value = seed
-         seed = random # seed (positive integer) for choosing between reactions
+         seed = random # seed (positive integer) for choosing between eligible reactions
 
 * react = mandatory argument indicating new reaction specification
 * react-ID = user-assigned name for the reaction
@@ -238,7 +237,7 @@ more types of reactions must be enforced.
 The *max_rxn* keyword can enforce an upper limit on the overall number of
 one or more reactions. The reactions to sum over are listed by reaction
 name (react-ID). The number of reaction occurrences is calculated by
-summing over the listed reactions. This sum is limited to N. Reaction
+summing over the listed reactions. This sum is limited to Nlimit. Reaction
 occurrences are chosen randomly from all eligible reaction sites of all
 listed reactions. By default, a hardware-based random number source is used
 if available; reactions are chosen deterministically if a positive integer
