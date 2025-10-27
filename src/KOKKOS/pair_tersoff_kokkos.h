@@ -224,7 +224,7 @@ class PairTersoffKokkos : public PairTersoff {
     for (int i = 0; i < 3; i++)
       y[i] = static_cast<y_type>(static_cast<x_type>(k)*x[i]);
   }
-  
+
   template<typename kx_type, typename yz_type>
   KOKKOS_INLINE_FUNCTION
   void vec3_scaleadd(const kx_type k, const kx_type x[3], const yz_type y[3], yz_type z[3]) const {
