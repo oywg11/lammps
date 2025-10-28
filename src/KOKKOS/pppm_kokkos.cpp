@@ -340,18 +340,20 @@ void PPPMKokkos<DeviceType>::setup()
 
   delvolinv = delxinv*delyinv*delzinv;
 
-  delxinv_kk = static_cast<KK_FLOAT>(delxinv);
-  delyinv_kk = static_cast<KK_FLOAT>(delyinv);
-  delzinv_kk = static_cast<KK_FLOAT>(delzinv);
-  delvolinv_kk = static_cast<KK_FLOAT>(delvolinv);
-
   unitkx = (MY_2PI/xprd);
   unitky = (MY_2PI/yprd);
   unitkz = (MY_2PI/zprd_slab);
 
+  // ensure all relevant _kk values are up to date
+  delxinv_kk = static_cast<KK_FLOAT>(delxinv);
+  delyinv_kk = static_cast<KK_FLOAT>(delyinv);
+  delzinv_kk = static_cast<KK_FLOAT>(delzinv);
+  delvolinv_kk = static_cast<KK_FLOAT>(delvolinv);
   unitkx_kk = static_cast<KK_FLOAT>(unitkx);
   unitky_kk = static_cast<KK_FLOAT>(unitky);
   unitkz_kk = static_cast<KK_FLOAT>(unitkz);
+  g_ewald_kk = static_cast<KK_FLOAT>(g_ewald);
+  g_ewald_inv_kk = static_cast<KK_FLOAT>(1.0 / g_ewald);
 
   // d_fkx,d_fky,d_fkz for my FFT grid pts
 
@@ -466,10 +468,13 @@ void PPPMKokkos<DeviceType>::setup_triclinic()
   delzinv = nz_pppm;
   delvolinv = delxinv*delyinv*delzinv/volume;
 
+  // ensure all relevant _kk values are up to date
   delxinv_kk = static_cast<KK_FLOAT>(delxinv);
   delyinv_kk = static_cast<KK_FLOAT>(delyinv);
   delzinv_kk = static_cast<KK_FLOAT>(delzinv);
   delvolinv_kk = static_cast<KK_FLOAT>(delvolinv);
+  g_ewald_kk = static_cast<KK_FLOAT>(g_ewald);
+  g_ewald_inv_kk = static_cast<KK_FLOAT>(1.0 / g_ewald);
 
   numz_fft = nzhi_fft-nzlo_fft + 1;
   numy_fft = nyhi_fft-nylo_fft + 1;
@@ -600,9 +605,9 @@ void PPPMKokkos<DeviceType>::compute(int eflag, int vflag)
     domain->x2lamda(atomKK->nlocal);
   }
 
-  boxlo_kk[0] = static_cast<KK_FLOAT>(domain->boxlo[0]);
-  boxlo_kk[1] = static_cast<KK_FLOAT>(domain->boxlo[1]);
-  boxlo_kk[2] = static_cast<KK_FLOAT>(domain->boxlo[2]);
+  boxlo_kk[0] = static_cast<KK_FLOAT>(boxlo[0]);
+  boxlo_kk[1] = static_cast<KK_FLOAT>(boxlo[1]);
+  boxlo_kk[2] = static_cast<KK_FLOAT>(boxlo[2]);
 
   // extend size of per-atom arrays if necessary
 
@@ -683,6 +688,10 @@ void PPPMKokkos<DeviceType>::compute(int eflag, int vflag)
   if (evflag_atom) {
     int nlocal = atomKK->nlocal;
     int ntotal = nlocal;
+
+    // ensure all relevant _kk values are up to date
+    g_ewald_kk = static_cast<KK_FLOAT>(g_ewald);
+    g_ewald_inv_kk = static_cast<KK_FLOAT>(1.0 / g_ewald);
 
     if (eflag_atom) {
       copymode = 1;
@@ -935,9 +944,9 @@ void PPPMKokkos<DeviceType>::set_grid_local()
   boxlo[0] = domain->boxlo[0];
   boxlo[1] = domain->boxlo[1];
   boxlo[2] = domain->boxlo[2];
-  boxlo_kk[0] = static_cast<KK_FLOAT>(domain->boxlo[0]);
-  boxlo_kk[1] = static_cast<KK_FLOAT>(domain->boxlo[1]);
-  boxlo_kk[2] = static_cast<KK_FLOAT>(domain->boxlo[2]);
+  boxlo_kk[0] = static_cast<KK_FLOAT>(boxlo[0]);
+  boxlo_kk[1] = static_cast<KK_FLOAT>(boxlo[1]);
+  boxlo_kk[2] = static_cast<KK_FLOAT>(boxlo[2]);
 }
 
 /* ----------------------------------------------------------------------
@@ -1179,7 +1188,15 @@ template<class DeviceType>
 void PPPMKokkos<DeviceType>::particle_map()
 {
   int nlocal = atomKK->nlocal;
+
+  // ensure all relevant _kk values are up to date
   shift_kk = static_cast<KK_FLOAT>(shift);
+  delxinv_kk = static_cast<KK_FLOAT>(delxinv);
+  delyinv_kk = static_cast<KK_FLOAT>(delyinv);
+  delzinv_kk = static_cast<KK_FLOAT>(delzinv);
+  boxlo_kk[0] = static_cast<KK_FLOAT>(boxlo[0]);
+  boxlo_kk[1] = static_cast<KK_FLOAT>(boxlo[1]);
+  boxlo_kk[2] = static_cast<KK_FLOAT>(boxlo[2]);
 
   k_flag.view_host()() = 0;
   k_flag.modify_host();
@@ -1238,6 +1255,16 @@ void PPPMKokkos<DeviceType>::make_rho()
   numy_out = nyhi_out-nylo_out + 1;
   numx_out = nxhi_out-nxlo_out + 1;
   const int inum_out = numz_out*numy_out*numx_out;
+
+  // ensure all relevant _kk values are up to date
+  shiftone_kk = static_cast<KK_FLOAT>(shiftone);
+  delxinv_kk = static_cast<KK_FLOAT>(delxinv);
+  delyinv_kk = static_cast<KK_FLOAT>(delyinv);
+  delzinv_kk = static_cast<KK_FLOAT>(delzinv);
+  delvolinv_kk = static_cast<KK_FLOAT>(delvolinv);
+  boxlo_kk[0] = static_cast<KK_FLOAT>(boxlo[0]);
+  boxlo_kk[1] = static_cast<KK_FLOAT>(boxlo[1]);
+  boxlo_kk[2] = static_cast<KK_FLOAT>(boxlo[2]);
 
   copymode = 1;
   Kokkos::parallel_for(Kokkos::RangePolicy<DeviceType, TagPPPM_make_rho_zero>(0,inum_out),*this);
@@ -2076,6 +2103,9 @@ void PPPMKokkos<DeviceType>::fieldforce_ik()
 
   int nlocal = atomKK->nlocal;
 
+  // ensure all relevant _kk values are up to date
+  qscale_kk = static_cast<KK_FLOAT>(qscale);
+
   copymode = 1;
   Kokkos::parallel_for(Kokkos::RangePolicy<DeviceType, TagPPPM_fieldforce_ik>(0,nlocal),*this);
   copymode = 0;
@@ -2135,6 +2165,15 @@ void PPPMKokkos<DeviceType>::fieldforce_peratom()
   // (mx,my,mz) = global coords of moving stencil pt
 
   int nlocal = atomKK->nlocal;
+
+  // ensure all relevant _kk values are up to date
+  shiftone_kk = static_cast<KK_FLOAT>(shiftone);
+  delxinv_kk = static_cast<KK_FLOAT>(delxinv);
+  delyinv_kk = static_cast<KK_FLOAT>(delyinv);
+  delzinv_kk = static_cast<KK_FLOAT>(delzinv);
+  boxlo_kk[0] = static_cast<KK_FLOAT>(boxlo[0]);
+  boxlo_kk[1] = static_cast<KK_FLOAT>(boxlo[1]);
+  boxlo_kk[2] = static_cast<KK_FLOAT>(boxlo[2]);
 
   copymode = 1;
   Kokkos::parallel_for(Kokkos::RangePolicy<DeviceType, TagPPPM_fieldforce_peratom>(0,nlocal),*this);
