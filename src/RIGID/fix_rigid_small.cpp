@@ -627,7 +627,6 @@ void FixRigidSmall::setup(int vflag)
   if (maxextent > cutghost)
     error->all(FLERR,"Rigid body extent {} > ghost atom cutoff - use comm_modify cutoff", maxextent);
 
-  if (langflag) apply_langevin_thermostat();
   compute_forces_and_torques();
 
   // enforce 2d body forces and torques

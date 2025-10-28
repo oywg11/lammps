@@ -1501,6 +1501,17 @@ details please see ``lib/hdnnp/README`` and the `n2p2 build documentation
       to path where *n2p2* is located. If *n2p2* is located directly in
       ``lib/hdnnp/n2p2`` it will be automatically found by CMake.
 
+      .. admonition:: Failure to build n2p2 due to git branch names
+         :class: note
+
+         Some script code inside the *n2p2* library build processes the
+         current branch name used by git and that will fail for LAMMPS
+         repository branch names containing the forward slash '/'
+         character, for example: ``user/update-n2p2``.  The workaround
+         is to change the (local) branch name, e.g. for the given
+         example with: ``git branch -m user/update-n2p2
+         user_update-n2p2``
+
    .. tab:: Traditional make
 
       .. versionchanged:: 10Sep2025

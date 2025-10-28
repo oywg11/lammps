@@ -4499,7 +4499,7 @@ void Molecule::print(FILE *fp)
   }
 
   if (bodyflag) {
-    auto avec = dynamic_cast<AtomVecBody *>(atom->style_match("body"));
+    auto *avec = dynamic_cast<AtomVecBody *>(atom->style_match("body"));
     if (avec) {
       fputs("\nBody Integers\n\n", fp);
       if ((strcmp(avec->bptr->style, "nparticle") == 0) ||
