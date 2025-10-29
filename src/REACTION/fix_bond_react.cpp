@@ -348,7 +348,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
                                                 "used without stabilization keyword");
         if (iarg+2 > narg) error->all(FLERR,"Illegal fix bond/react command: "
                                       "'stabilize_steps' has too few arguments");
-        rxn.limit_duration = utils::numeric(FLERR,arg[iarg+1],false,lmp);
+        rxn.limit_duration = utils::inumeric(FLERR,arg[iarg+1],false,lmp);
         rxn.stabilize_steps_flag = 1;
         iarg += 2;
       } else if (strcmp(arg[iarg],"custom_charges") == 0) {
