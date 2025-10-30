@@ -18,8 +18,7 @@
             "const": "dump"
         },
         "style": {
-            "type": "string",
-            "const": "molecules"
+            "enum": ["molecules"]
         },
         "revision": {
             "type": "integer",
