@@ -206,7 +206,7 @@ The *store* keyword controls whether the fix stores the constraint
 (or restraint) forces as a per-atom property.
 
 During an MD :doc:`run <run>`, the constraint forces are the forces on
-atoms due to the constraints after an constrained position update.
+atoms due to the constraints after a constrained position update.
 Applying the SHAKE constraint *minimizes* those forces.  By using *store
 yes* the original constraint forces on all atoms can be accessed as a
 per-atom array of the fix.
