@@ -64,8 +64,6 @@ FixRattle::FixRattle(LAMMPS *lmp, int narg, char **arg) :
   vp = nullptr;
   FixRattle::grow_arrays(atom->nmax);
 
-  if (store_flag) error->all(FLERR, "Option 'store yes' is not yet compatible with fix rattle");
-
   // default communication mode
   // necessary for compatibility with SHAKE
   // see pack_forward and unpack_forward
@@ -139,8 +137,7 @@ void FixRattle::init() {
   }
 
   if (flag && comm->me == 0)
-    error->warning(FLERR,
-                   "Fix rattle should come after all other integration fixes ");
+    error->warning(FLERR, "Fix rattle should come after all other integration fixes ");
 }
 
 /* ----------------------------------------------------------------------
