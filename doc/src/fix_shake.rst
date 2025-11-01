@@ -33,7 +33,7 @@ Syntax
        *m* value = one or more mass values
 
 * zero or more keyword/value pairs may be appended
-* keyword = *mol* or *kbond*
+* keyword = *mol* or *kbond* or *store*
 
   .. parsed-literal::
 
@@ -41,6 +41,7 @@ Syntax
          template-ID = ID of molecule template specified in a separate :doc:`molecule <molecule>` command
        *kbond* value = force constant
          force constant = force constant used to apply a restraint force when used during minimization
+       *store* value = *yes* or *no*
 
 Examples
 """"""""
@@ -50,6 +51,7 @@ Examples
    fix 1 sub shake 0.0001 20 10 b 4 19 a 3 5 2
    fix 1 sub shake 0.0001 20 10 t 5 6 m 1.0 a 31
    fix 1 sub shake 0.0001 20 10 t 5 6 m 1.0 a 31 mol myMol
+   fix 1 sub shake 0.0001 20 10 t 5 6 m 1.0 a 31 store yes
    fix 1 sub rattle 0.0001 20 10 t 5 6 m 1.0 a 31
    fix 1 sub rattle 0.0001 20 10 t 5 6 m 1.0 a 31 mol myMol
 
@@ -198,6 +200,22 @@ will be fulfilled to the desired accuracy within a few MD steps
 following the minimization. The default value for *kbond* depends on the
 :doc:`units <units>` setting and is 1.0e9*k_B.
 
+.. versionadded:: TBD
+
+The *store* keyword controls whether the fix stores the constraint
+(or restraint) forces as a per-atom property.
+
+During an MD :doc:`run <run>`, the constraint forces are the forces on
+atoms due to the constraints after an constrained position update.
+Applying the SHAKE constraint *minimizes* those forces.  By using *store
+yes* the original constraint forces on all atoms can be accessed as a
+per-atom array of the fix.
+
+During a :doc:`minimization <minimize>`, restraint forces are added to
+the atoms to keep the constrained bonds and angles close to their
+initial values.  By using *store yes* those added forces can be accessed
+as a per-atom array of the fix.
+
 ----------
 
 .. include:: accel_styles.rst
@@ -292,7 +310,7 @@ Related commands
 Default
 """""""
 
-kbond = 1.0e9*k_B
+kbond = 1.0e9*k_B, store = no
 
 ----------
 

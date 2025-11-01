@@ -44,6 +44,9 @@ FixShakeKokkos<DeviceType>::FixShakeKokkos(LAMMPS *lmp, int narg, char **arg) :
   atomKK = (AtomKokkos *)atom;
   execution_space = ExecutionSpaceFromDevice<DeviceType>::space;
 
+  if (store_flag)
+    error->all(FLERR, "Option 'store yes' is not (yet) supported by fix {}/kk", style);
+
   datamask_read = EMPTY_MASK;
   datamask_modify = EMPTY_MASK;
 

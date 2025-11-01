@@ -64,6 +64,8 @@ FixRattle::FixRattle(LAMMPS *lmp, int narg, char **arg) :
   vp = nullptr;
   FixRattle::grow_arrays(atom->nmax);
 
+  if (store_flag) error->all(FLERR, "Option 'store yes' is not yet compatible with fix rattle");
+
   // default communication mode
   // necessary for compatibility with SHAKE
   // see pack_forward and unpack_forward
@@ -83,18 +85,20 @@ FixRattle::~FixRattle()
 
 #if RATTLE_DEBUG
 
-    // communicate maximum distance error
+  // communicate maximum distance error
 
-    double global_derr_max, global_verr_max;
-    int npid;
+  double global_derr_max, global_verr_max;
+  int npid;
 
-    MPI_Reduce(&derr_max, &global_derr_max, 1 , MPI_DOUBLE, MPI_MAX, 0, world);
-    MPI_Reduce(&verr_max, &global_verr_max, 1 , MPI_DOUBLE, MPI_MAX, 0, world);
+  MPI_Reduce(&derr_max, &global_derr_max, 1 , MPI_DOUBLE, MPI_MAX, 0, world);
+  MPI_Reduce(&verr_max, &global_verr_max, 1 , MPI_DOUBLE, MPI_MAX, 0, world);
 
-    if (comm->me == 0 && screen) {
-      fprintf(screen, "RATTLE: Maximum overall relative position error ( (r_ij-d_ij)/d_ij ): %.10g\n", global_derr_max);
-      fprintf(screen, "RATTLE: Maximum overall absolute velocity error (r_ij * v_ij): %.10g\n", global_verr_max);
-    }
+  if (comm->me == 0) {
+    utils::logmesg(lmp, "RATTLE: Maximum overall relative position error ( (r_ij-d_ij)/d_ij ): "
+                   "{:.10}\n", global_derr_max);
+    utils::logmesg(lmp, "RATTLE: Maximum overall absolute velocity error (r_ij * v_ij): {:.10}\n",
+                   global_verr_max);
+  }
 #endif
 }
 
