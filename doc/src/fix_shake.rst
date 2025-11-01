@@ -19,9 +19,9 @@ Syntax
 
 * ID, group-ID are documented in :doc:`fix <fix>` command
 * style = shake or rattle = style name of this fix command
-* tol = accuracy tolerance of SHAKE solution
-* iter = max # of iterations in each SHAKE solution
-* N = print SHAKE statistics every this many timesteps (0 = never)
+* tol = accuracy tolerance of SHAKE or RATTLE solution
+* iter = max # of iterations in each SHAKE or RATTLE solution
+* N = print SHAKE or RATTLE statistics every this many timesteps (0 = never)
 * one or more constraint/value pairs are appended
 * constraint = *b* or *a* or *t* or *m*
 
@@ -119,6 +119,8 @@ Setting the N argument will print statistics to the screen and log
 file about regarding the lengths of bonds and angles that are being
 constrained.  Small delta values mean SHAKE is doing a good job.
 
+-----
+
 In LAMMPS, only small clusters of atoms can be constrained.  This is
 so the constraint calculation for a cluster can be performed by a
 single processor, to enable good parallel performance.  A cluster is
@@ -150,25 +152,27 @@ Thus, LAMMPS will print a warning and type label handling is disabled
 and numeric types must be used.
 
 For all constraints, a particular bond is only constrained if *both*
-atoms in the bond are in the group specified with the SHAKE fix.
+atoms in the bond are in the group specified with the SHAKE or RATTLE
+fix.
 
 The degrees-of-freedom removed by SHAKE bonds and angles are accounted
-for in temperature and pressure computations.  Similarly, the SHAKE
-contribution to the pressure of the system (virial) is also accounted
-for.
+for in temperature and pressure computations.  Similarly, the SHAKE or
+RATTLE contribution to the pressure of the system (virial) is also
+accounted for.
 
 .. note::
 
-   This command works by using the current forces on atoms to calculate
-   an additional constraint force which when added will leave the atoms
-   in positions that satisfy the SHAKE constraints (e.g. bond length)
-   after the next time integration step.  If you define fixes
-   (e.g. :doc:`fix efield <fix_efield>`) that add additional force to
-   the atoms after *fix shake* operates, then this fix will not take them
-   into account and the time integration will typically not satisfy the
-   SHAKE constraints.  The solution for this is to make sure that fix
-   shake is defined in your input script after any other fixes which add
-   or change forces (to atoms that *fix shake* operates on).
+   The *fix shake* command works by using the current forces on atoms to
+   calculate an additional constraint force which when added will leave
+   the atoms in positions that satisfy the SHAKE constraints (e.g. bond
+   length) after the next time integration step.  If you define fixes
+   (e.g. :doc:`fix efield <fix_efield>`) that add additional forces to
+   the atoms **after** *fix shake* operates, then those forces will not
+   be taken into account, and the time integration will typically not
+   fully satisfy the SHAKE constraints.  The solution for this is to make
+   sure that *fix shake* is defined in your input script **after** any
+   other fixes which add or change forces (to atoms that *fix shake*
+   operates on).
 
 ----------
 
