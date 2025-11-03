@@ -425,18 +425,11 @@ int PairMLIAPKokkos<DeviceType>::pack_forward_comm_kokkos(
   auto val=fill.view<DeviceType>();
   int nf=vec_len;
   auto to=copy_to;
-  Kokkos::parallel_for(
-    Kokkos::TeamPolicy<>(nv, Kokkos::AUTO, Kokkos::AUTO),
-    KOKKOS_LAMBDA (Kokkos::TeamPolicy<>::member_type team_member) {
-      const int i = team_member.league_rank();
+  Kokkos::parallel_for(nv*nf, KOKKOS_LAMBDA (int start) {
+      const int i = start/nf;
       const int gstart=idx(i)*nf;
-      const int start=i*nf;
-      Kokkos::parallel_for(
-        Kokkos::TeamVectorRange(team_member, nf),
-        [=] (const int j) {
-          val(start+j) = static_cast<double>(to[gstart+j]);
-        }
-      );
+      const int j = start%nf;
+      val(start+j) = static_cast<double>(to[gstart+j]);
     }
   );
   return nv*nf;
@@ -503,18 +496,11 @@ void PairMLIAPKokkos<DeviceType>::unpack_forward_comm_kokkos(
   auto val=fill.view<DeviceType>();
   int nf=vec_len;
   auto to=copy_to;
-  Kokkos::parallel_for(
-    Kokkos::TeamPolicy<>(nv, Kokkos::AUTO, Kokkos::AUTO),
-    KOKKOS_LAMBDA (Kokkos::TeamPolicy<>::member_type team_member) {
-      const int i = team_member.league_rank();
+  Kokkos::parallel_for(nv*nf, KOKKOS_LAMBDA (int start) {
+      const int i=start/nf;
       const int gstart=(first_up+i)*nf;
-      const int start=i*nf;
-      Kokkos::parallel_for(
-        Kokkos::TeamVectorRange(team_member, nf),
-        [=] (const int j) {
-          to[gstart+j] = static_cast<CommType>(val(start+j));
-        }
-      );
+      const int j=start%nf;
+      to[gstart+j] = static_cast<CommType>(val(start+j));
     }
   );
 }
@@ -573,18 +559,11 @@ int PairMLIAPKokkos<DeviceType>::pack_reverse_comm_kokkos(int nv, int first_up, 
   int nf=vec_len;
   auto val=fill.view<DeviceType>();
   auto to=copy_to;
-  Kokkos::parallel_for(
-    Kokkos::TeamPolicy<>(nv, Kokkos::AUTO, Kokkos::AUTO),
-    KOKKOS_LAMBDA (Kokkos::TeamPolicy<>::member_type team_member) {
-      const int i = team_member.league_rank();
+  Kokkos::parallel_for(nv*nf, KOKKOS_LAMBDA (int start) {
+      const int i = start/nf;
       const int gstart=(first_up+i)*nf;
-      const int start=i*nf;
-      Kokkos::parallel_for(
-        Kokkos::TeamVectorRange(team_member, nf),
-        [=] (const int j) {
-          val(start+j) = static_cast<double>(to[gstart+j]);
-        }
-      );
+      const int j = start%nf;
+      val(start+j) = static_cast<double>(to[gstart+j]);
     }
   );
   return nv*nf;
@@ -648,18 +627,11 @@ void PairMLIAPKokkos<DeviceType>::unpack_reverse_comm_kokkos(int nv, DAT::tdual_
   auto val=fill.view<DeviceType>();
   auto idx=idx_v.view<DeviceType>();
   auto to=copy_to;
-  Kokkos::parallel_for(
-    Kokkos::TeamPolicy<>(nv, Kokkos::AUTO, Kokkos::AUTO),
-    KOKKOS_LAMBDA (Kokkos::TeamPolicy<>::member_type team_member) {
-      const int i = team_member.league_rank();
+  Kokkos::parallel_for(nv*nf, KOKKOS_LAMBDA (int start) {
+      const int i = start/nf;
       const int gstart=idx(i)*nf;
-      const int start=i*nf;
-      Kokkos::parallel_for(
-        Kokkos::TeamVectorRange(team_member, nf),
-        [=] (const int j) {
-          to[gstart+j] += static_cast<CommType>(val(start+j));
-        }
-      );
+      const int j=i%nf;
+      to[gstart+j] += static_cast<CommType>(val(start+j));
     }
   );
 }
