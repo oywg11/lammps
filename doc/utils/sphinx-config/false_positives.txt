@@ -155,6 +155,7 @@ arge
 args
 argv
 Armv
+armv
 arrhenius
 Arun
 arXiv
@@ -2901,6 +2902,7 @@ parallelepiped
 parallelepipeds
 Parallelizable
 parallelization
+parallelize
 parallelized
 parallelizing
 param
@@ -3682,6 +3684,7 @@ stdout
 steelblue
 Stegailov
 Steinbach
+steinhardt
 Steinhardt
 Steinhauser
 Stepaniants
@@ -3756,6 +3759,7 @@ surfactants
 Suter
 Sutmann
 Suzen
+sve
 svn
 Svoboda
 sw
@@ -4090,8 +4094,8 @@ valent
 Valeriu
 valgrind
 validator
+validators
 Valone
-valuev
 Valuev
 Vanden
 Vandenbrande

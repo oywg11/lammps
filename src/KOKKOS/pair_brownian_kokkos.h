@@ -47,7 +47,6 @@ class PairBrownianKokkos : public PairBrownian, public KokkosBase {
   ~PairBrownianKokkos() override;
   void compute(int, int) override;
   void coeff(int, char **) override;
-  void settings(int, char **) override;
   void init_style() override;
   double init_one(int, int) override;
 
@@ -68,7 +67,7 @@ class PairBrownianKokkos : public PairBrownian, public KokkosBase {
   typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kkfloat_1d_3_lr c_x;
   typename AT::t_kkacc_1d_3 f;
-  typename AT::t_kkfloat_1d_3 torque;
+  typename AT::t_kkacc_1d_3 torque;
   typename AT::t_int_1d_randomread type;
   typename AT::t_kkfloat_1d_randomread radius;
 

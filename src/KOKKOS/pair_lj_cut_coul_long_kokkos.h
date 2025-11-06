@@ -41,7 +41,6 @@ class PairLJCutCoulLongKokkos : public PairLJCutCoulLong {
 
   void compute(int, int) override;
 
-  void settings(int, char **) override;
   void init_tables(double cut_coul, double *cut_respa) override;
   void init_style() override;
   double init_one(int, int) override;
@@ -105,6 +104,8 @@ class PairLJCutCoulLongKokkos : public PairLJCutCoulLong {
   KK_FLOAT special_coul[4];
   KK_FLOAT special_lj[4];
   KK_FLOAT qqrd2e;
+  KK_FLOAT g_ewald_kk;
+  KK_FLOAT tabinnersq_kk;
 
   void allocate() override;
   friend struct PairComputeFunctor<PairLJCutCoulLongKokkos,FULL,true,0,CoulLongTable<1>>;

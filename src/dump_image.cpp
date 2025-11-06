@@ -1705,7 +1705,7 @@ void DumpImage::create_image()
     reg.ptr = ptr;
 
     if (reg.ptr->rotateflag) {
-      utils::logmesg(lmp, "Cannot (yet) handle rotating region {}. Skipping... ", reg.ptr->id);
+      utils::logmesg(lmp, "Cannot (yet) handle rotating region {}. Skipping...\n", reg.ptr->id);
       continue;
     }
 

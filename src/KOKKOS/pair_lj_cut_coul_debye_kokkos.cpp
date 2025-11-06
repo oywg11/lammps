@@ -257,33 +257,6 @@ void PairLJCutCoulDebyeKokkos<DeviceType>::allocate()
 }
 
 /* ----------------------------------------------------------------------
-   global settings
-------------------------------------------------------------------------- */
-
-template<class DeviceType>
-void PairLJCutCoulDebyeKokkos<DeviceType>::settings(int narg, char **arg)
-{
-  if (narg < 2 || narg > 3) error->all(FLERR,"Illegal pair_style command");
-
-  kappa = utils::numeric(FLERR,arg[0],false,lmp);
-  cut_lj_global = utils::numeric(FLERR,arg[1],false,lmp);
-  if (narg == 2) cut_coul_global = cut_lj_global;
-  else cut_coul_global = utils::numeric(FLERR,arg[2],false,lmp);
-
-  // reset cutoffs that were previously set from data file
-
-  if (allocated) {
-    int i,j;
-    for (i = 1; i <= atom->ntypes; i++)
-      for (j = i+1; j <= atom->ntypes; j++)
-        if (setflag[i][j] == 1) {
-          cut_lj[i][j] = cut_lj_global;
-          cut_coul[i][j] = cut_coul_global;
-        }
-  }
-}
-
-/* ----------------------------------------------------------------------
    init specific to this pair style
 ------------------------------------------------------------------------- */
 
@@ -323,27 +296,27 @@ double PairLJCutCoulDebyeKokkos<DeviceType>::init_one(int i, int j)
   double cut_ljsqm = cut_ljsq[i][j];
   double cut_coulsqm = cut_coulsq[i][j];
 
-  k_params.h_view(i,j).lj1 = lj1[i][j];
-  k_params.h_view(i,j).lj2 = lj2[i][j];
-  k_params.h_view(i,j).lj3 = lj3[i][j];
-  k_params.h_view(i,j).lj4 = lj4[i][j];
-  k_params.h_view(i,j).offset = offset[i][j];
-  k_params.h_view(i,j).cut_ljsq = cut_ljsqm;
-  k_params.h_view(i,j).cut_coulsq = cut_coulsqm;
+  k_params.view_host()(i,j).lj1 = lj1[i][j];
+  k_params.view_host()(i,j).lj2 = lj2[i][j];
+  k_params.view_host()(i,j).lj3 = lj3[i][j];
+  k_params.view_host()(i,j).lj4 = lj4[i][j];
+  k_params.view_host()(i,j).offset = offset[i][j];
+  k_params.view_host()(i,j).cut_ljsq = cut_ljsqm;
+  k_params.view_host()(i,j).cut_coulsq = cut_coulsqm;
 
-  k_params.h_view(j,i) = k_params.h_view(i,j);
+  k_params.view_host()(j,i) = k_params.view_host()(i,j);
   if (i<MAX_TYPES_STACKPARAMS+1 && j<MAX_TYPES_STACKPARAMS+1) {
-    m_params[i][j] = m_params[j][i] = k_params.h_view(i,j);
+    m_params[i][j] = m_params[j][i] = k_params.view_host()(i,j);
     m_cutsq[j][i] = m_cutsq[i][j] = cutone*cutone;
     m_cut_ljsq[j][i] = m_cut_ljsq[i][j] = cut_ljsqm;
     m_cut_coulsq[j][i] = m_cut_coulsq[i][j] = cut_coulsqm;
   }
 
-  k_cutsq.h_view(i,j) = k_cutsq.h_view(j,i) = cutone*cutone;
+  k_cutsq.view_host()(i,j) = k_cutsq.view_host()(j,i) = cutone*cutone;
   k_cutsq.modify_host();
-  k_cut_ljsq.h_view(i,j) = k_cut_ljsq.h_view(j,i) = cut_ljsqm;
+  k_cut_ljsq.view_host()(i,j) = k_cut_ljsq.view_host()(j,i) = cut_ljsqm;
   k_cut_ljsq.modify_host();
-  k_cut_coulsq.h_view(i,j) = k_cut_coulsq.h_view(j,i) = cut_coulsqm;
+  k_cut_coulsq.view_host()(i,j) = k_cut_coulsq.view_host()(j,i) = cut_coulsqm;
   k_cut_coulsq.modify_host();
   k_params.modify_host();
 
