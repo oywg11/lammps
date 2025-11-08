@@ -232,6 +232,7 @@ void Region::pretransform()
     if (zstr) dz = input->variable->compute_equal(zvar);
   }
   if (rotateflag) theta = input->variable->compute_equal(tvar);
+  bbox_update();
 }
 
 /* ----------------------------------------------------------------------
