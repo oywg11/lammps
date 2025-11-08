@@ -35,6 +35,7 @@ Region::Region(LAMMPS *lmp, int /*narg*/, char **arg) :
   id = utils::strdup(arg[0]);
   style = utils::strdup(arg[1]);
 
+  bboxflag = 0;
   varshape = 0;
   xstr = ystr = zstr = tstr = nullptr;
   dx = dy = dz = 0.0;

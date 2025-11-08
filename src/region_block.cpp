@@ -19,8 +19,8 @@
 #include "math_extra.h"
 #include "variable.h"
 
-#include <cstring>
 #include <algorithm>
+#include <cstring>
 
 using namespace LAMMPS_NS;
 
@@ -169,7 +169,7 @@ RegBlock::RegBlock(LAMMPS *lmp, int narg, char **arg) :
       extent_zlo = zlo;
       extent_zhi = zhi;
     }
-  } else bboxflag = 0;
+  }
 
   // particle could be close to all 6 planes
   // particle can only touch 3 planes
