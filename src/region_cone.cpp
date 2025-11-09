@@ -298,8 +298,7 @@ RegCone::RegCone(LAMMPS *lmp, int narg, char **arg) :
         extent_zhi = hi;
       }
     }
-  } else
-    bboxflag = 0;
+  }
 
   // particle could be close to cone surface and 2 ends
   // particle can only touch surface and 1 end
