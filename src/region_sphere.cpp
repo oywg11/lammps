@@ -82,7 +82,7 @@ RegSphere::RegSphere(LAMMPS *lmp, int narg, char **arg) :
   // for variable radius, uses initial radius and origin for variable center
 
   if (interior) {
-      bboxflag = 1;
+    bboxflag = 1;
     if (dynamic || varshape) {
       RegSphere::bbox_update();
     } else {

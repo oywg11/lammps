@@ -1829,6 +1829,7 @@ void DumpImage::create_image()
         // inconsistent style. should not happen.
         if (!myreg) continue;
 
+        // construct coordinates for lo/hi tip/center of cone
         double lo[3], hi[3];
         if (myreg->axis == 'x') {
           lo[0] = myreg->lo;
@@ -1852,6 +1853,9 @@ void DumpImage::create_image()
           hi[1] = myreg->c2;
           hi[2] = myreg->hi;
         }
+        // Apply forward_transform for cone lo/hi tip/center for dynamic regions
+        myreg->forward_transform(lo[0], lo[1], lo[2]);
+        myreg->forward_transform(hi[0], hi[1], hi[2]);
 
         double p1[3], p2[3], p3[3], p4[3];
         if (reg.style == FRAME) {
@@ -1990,6 +1994,7 @@ void DumpImage::create_image()
         // inconsistent style. should not happen.
         if (!myreg) continue;
 
+        // construct coordinates for lo/hi center of cylinder
         double lo[3], hi[3];
         if (myreg->axis == 'x') {
           lo[0] = myreg->lo;
@@ -2013,6 +2018,9 @@ void DumpImage::create_image()
           hi[1] = myreg->c2;
           hi[2] = myreg->hi;
         }
+        // Apply forward_transform for cylinder lo/hi center for dynamic regions
+        myreg->forward_transform(lo[0], lo[1], lo[2]);
+        myreg->forward_transform(hi[0], hi[1], hi[2]);
 
         double p1[3], p2[3], p3[3], p4[3];
         if (reg.style == FRAME) {
