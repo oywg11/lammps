@@ -54,6 +54,12 @@ using namespace FFTValidation;
 // whether to print verbose output (i.e. not capturing LAMMPS screen output).
 bool verbose = false;
 
+#ifdef FFT_SINGLE
+static constexpr double TOLERANCE = 1.0e-7;
+#else
+static constexpr double TOLERANCE = 1.0e-10;
+#endif
+
 class FFT3DTest : public LAMMPSTest {
 protected:
     void SetUp() override
@@ -351,7 +357,7 @@ TEST_F(FFT3DTest, KnownAnswer_DeltaFunction)
 
     // Validate against expected result
     FFTValidation::KnownAnswerValidator validator(output_data, expected_data.data(), nfast, nmid,
-                                                   nslow, 1e-10, verbose);
+                                                   nslow, TOLERANCE, verbose);
     bool passed = validator.validate();
 
     if (verbose || !passed) {
@@ -360,7 +366,7 @@ TEST_F(FFT3DTest, KnownAnswer_DeltaFunction)
         std::cout << "  Max error: " << validator.get_error_stats().max() << " (at index "
                   << validator.get_error_stats().idx() << ")" << std::endl;
         std::cout << "  Avg error: " << validator.get_error_stats().avg() << std::endl;
-        std::cout << "  Tolerance: 1e-10" << std::endl;
+        std::cout << "  Tolerance: " << TOLERANCE << std::endl;
         std::cout << "  Status: " << (passed ? "PASSED" : "FAILED") << std::endl;
 
         // Show sample values
@@ -372,7 +378,7 @@ TEST_F(FFT3DTest, KnownAnswer_DeltaFunction)
     }
 
     EXPECT_TRUE(passed) << "Delta function known answer validation failed";
-    EXPECT_LT(validator.get_error_stats().max(), 1e-10);
+    EXPECT_LT(validator.get_error_stats().max(), TOLERANCE);
 }
 
 // ============================================================================
@@ -410,7 +416,7 @@ TEST_F(FFT3DTest, KnownAnswer_Constant)
 
     // Validate against expected result
     FFTValidation::KnownAnswerValidator validator(output_data, expected_data.data(), nfast, nmid,
-                                                   nslow, 1e-10, verbose);
+                                                   nslow, TOLERANCE, verbose);
     bool passed = validator.validate();
 
     if (verbose || !passed) {
@@ -420,7 +426,7 @@ TEST_F(FFT3DTest, KnownAnswer_Constant)
         std::cout << "  Max error: " << validator.get_error_stats().max() << " (at index "
                   << validator.get_error_stats().idx() << ")" << std::endl;
         std::cout << "  Avg error: " << validator.get_error_stats().avg() << std::endl;
-        std::cout << "  Tolerance: 1e-10" << std::endl;
+        std::cout << "  Tolerance: " << TOLERANCE << std::endl;
         std::cout << "  Status: " << (passed ? "PASSED" : "FAILED") << std::endl;
 
         // Show DC component
@@ -439,7 +445,7 @@ TEST_F(FFT3DTest, KnownAnswer_Constant)
     }
 
     EXPECT_TRUE(passed) << "Constant field known answer validation failed";
-    EXPECT_LT(validator.get_error_stats().max(), 1e-10);
+    EXPECT_LT(validator.get_error_stats().max(), TOLERANCE);
 }
 
 // ============================================================================
@@ -487,8 +493,9 @@ TEST_F(FFT3DTest, KnownAnswer_SineWave)
                 std::complex<FFT_SCALAR>(0.0, spike_amplitude));
 
     // Validate against expected result
+
     FFTValidation::KnownAnswerValidator validator(output_data, expected_data.data(), nfast, nmid,
-                                                   nslow, 1e-10, verbose);
+                                                   nslow, TOLERANCE, verbose);
     bool passed = validator.validate();
 
     if (verbose || !passed) {
@@ -499,7 +506,7 @@ TEST_F(FFT3DTest, KnownAnswer_SineWave)
         std::cout << "  Max error: " << validator.get_error_stats().max() << " (at index "
                   << validator.get_error_stats().idx() << ")" << std::endl;
         std::cout << "  Avg error: " << validator.get_error_stats().avg() << std::endl;
-        std::cout << "  Tolerance: 1e-10" << std::endl;
+        std::cout << "  Tolerance: " << TOLERANCE << std::endl;
         std::cout << "  Status: " << (passed ? "PASSED" : "FAILED") << std::endl;
 
         // Show the spike values
@@ -521,7 +528,7 @@ TEST_F(FFT3DTest, KnownAnswer_SineWave)
     }
 
     EXPECT_TRUE(passed) << "Sine wave known answer validation failed";
-    EXPECT_LT(validator.get_error_stats().max(), 1e-10);
+    EXPECT_LT(validator.get_error_stats().max(), TOLERANCE);
 }
 
 
@@ -1002,13 +1009,13 @@ TEST_F(FFT3DTest, MKL_Optimized)
     }
 
     FFTValidation::KnownAnswerValidator validator(delta_output.data(), expected_data.data(),
-                                                   nfast, nmid, nslow, 1e-10, verbose);
+                                                   nfast, nmid, nslow, TOLERANCE, verbose);
     bool passed = validator.validate();
 
     EXPECT_TRUE(passed) << "MKL delta function validation failed"
                         << "\n  Max error: " << validator.get_error_stats().max()
-                        << "\n  Tolerance: " << 1e-10;
-    EXPECT_LT(validator.get_error_stats().max(), 1e-10);
+                        << "\n  Tolerance: " << TOLERANCE;
+    EXPECT_LT(validator.get_error_stats().max(), TOLERANCE);
 }
 
 // ============================================================================

@@ -537,14 +537,14 @@ public:
         error_stats_.reset();
         int n_points = nfast_ * nmid_ * nslow_;
 
-        double max_original = 0.0;
+        FFT_SCALAR max_original = 0.0;
         for (int i = 0; i < n_points; i++) {
             auto orig_val = get_complex_linear(original_data_, i);
             max_original  = std::max(max_original, std::abs(orig_val));
         }
 
         // Check if data is essentially zero (avoid division by zero)
-        bool is_zero_data = (max_original < 1e-14);
+        bool is_zero_data = (max_original < 1e-12);
 
         for (int i = 0; i < n_points; i++) {
             auto orig = get_complex_linear(original_data_, i);
@@ -602,13 +602,13 @@ public:
         int n_points = nfast_ * nmid_ * nslow_;
 
         // Find maximum expected value for relative error calculation
-        double max_expected = 0.0;
+        FFT_SCALAR max_expected = 0.0;
         for (int i = 0; i < n_points; i++) {
             auto exp_val = get_complex_linear(expected_fft_, i);
             max_expected = std::max(max_expected, std::abs(exp_val));
         }
 
-        bool is_zero_expected = (max_expected < 1e-14);
+        bool is_zero_expected = (max_expected < 1e-12);
 
         for (int i = 0; i < n_points; i++) {
             auto computed = get_complex_linear(computed_fft_, i);

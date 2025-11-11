@@ -59,6 +59,12 @@ using namespace FFTValidation;
 // Verbose output control
 bool verbose = false;
 
+#ifdef FFT_SINGLE
+static constexpr double TOLERANCE = 1.0e-7;
+#else
+static constexpr double TOLERANCE = 1.0e-10;
+#endif
+
 // Helper function to check if KOKKOS is using a GPU backend
 static bool is_kokkos_gpu_backend()
 {
@@ -268,7 +274,7 @@ protected:
         }
 
         KnownAnswerValidator validator(output_vec.data(), expected_vec.data(), nfast, nmid, nslow,
-                                        1e-10, verbose);
+                                        TOLERANCE, verbose);
         bool valid = validator.validate();
 
         if (verbose || !valid) {
@@ -508,7 +514,7 @@ TEST_F(FFT3DKokkosTest, KnownAnswer_Kokkos_Sine)
                 std::complex<FFT_SCALAR>(0.0, spike_amplitude));
 
     KnownAnswerValidator validator(output_vec.data(), expected_data.data(), nfast, nmid, nslow,
-                                    1e-10, verbose);
+                                    TOLERANCE, verbose);
     bool valid = validator.validate();
 
     if (verbose || !valid) {
