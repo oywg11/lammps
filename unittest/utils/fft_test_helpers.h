@@ -47,14 +47,12 @@ constexpr double TWO_PI = 2.0 * PI;
 
 // Precision-aware tolerances (based on FFT_SCALAR type)
 #ifdef FFT_SINGLE
-constexpr FFT_SCALAR BASE_TOLERANCE         = 1e-5;
-constexpr FFT_SCALAR ROUNDTRIP_TOLERANCE    = 1e-4;
-constexpr FFT_SCALAR KNOWN_ANSWER_TOLERANCE = 1e-5;
-constexpr FFT_SCALAR PARSEVAL_TOLERANCE     = 1e-4;
-constexpr FFT_SCALAR HERMITIAN_TOLERANCE    = 1e-5;
-constexpr FFT_SCALAR LINEARITY_TOLERANCE    = 1e-4;
+constexpr FFT_SCALAR ROUNDTRIP_TOLERANCE    = 1e-5;
+constexpr FFT_SCALAR KNOWN_ANSWER_TOLERANCE = 1e-6;
+constexpr FFT_SCALAR PARSEVAL_TOLERANCE     = 1e-5;
+constexpr FFT_SCALAR HERMITIAN_TOLERANCE    = 1e-6;
+constexpr FFT_SCALAR LINEARITY_TOLERANCE    = 1e-5;
 #else
-constexpr FFT_SCALAR BASE_TOLERANCE         = 1e-12;
 constexpr FFT_SCALAR ROUNDTRIP_TOLERANCE    = 1e-11;
 constexpr FFT_SCALAR KNOWN_ANSWER_TOLERANCE = 1e-12;
 constexpr FFT_SCALAR PARSEVAL_TOLERANCE     = 1e-10;

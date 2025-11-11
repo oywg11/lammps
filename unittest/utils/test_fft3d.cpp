@@ -54,12 +54,6 @@ using namespace FFTValidation;
 // whether to print verbose output (i.e. not capturing LAMMPS screen output).
 bool verbose = false;
 
-#ifdef FFT_SINGLE
-static constexpr double TOLERANCE = 1.0e-7;
-#else
-static constexpr double TOLERANCE = 1.0e-10;
-#endif
-
 class FFT3DTest : public LAMMPSTest {
 protected:
     void SetUp() override
