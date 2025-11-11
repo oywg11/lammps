@@ -241,13 +241,14 @@ void DynamicalMatrix::openfile(const char *filename)
   if (me == 0) {
     if (compressed) {
       fp = platform::compressed_write(std::string(filename)+".gz");
-      if (!fp) error->one(FLERR,"Cannot open compressed file");
+      if (!fp) error->one(FLERR, Error::NOLASTLINE, "Cannot open gzip compressed file");
     } else if (binaryflag) {
       fp = fopen(filename,"wb");
     } else {
       fp = fopen(filename,"w");
     }
-    if (!fp) error->one(FLERR,"Cannot open dynmat file: {}", utils::getsyserror());
+    if (!fp)
+      error->one(FLERR, Error::NOLASTLINE, "Cannot open dynmat file: {}", utils::getsyserror());
   }
 
   file_opened = 1;
@@ -283,9 +284,9 @@ void DynamicalMatrix::calculateMatrix()
   if (me == 0 && screen) {
     fputs("Calculating Dynamical Matrix ...\n", screen);
     utils::print(screen,"  Total # of atoms = {}\n"
-                      "  Atoms in group = {}\n"
-                      "  Total dynamical matrix elements = {}\n",
-               natoms, gcount, dynlen*dynlen);
+                 "  Atoms in group = {}\n"
+                 "  Total dynamical matrix elements = {}\n",
+                 natoms, gcount, dynlen*dynlen);
   }
 
   // emit dynlen rows of dimalpha*dynlen*dimbeta elements
@@ -380,7 +381,7 @@ void DynamicalMatrix::writeMatrix(double **dynmat)
     for (int i=0; i<3; i++)
       fwrite(dynmat[i], sizeof(double), dynlenb, fp);
     if (ferror(fp))
-      error->one(FLERR, "Error writing to binary file");
+      error->one(FLERR, Error::NOLASTLINE, "Error writing to binary file {}", utils::getsyserror());
   } else {
     for (int i = 0; i < 3; i++) {
       for (bigint j = 0; j < dynlenb; j++) {
@@ -389,7 +390,7 @@ void DynamicalMatrix::writeMatrix(double **dynmat)
       }
     }
     if (ferror(fp))
-      error->one(FLERR,"Error writing to file");
+      error->one(FLERR, Error::NOLASTLINE, "Error writing to text file {}", utils::getsyserror());
   }
 }
 
