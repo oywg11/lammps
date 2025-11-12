@@ -4,6 +4,8 @@ Development build options
 The build procedures in LAMMPS offers a few extra options which are
 useful during development, testing or debugging.
 
+.. contents::
+
 ----------
 
 .. _compilation:
@@ -273,21 +275,22 @@ Unit tests for force styles
 A large part of LAMMPS are different "styles" for computing non-bonded
 and bonded interactions selected through the :doc:`pair_style`,
 :doc:`bond_style`, :doc:`angle_style`, :doc:`dihedral_style`,
-:doc:`improper_style`, and :doc:`kspace_style`.  Since these all share
-common interfaces, it is possible to write generic test programs that
-will call those common interfaces for small test systems with less than
-100 atoms and compare the results with pre-recorded reference results.
-A test run is then a a collection multiple individual test runs each
-with many comparisons to reference results based on template input
-files, individual command settings, relative error margins, and
-reference data stored in a YAML format file with ``.yaml``
-suffix. Currently the programs ``test_pair_style``, ``test_bond_style``,
+:doc:`improper_style`, and :doc:`kspace_style` commands.  Since these
+styles all share common interfaces, it is possible to write generic test
+programs that will assemble LAMMPS inputs from templates with different
+settings and call those common interfaces for small test systems with
+less than 100 atoms and compare the results with pre-recorded reference
+results.  A test run is then a collection of multiple individual test
+runs, each with many comparisons to reference results based on template
+input files, individual command settings, relative error margins, and
+reference data stored in a YAML format file with ``.yaml`` suffix.
+Currently the programs ``test_pair_style``, ``test_bond_style``,
 ``test_angle_style``, ``test_dihedral_style``, and
 ``test_improper_style`` are implemented.  They will compare forces,
 energies and (global) stress for all atoms after a ``run 0`` calculation
 and after a few steps of MD with :doc:`fix nve <fix_nve>`, each in
 multiple variants with different settings and also for multiple
-accelerated styles. If a prerequisite style or package is missing, the
+accelerated styles.  If a prerequisite style or package is missing, the
 individual tests are skipped.  All force style tests will be executed on
 a single MPI process, so using the CMake option ``-D BUILD_MPI=off`` can
 significantly speed up testing, since this will skip the MPI
@@ -296,36 +299,69 @@ output:
 
 .. code-block:: console
 
-   $ test_pair_style mol-pair-lj_cut.yaml
-   [==========] Running 6 tests from 1 test suite.
-   [----------] Global test environment set-up.
-   [----------] 6 tests from PairStyle
-   [ RUN      ] PairStyle.plain
-   [       OK ] PairStyle.plain (24 ms)
-   [ RUN      ] PairStyle.omp
-   [       OK ] PairStyle.omp (18 ms)
-   [ RUN      ] PairStyle.intel
-   [       OK ] PairStyle.intel (6 ms)
-   [ RUN      ] PairStyle.opt
-   [  SKIPPED ] PairStyle.opt (0 ms)
-   [ RUN      ] PairStyle.single
-   [       OK ] PairStyle.single (7 ms)
-   [ RUN      ] PairStyle.extract
-   [       OK ] PairStyle.extract (6 ms)
-   [----------] 6 tests from PairStyle (62 ms total)
+   $ ctest -R MolPairStyle:lj_cut$ -V
 
-   [----------] Global test environment tear-down
-   [==========] 6 tests from 1 test suite ran. (63 ms total)
-   [  PASSED  ] 5 tests.
-   [  SKIPPED ] 1 test, listed below:
-   [  SKIPPED ] PairStyle.opt
+   [...]
 
-In this particular case, 5 out of 6 sets of tests were conducted, the
-tests for the ``lj/cut/opt`` pair style was skipped, since the tests
-executable did not include it.  To learn what individual tests are performed,
-you (currently) need to read the source code.  You can use code coverage
-recording (see next section) to confirm how well the tests cover the code
-paths in the individual source files.
+      Start 199: MolPairStyle:lj_cut
+
+   199: Test command: /home/akohlmey/compile/lammps/build-test/test_pair_style "/home/akohlmey/compile/lammps/unittest/force-styles/tests/mol-pair-lj_cut.yaml"
+   199: Working Directory: /home/akohlmey/compile/lammps/build-test/unittest/force-styles
+   199: Environment variables: 
+   199:  PYTHONPATH=/home/akohlmey/compile/lammps/unittest/force-styles/tests:/home/akohlmey/compile/lammps/python:
+   199:  PYTHONUNBUFFERED=1
+   199:  PYTHONDONTWRITEBYTECODE=1
+   199:  OMP_PROC_BIND=false
+   199:  OMP_NUM_THREADS=4
+   199:  LAMMPS_POTENTIALS=/home/akohlmey/compile/lammps/potentials
+   199:  LD_LIBRARY_PATH=/home/akohlmey/compile/lammps/build-test:/usr/lib64/mpich/lib:/home/akohlmey/.local/lib::
+   199: Test timeout computed to be: 1500
+   199: [==========] Running 9 tests from 1 test suite.
+   199: [----------] Global test environment set-up.
+   199: [----------] 9 tests from PairStyle
+   199: [ RUN      ] PairStyle.plain
+   199: [       OK ] PairStyle.plain (17 ms)
+   199: [ RUN      ] PairStyle.omp
+   199: [       OK ] PairStyle.omp (3 ms)
+   199: [ RUN      ] PairStyle.kokkos_omp
+   199: [       OK ] PairStyle.kokkos_omp (6 ms)
+   199: [ RUN      ] PairStyle.gpu
+   199: /home/akohlmey/compile/lammps/unittest/force-styles/test_pair_style.cpp:793: Skipped
+   199: 
+   199: 
+   199: [  SKIPPED ] PairStyle.gpu (0 ms)
+   199: [ RUN      ] PairStyle.intel
+   199: [       OK ] PairStyle.intel (2 ms)
+   199: [ RUN      ] PairStyle.opt
+   199: [       OK ] PairStyle.opt (2 ms)
+   199: [ RUN      ] PairStyle.single
+   199: [       OK ] PairStyle.single (2 ms)
+   199: [ RUN      ] PairStyle.extract
+   199: [       OK ] PairStyle.extract (1 ms)
+   199: [ RUN      ] PairStyle.extract_omp
+   199: [       OK ] PairStyle.extract_omp (1 ms)
+   199: [----------] 9 tests from PairStyle (37 ms total)
+   199: 
+   199: [----------] Global test environment tear-down
+   199: [==========] 9 tests from 1 test suite ran. (37 ms total)
+   199: [  PASSED  ] 8 tests.
+   199: [  SKIPPED ] 1 test, listed below:
+   199: [  SKIPPED ] PairStyle.gpu
+   1/1 Test #199: MolPairStyle:lj_cut ..............   Passed    0.75 sec
+
+   The following tests passed:
+           MolPairStyle:lj_cut
+
+   100% tests passed, 0 tests failed out of 1
+
+   Total Test time (real) =   0.76 sec
+
+In this particular case, 8 out of 9 sets of tests were conducted, the
+tests for the ``lj/cut/gpu`` pair style was skipped, since the LAMMPS
+library linked to the test executable did not include it.  To learn what
+individual tests are performed, you (currently) need to read the source
+code.  You can use code coverage recording (see next section) to confirm
+how well the tests cover the code paths in the individual source files.
 
 The force style test programs have a common set of options:
 
