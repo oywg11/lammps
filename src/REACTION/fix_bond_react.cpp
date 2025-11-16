@@ -28,6 +28,7 @@ Contributing Author: Jacob Gissinger (jgissing@stevens.edu)
 #include "force.h"
 #include "group.h"
 #include "input.h"
+#include "json_metadata.h"
 #include "math_const.h"
 #include "math_extra.h"
 #include "memory.h"
@@ -442,13 +443,13 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   if (outflag) {
     // add Metadata struct to print out react-ID to JSON molecules dump
     // adds 'reaction' JSON key to each molecule
-    rxn_metadata.metaflag = true;
-    rxn_metadata.key = "reaction";
+    rxn_metadata = std::make_unique<json_metadata>();
+    rxn_metadata->key = "reaction";
     std::vector<std::string> rxn_names;
     rxn_names.reserve(rxns.size());
     for (auto const& rxn : rxns)
       rxn_names.push_back(rxn.name);
-    rxn_metadata.values = rxn_names;
+    rxn_metadata->values = rxn_names;
   }
 
   for (auto &rlm : rate_limits) {
@@ -3630,8 +3631,8 @@ void FixBondReact::update_everything()
       indent.resize(++json_level*tab, ' ');
     }
 
-    rxn_metadata.ivec = i_react_tags;
-    output->write_molecule_json(fpout, json_level, json_init, i_rxn_instance, rxn_metadata);
+    rxn_metadata->ivec = i_react_tags;
+    output->write_molecule_json(fpout, json_level, json_init, i_rxn_instance, rxn_metadata.get());
     if (json_init == 1) json_init++;
     if (comm->me == 0) {
       indent.resize(--json_level*tab, ' ');

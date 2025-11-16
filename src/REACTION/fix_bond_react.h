@@ -25,7 +25,6 @@ FixStyle(bond/react,FixBondReact);
 #define LMP_FIX_BOND_REACT_H
 
 #include "fix.h"
-#include "output.h"
 
 #include <array>
 #include <deque>
@@ -33,6 +32,8 @@ FixStyle(bond/react,FixBondReact);
 #include <set>
 
 namespace LAMMPS_NS {
+
+struct json_metadata;                                   // forward declaration. full declaration in json_metadata.h
 
 class FixBondReact : public Fix {
  public:
@@ -71,7 +72,7 @@ class FixBondReact : public Fix {
   FILE *fpout;
   bool outflag;
   int json_init;
-  Output::JSON_Metadata rxn_metadata;
+  std::unique_ptr<json_metadata> rxn_metadata;
   int stabilization_flag;
   Reset_Mol_IDs molid_mode;
   int custom_exclude_flag;
