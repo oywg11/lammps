@@ -25,6 +25,7 @@ FixStyle(bond/react,FixBondReact);
 #define LMP_FIX_BOND_REACT_H
 
 #include "fix.h"
+#include "output.h"
 
 #include <array>
 #include <deque>
@@ -68,7 +69,9 @@ class FixBondReact : public Fix {
   FILE *fp;
   tagint lastcheck;
   FILE *fpout;
-  int outflag, json_init;
+  bool outflag;
+  int json_init;
+  Output::JSON_Metadata rxn_metadata;
   int stabilization_flag;
   Reset_Mol_IDs molid_mode;
   int custom_exclude_flag;

@@ -100,7 +100,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
   reset_mol_ids = nullptr;
   fpout = nullptr;
   json_init = 0;
-  outflag = 0;
+  outflag = false;
 
   if (narg < 8) utils::missing_cmd_args(FLERR,"fix bond/react", error);
 
@@ -236,7 +236,7 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     } else if (strcmp(arg[iarg], "file") == 0) {
       if (iarg + 2 > narg)
         utils::missing_cmd_args(FLERR, std::string("Fix bond/react ") + arg[iarg], error);
-      outflag = 1;
+      outflag = true;
       if (comm->me == 0) {
         fpout = fopen(arg[iarg + 1], "w");
         if (fpout == nullptr)
@@ -439,6 +439,18 @@ FixBondReact::FixBondReact(LAMMPS *lmp, int narg, char **arg) :
     }
   }
 
+  if (outflag) {
+    // add Metadata struct to print out react-ID to JSON molecules dump
+    // adds 'reaction' JSON key to each molecule
+    rxn_metadata.metaflag = true;
+    rxn_metadata.key = "reaction";
+    std::vector<std::string> rxn_names;
+    rxn_names.reserve(rxns.size());
+    for (auto const& rxn : rxns)
+      rxn_names.push_back(rxn.name);
+    rxn_metadata.values = rxn_names;
+  }
+
   for (auto &rlm : rate_limits) {
     for (int i = 0; i < rlm.Nrxns; i++) {
       int existflag = 0;
@@ -637,7 +649,7 @@ FixBondReact::~FixBondReact()
   delete[] set;
 
   if (comm->me == 0) {
-    if (outflag == 1) fprintf(fpout, "        }\n    ]\n}");
+    if (outflag) fprintf(fpout, "        }\n    ]\n}");
     if (fpout) fclose(fpout);
   }
 
@@ -3600,9 +3612,8 @@ void FixBondReact::update_everything()
 
   }
 
-  //need to take out of update_everything to print for all stabilization steps
-  //also should probably give choice to print just on step that reaction starts
-  if (outflag == 1) {
+  // currently dumping each reaction once, on step that reaction occurs
+  if (outflag) {
     std::string indent;
     int json_level = 2, tab = 4;
     if (comm->me == 0) {
@@ -3619,17 +3630,7 @@ void FixBondReact::update_everything()
       indent.resize(++json_level*tab, ' ');
     }
 
-    // add Metadata struct to print out react-ID, using 'reaction' JSON key
-    Output::JSON_Metadata rxn_metadata;
-    rxn_metadata.metaflag = true;
-    rxn_metadata.key = "reaction";
-    std::vector<std::string> rxn_names;
-    rxn_names.reserve(rxns.size());
-    for (auto const& rxn : rxns)
-      rxn_names.push_back(rxn.name);
-    rxn_metadata.values = rxn_names;
     rxn_metadata.ivec = i_react_tags;
-
     output->write_molecule_json(fpout, json_level, json_init, i_rxn_instance, rxn_metadata);
     if (json_init == 1) json_init++;
     if (comm->me == 0) {
