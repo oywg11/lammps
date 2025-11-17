@@ -74,7 +74,7 @@ add_custom_target(use_cmake_files
   COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --prefix ${CMAKE_BINARY_DIR}/dummy-install
   COMMAND ${CMAKE_COMMAND} -S ${CMAKE_CURRENT_SOURCE_DIR}/use-cmake-files
                            -B ${CMAKE_BINARY_DIR}/use-cmake-files
-                           -D LAMMPS_DIR=${CMAKE_BINARY_DIR}
+                           -D LAMMPS_DIR=${CMAKE_BINARY_DIR}/dummy-install/lib/cmake/LAMMPS
   COMMAND ${CMAKE_COMMAND} --build  ${CMAKE_BINARY_DIR}/use-cmake-files
   DEPENDS lammps lmp
   BYPRODUCTS ${CMAKE_BINARY_DIR}/use-cmake-files/testlmp
