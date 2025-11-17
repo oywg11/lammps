@@ -1,5 +1,9 @@
 
+#ifdef USE_MPI
 #include <mpi.h>
+#else
+#define MPI_COMM_WORLD 0
+#endif
 #include <lammps/lammps.h>
 #include <lammps/input.h>
 #include <lammps/atom.h>
