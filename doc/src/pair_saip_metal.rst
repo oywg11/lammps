@@ -51,7 +51,7 @@ The *saip/metal* style computes the semi-anisotropic interfacial
 potential (SAIP) potential for hetero-junctions formed with hexagonal
 2D materials and metal surfaces, as described in :ref:`(Ouyang6) <Ouyang6>` and :ref:`(Yao1) <Yao1>`.
 
-.. versionadded:: 18Nov2025
+.. versionadded:: TBD
 
 The *saip/metal/tmd* style computes the semi-anisotropic interfacial
 potential (SAIP) potential for hetero-junctions formed with transition
