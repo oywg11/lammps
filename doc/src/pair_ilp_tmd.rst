@@ -36,7 +36,7 @@ Description
 
 The *ilp/tmd* style computes the registry-dependent interlayer
 potential (ILP) potential for heterointerfaces of transition metal dichalcogenides (TMD)/TMD,
-TMD/graphene, and TMD / hexagonal boron nitride (h-BN), as described in 
+TMD/graphene, and TMD / hexagonal boron nitride (h-BN), as described in
 :ref:`(Ouyang7) <Ouyang7>`, :ref:`(Jiang1) <Jiang1>` and :ref:`(Jiang2) <Jiang2>`.
 
 .. math::

@@ -752,7 +752,8 @@ void PairILPGrapheneHBNOpt::update_internal_list()
   }
 }
 
-void PairILPGrapheneHBNOpt::coeff(int narg, char **args) {
+void PairILPGrapheneHBNOpt::coeff(int narg, char **args)
+{
   PairILPGrapheneHBN::coeff(narg, args);
   memory->create(special_type, atom->ntypes + 1, "PairILPGrapheneHBN:special_type");
   for (int i = 1; i <= atom->ntypes; i++) {
