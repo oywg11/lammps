@@ -13,52 +13,53 @@
 
 #ifdef PAIR_CLASS
 // clang-format off
-PairStyle(lj96/cut,PairLJ96Cut);
+PairStyle(hybrid/scaled/kk,PairHybridScaledKokkos);
 // clang-format on
 #else
 
-#ifndef LMP_PAIR_LJ96_CUT_H
-#define LMP_PAIR_LJ96_CUT_H
+// clang-format off
+#ifndef LMP_PAIR_HYBRID_SCALED_KOKKOS_H
+#define LMP_PAIR_HYBRID_SCALED_KOKKOS_H
 
-#include "pair.h"
+#include "pair_hybrid_kokkos.h"
+
+#include <string>
+#include <vector>
 
 namespace LAMMPS_NS {
 
-class PairLJ96Cut : public Pair {
+class PairHybridScaledKokkos : public PairHybridKokkos {
  public:
-  PairLJ96Cut(class LAMMPS *);
-  ~PairLJ96Cut() override;
-
+  PairHybridScaledKokkos(class LAMMPS *);
+  ~PairHybridScaledKokkos() override;
   void compute(int, int) override;
   void settings(int, char **) override;
   void coeff(int, char **) override;
-  void init_style() override;
-  double init_one(int, int) override;
+
   void write_restart(FILE *) override;
   void read_restart(FILE *) override;
-  void write_restart_settings(FILE *) override;
-  void read_restart_settings(FILE *) override;
-  void write_data(FILE *) override;
-  void write_data_all(FILE *) override;
   double single(int, int, int, int, double, double, double, double &) override;
   void born_matrix(int, int, int, int, double, double, double, double &, double &) override;
-  void *extract(const char *, int &) override;
 
-  void compute_inner() override;
-  void compute_middle() override;
-  void compute_outer(int, int) override;
+  void init_svector() override;
+  void copy_svector(int, int) override;
 
- protected:
-  double cut_global;
-  double **cut;
-  double **epsilon, **sigma;
-  double **lj1, **lj2, **lj3, **lj4, **offset;
-  double *cut_respa;
+  int pack_forward_comm(int, int *, double *, int, int *) override;
+  void unpack_forward_comm(int, int, double *) override;
 
-  virtual void allocate();
+protected:
+  double **fsum, **tsum;
+  double *scaleval;
+  int *scaleidx;
+  std::vector<std::string> scalevars;
+  int nmaxfsum;
+  int *atomvar;         // indices of atom-style variables
+  double *atomscale;    // vector of atom-style variable values
 };
 
 }    // namespace LAMMPS_NS
 
 #endif
 #endif
+
+
