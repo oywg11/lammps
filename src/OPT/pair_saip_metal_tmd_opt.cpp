@@ -60,7 +60,7 @@ void PairSAIPMETALTMDOpt::coeff(int narg, char **args)
   for (int i = 1; i <= atom->ntypes; i++) {
     int itype = map[i];
     if (strcmp(elements[itype], "Au") == 0 || strcmp(elements[itype], "Cu") == 0 ||
-        strcmp(elements[itype], "Ag") == 0 || strcmp(elements[itype], "Ru") == 0 || 
+        strcmp(elements[itype], "Ag") == 0 || strcmp(elements[itype], "Ru") == 0 ||
         strcmp(elements[itype], "Pt") == 0 || strcmp(elements[itype], "Ni") == 0) {
       special_type[i] = SAIP_METAL;
     }
