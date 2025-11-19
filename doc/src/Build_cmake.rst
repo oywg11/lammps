@@ -126,6 +126,78 @@ defaults to ``${HOME}/.local``.
    root) the `ldconfig` program to update the cache file for fast lookup
    of system shared libraries.
 
+.. admonition:: Using the installed library
+   :class: Hint
+
+   The CMake installation functionality is an experimental work in
+   progress and thus not without problems, especially when writing your
+   own program that is trying to use the LAMMPS C++ classes directly.
+
+   While there is a well-defined :ref:`C-language interface
+   <lammps_c_api>` with the ``library.h`` header file, there is no
+   equivalent for the C++ interface yet.  When installing LAMMPS,
+   only the core header files are copied into the installation folder
+   and thus only high-level access to C++ features is available.
+
+   The following is a minimal CMake example file for using the installed
+   LAMMPS package which represents the current state of development:
+
+   .. code-block:: cmake
+
+      cmake_minimum_required(VERSION 3.20)
+      project(simpleCC CXX)
+      # set this to the LAMMPS installation location
+      if(NOT CMAKE_PREFIX_PATH)
+        set(CMAKE_PREFIX_PATH $ENV{HOME}/.local)
+      endif()
+      find_package(LAMMPS REQUIRED)
+      add_executable(simpleCC simple.cpp)
+      target_link_libraries(simpleCC PRIVATE LAMMPS::LAMMPS)
+
+   The ``CMAKE_PREFIX_PATH`` setting tells CMake where to find the
+   generated CMake configuration files for the `find_package()
+   <https://cmake.org/cmake/help/latest/command/find_package.html>`_
+   CMake command.  You can also specify a required minimal version or
+   version range.  For that a numeric representation in the "YYYY.MM.DD"
+   format has to be used: the 10 September 2025 release thus becomes
+   version 2025.09.10.  The include statements in the ``simple.cpp``
+   source file have to be prefixed with ``lammps/`` as follows:
+
+   .. code-block:: C++
+
+      #include <lammps/lammps.h>
+      #include <lammps/input.h>
+      #include <lammps/atom.h>
+      #include <lammps/library.h>
+
+   Using the ``LAMMPS::LAMMPS`` target imported from the installed
+   LAMMPS CMake configuration files should set up the include and linker
+   flags and folders automatically.  Below is the output for an example
+   session (note how it checks for and includes MPI and OpenMP support
+   since that specific LAMMPS library was set up this way):
+
+   .. code-block:: console
+
+      $ cmake -S . -B build -D CMAKE_PREFIX_PATH=$HOME/Downloads/test-install
+      -- The CXX compiler identification is GNU 15.2.1
+      -- Detecting CXX compiler ABI info
+      -- Detecting CXX compiler ABI info - done
+      -- Check for working CXX compiler: /usr/lib64/ccache/c++ - skipped
+      -- Detecting CXX compile features
+      -- Detecting CXX compile features - done
+      -- Found MPI_CXX: /usr/lib64/mpich/lib/libmpicxx.so (found version "4.1")
+      -- Found MPI: TRUE (found version "4.1") found components: CXX
+      -- Found OpenMP_CXX: -fopenmp (found version "4.5")
+      -- Found OpenMP: TRUE (found version "4.5") found components: CXX
+      -- Found LAMMPS: /home/akohlmey/Downloads/test-install/lib64/liblammps.so.0
+      -- Configuring done (0.9s)
+      -- Generating done (0.0s)
+      -- Build files have been written to: /home/akohlmey/Downloads/test-simple/build
+      $ cmake --build build
+      [ 50%] Building CXX object CMakeFiles/simpleCC.dir/simple.cpp.o
+      [100%] Linking CXX executable simpleCC
+      [100%] Built target simpleCC
+
 .. _cmake_options:
 
 Configuration and build options
