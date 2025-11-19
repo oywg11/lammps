@@ -13,34 +13,32 @@
 
 #ifdef COMPUTE_CLASS
 // clang-format off
-ComputeStyle(temp/deform/kk,ComputeTempDeformKokkos<LMPDeviceType>);
-ComputeStyle(temp/deform/kk/device,ComputeTempDeformKokkos<LMPDeviceType>);
-ComputeStyle(temp/deform/kk/host,ComputeTempDeformKokkos<LMPHostType>);
+ComputeStyle(temp/com/kk,ComputeTempCOMKokkos<LMPDeviceType>);
+ComputeStyle(temp/com/kk/device,ComputeTempCOMKokkos<LMPDeviceType>);
+ComputeStyle(temp/com/kk/host,ComputeTempCOMKokkos<LMPHostType>);
 // clang-format on
 #else
 
 // clang-format off
-#ifndef LMP_COMPUTE_TEMP_DEFORM_KOKKOS_H
-#define LMP_COMPUTE_TEMP_DEFORM_KOKKOS_H
+#ifndef LMP_COMPUTE_TEMP_COM_KOKKOS_H
+#define LMP_COMPUTE_TEMP_COM_KOKKOS_H
 
-#include "compute_temp_deform.h"
-#include "kokkos_few.h"
+#include "compute_temp_com.h"
 #include "kokkos_type.h"
 
 namespace LAMMPS_NS {
 
 template<int RMASS>
-struct TagComputeTempDeformScalar{};
+struct TagComputeTempCOMScalar{};
 
 template<int RMASS>
-struct TagComputeTempDeformVector{};
+struct TagComputeTempCOMVector{};
 
-struct TagComputeTempDeformRemoveBias{};
-
-struct TagComputeTempDeformRestoreBias{};
+struct TagComputeTempCOMRemoveBias{};
+struct TagComputeTempCOMRestoreBias{};
 
 template<class DeviceType>
-class ComputeTempDeformKokkos: public ComputeTempDeform {
+class ComputeTempCOMKokkos : public ComputeTempCOM {
  public:
 
   struct s_CTEMP {
@@ -66,7 +64,7 @@ class ComputeTempDeformKokkos: public ComputeTempDeform {
   typedef ArrayTypes<DeviceType> AT;
   typedef CTEMP value_type;
 
-  ComputeTempDeformKokkos(class LAMMPS *, int, char **);
+  ComputeTempCOMKokkos(class LAMMPS *, int, char **);
   double compute_scalar() override;
   void compute_vector() override;
   void remove_bias_all() override;
@@ -75,31 +73,26 @@ class ComputeTempDeformKokkos: public ComputeTempDeform {
 
   template<int RMASS>
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagComputeTempDeformScalar<RMASS>, const int&, CTEMP&) const;
+  void operator()(TagComputeTempCOMScalar<RMASS>, const int&, CTEMP&) const;
 
   template<int RMASS>
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagComputeTempDeformVector<RMASS>, const int&, CTEMP&) const;
+  void operator()(TagComputeTempCOMVector<RMASS>, const int&, CTEMP&) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagComputeTempDeformRemoveBias, const int &i) const;
+  void operator()(TagComputeTempCOMRemoveBias, const int &i) const;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(TagComputeTempDeformRestoreBias, const int &i) const;
+  void operator()(TagComputeTempCOMRestoreBias, const int &i) const;
 
  protected:
-  typename AT::t_kkfloat_1d_3_lr_randomread x;
   typename AT::t_kkfloat_1d_3 v;
-  typename AT::t_kkfloat_1d_3 vbiasall;
   typename AT::t_kkfloat_1d_randomread rmass;
   typename AT::t_kkfloat_1d_randomread mass;
   typename AT::t_int_1d_randomread type;
   typename AT::t_int_1d_randomread mask;
 
-  class DomainKokkos *domainKK;
-
-  Few<double, 6> h_rate, h_ratelo;
-
+  class GroupKokkos *groupKK;
 };
 
 }    // namespace LAMMPS_NS
